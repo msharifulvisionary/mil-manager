@@ -873,13 +873,17 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
 
     const handleSubmit = () => {
         if (!form.amount || !form.date) return alert("টাকার পরিমাণ এবং তারিখ আবশ্যক");
+        
         if (isEditing && onUpdate) {
             onUpdate(form.id, form);
             setIsEditing(false);
         } else {
-            onAdd(form);
+            // FIX: Strip 'id' from form if it exists (even as undefined) to prevent Firestore errors
+            const { id, ...cleanForm } = form as any;
+            onAdd(cleanForm);
         }
-        setForm({ date: new Date().toISOString().split('T')[0], type: 'market', amount: 0, shopper: '', id: undefined });
+        // FIX: Reset form without explicit 'id: undefined'
+        setForm({ date: new Date().toISOString().split('T')[0], type: 'market', amount: 0, shopper: '' });
     };
 
     const handleEdit = (e: Expense) => {
@@ -892,9 +896,10 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
         if(!id) return;
         if(window.confirm('সত্যিই কি মুছে ফেলতে চান?')) {
             onDelete(id);
+            // FIX: Reset form without id property if we were editing the deleted item
             if(isEditing) {
                 setIsEditing(false);
-                setForm({ date: new Date().toISOString().split('T')[0], type: 'market', amount: 0, shopper: '', id: undefined });
+                setForm({ date: new Date().toISOString().split('T')[0], type: 'market', amount: 0, shopper: '' });
             }
         }
     }
