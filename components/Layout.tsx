@@ -8,9 +8,10 @@ interface LayoutProps {
   subtitle?: string;
   action?: React.ReactNode;
   managerInfo?: { name: string, mobile: string };
+  onDeveloperClick?: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, title, subtitle, action, managerInfo }) => {
+const Layout: React.FC<LayoutProps> = ({ children, title, subtitle, action, managerInfo, onDeveloperClick }) => {
   const today = new Date();
   const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = today.toLocaleDateString('bn-BD', dateOptions);
@@ -56,7 +57,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, subtitle, action, mana
       </main>
       
       <div className="print:hidden">
-        <Footer />
+        <Footer onDeveloperClick={onDeveloperClick} />
       </div>
     </div>
   );

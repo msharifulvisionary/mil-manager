@@ -3,7 +3,8 @@ import { HashRouter as Router, Routes, Route, Navigate, useNavigate, useLocation
 import { 
   Users, FileText, ShoppingCart, Settings, LogOut, 
   Trash2, PlusCircle, Edit2, Save, X, Activity, DollarSign, Calendar, ChevronRight,
-  Copy, UserCircle, Phone, Droplet, LayoutDashboard, Utensils, Eye, EyeOff, List, ArrowRight, ShieldCheck, ClipboardList
+  Copy, UserCircle, Phone, Droplet, LayoutDashboard, Utensils, Eye, EyeOff, List, ArrowRight, ShieldCheck, ClipboardList,
+  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook
 } from 'lucide-react';
 
 import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry } from './types';
@@ -12,39 +13,202 @@ import Layout from './components/Layout';
 import Reports from './components/Reports';
 import { FACEBOOK_LINK, DEVELOPER_NAME } from './constants';
 
-// --- LANDING PAGE ---
-const LandingPage = ({ onStart }: { onStart: () => void }) => {
+// --- DEVELOPER MODAL ---
+const DeveloperModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    if (!isOpen) return null;
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col items-center justify-center text-white p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-                <div className="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-10 right-10 w-64 h-64 bg-accent/20 rounded-full blur-3xl"></div>
-            </div>
-            
-            <div className="z-10 text-center max-w-2xl animate-fade-in flex-grow flex flex-col justify-center">
-                <div className="inline-block p-4 rounded-full bg-white/10 mb-6 border border-white/20 shadow-2xl mx-auto">
-                    <Utensils size={48} className="text-primary" />
-                </div>
-                <h1 className="text-4xl md:text-6xl font-extrabold mb-4 font-baloo tracking-wide">
-                    মেস <span className="text-primary">ম্যানেজার</span> প্রো
-                </h1>
-                <p className="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed">
-                    আপনার মেসের যাবতীয় মিল, বাজার এবং খরচের হিসাব এখন এক ক্লিকেই। ঝামেলাহীন এবং স্বচ্ছ হিসাব নিকাশের জন্য সেরা সমাধান।
-                </p>
-                
-                <button 
-                    onClick={onStart}
-                    className="group bg-primary hover:bg-sky-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-primary/50 transition-all flex items-center justify-center gap-2 mx-auto"
-                >
-                    শুরু করুন <ArrowRight className="group-hover:translate-x-1 transition-transform"/>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl relative transform transition-all scale-100">
+                <button onClick={onClose} className="absolute top-3 right-3 bg-white/20 hover:bg-black/10 p-2 rounded-full text-slate-600 transition-colors z-10">
+                    <X size={24} />
                 </button>
+                
+                {/* Header / Cover */}
+                <div className="h-32 bg-gradient-to-r from-primary to-blue-600 relative">
+                    <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                         <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-200 shadow-lg overflow-hidden flex items-center justify-center">
+                            {/* Placeholder Avatar if no image provided */}
+                             <span className="text-3xl font-bold text-slate-400">SI</span>
+                         </div>
+                    </div>
+                </div>
+                
+                <div className="pt-14 pb-8 px-6 text-center">
+                    <h2 className="text-2xl font-bold text-slate-800 font-baloo">MD SHARIFUL ISLAM</h2>
+                    <p className="text-xs font-bold text-primary tracking-widest uppercase mb-4">Professional Web Designer & Developer</p>
+                    
+                    <div className="space-y-3 text-left bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
+                        <div className="flex items-center gap-3 text-slate-700">
+                            <Phone size={18} className="text-primary" />
+                            <a href="tel:+8801735757133" className="hover:text-primary font-medium">+8801735757133</a>
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-700">
+                            <MessageCircle size={18} className="text-green-500" />
+                            <a href="https://wa.me/8801735757133" target="_blank" rel="noreferrer" className="hover:text-green-600 font-medium">WhatsApp Me</a>
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-700">
+                            <Mail size={18} className="text-red-500" />
+                            <a href="mailto:msharifulvisionary@gmail.com" className="hover:text-red-600 font-medium text-sm">msharifulvisionary@gmail.com</a>
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-700">
+                            <Facebook size={18} className="text-blue-600" />
+                            <a href="https://www.facebook.com/share/16omXd7dE2/" target="_blank" rel="noreferrer" className="hover:text-blue-700 font-medium">Facebook Profile</a>
+                        </div>
+                    </div>
+
+                    <button onClick={onClose} className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg">
+                        Close Profile
+                    </button>
+                </div>
             </div>
-            
-            <div className="z-10 w-full text-center py-6 border-t border-white/10">
-                <p className="text-sm text-slate-400 font-baloo">
-                    Design and Developed By <a href={FACEBOOK_LINK} target="_blank" rel="noreferrer" className="text-primary font-bold hover:underline hover:text-sky-300 transition-colors">{DEVELOPER_NAME}</a>
-                </p>
+        </div>
+    );
+};
+
+// --- PWA INSTALL PROMPT ---
+const PWAInstallPrompt = () => {
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+            // Show prompt after 5 seconds
+            setTimeout(() => setIsVisible(true), 5000);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstall = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+        setIsVisible(false);
+    };
+
+    if (!isVisible) return null;
+
+    return (
+        <div className="fixed top-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:max-w-md z-[90] animate-bounce-in">
+            <div className="bg-white border-l-4 border-primary p-4 rounded-r shadow-2xl flex items-center justify-between gap-4">
+                <div>
+                    <h4 className="font-bold text-slate-800">অ্যাপটি ইন্সটল করুন!</h4>
+                    <p className="text-xs text-slate-500">আরও ভালো অভিজ্ঞতার জন্য ওয়েব অ্যাপ হিসেবে ব্যবহার করুন।</p>
+                </div>
+                <div className="flex gap-2">
+                    <button onClick={() => setIsVisible(false)} className="text-slate-400 hover:text-slate-600 p-1"><X size={18}/></button>
+                    <button onClick={handleInstall} className="bg-primary text-white px-4 py-2 rounded font-bold text-sm shadow hover:bg-sky-600 flex items-center gap-2">
+                        <Download size={16}/> Install
+                    </button>
+                </div>
             </div>
+        </div>
+    );
+};
+
+// --- LANDING PAGE ---
+const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick: () => void }) => {
+    return (
+        <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+            {/* Navbar */}
+            <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-20 border-b border-slate-100">
+                <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-primary font-bold text-xl font-baloo">
+                        <Utensils size={28} /> মেস ম্যানেজার
+                    </div>
+                    <button onClick={onStart} className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-800 transition-colors">
+                        লগইন / রেজিস্টার
+                    </button>
+                </div>
+            </nav>
+
+            {/* Hero Section */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white py-20 px-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full opacity-10">
+                     <div className="absolute top-20 left-20 w-64 h-64 bg-primary rounded-full blur-3xl"></div>
+                     <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+                </div>
+                
+                <div className="container mx-auto text-center relative z-10 max-w-3xl">
+                    <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1 mb-6 animate-fade-in">
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        <span className="text-xs font-bold tracking-wider">SMART MESS MANAGEMENT SYSTEM</span>
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight font-baloo">
+                        মেসের হিসাব-নিকাশ এখন <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-400">হাতের মুঠোয়</span>
+                    </h1>
+                    <p className="text-lg text-slate-300 mb-10 leading-relaxed max-w-2xl mx-auto">
+                        মিল, বাজার, টাকা জমা এবং যাবতীয় খরচের হিসাব রাখার ঝামেলা থেকে মুক্তি পান। অটোমেটেড রিপোর্ট জেনারেশন এবং স্বচ্ছ হিসাবের জন্য সেরা সমাধান।
+                    </p>
+                    <button 
+                        onClick={onStart}
+                        className="group bg-primary hover:bg-sky-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-primary/50 transition-all flex items-center justify-center gap-3 mx-auto"
+                    >
+                        এখনই শুরু করুন <ArrowRight className="group-hover:translate-x-1 transition-transform"/>
+                    </button>
+                </div>
+            </div>
+
+            {/* Features Section */}
+            <div className="py-20 px-4 bg-white">
+                <div className="container mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-bold text-slate-800 mb-4 font-baloo">কেন ব্যবহার করবেন?</h2>
+                        <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {[
+                            { icon: Calendar, title: "সহজ মিল ম্যানেজমেন্ট", desc: "প্রতিদিনের মিল এবং চালের হিসাব খুব সহজেই এন্ট্রি এবং আপডেট করার সুবিধা।" },
+                            { icon: FileText, title: "অটোমেটেড রিপোর্ট", desc: "মাস শেষে এক ক্লিকেই সম্পূর্ণ মাসের আয়-ব্যয়ের পিডিএফ এবং ইমেজ রিপোর্ট।" },
+                            { icon: ShieldCheck, title: "স্বচ্ছ ও নিরাপদ", desc: "ম্যানেজার এবং বর্ডার উভয়ের জন্যই আলাদা ড্যাশবোর্ড এবং স্বচ্ছ হিসাব ব্যবস্থা।" }
+                        ].map((item, idx) => (
+                            <div key={idx} className="bg-slate-50 p-8 rounded-2xl hover:shadow-xl transition-shadow border border-slate-100 text-center group">
+                                <div className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                                    <item.icon size={32} className="text-primary" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-800 mb-3">{item.title}</h3>
+                                <p className="text-slate-500 leading-relaxed">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats/CTA Section */}
+            <div className="bg-slate-900 text-white py-16 px-4 border-t border-slate-800">
+                <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div>
+                        <h2 className="text-2xl font-bold mb-2 font-baloo">আপনার মেস ম্যানেজ করতে প্রস্তুত?</h2>
+                        <p className="text-slate-400">আজই রেজিস্ট্রেশন করুন এবং ডিজিটাল অভিজ্ঞতা নিন।</p>
+                    </div>
+                    <button onClick={onStart} className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+                        ফ্রি-তে ব্যবহার করুন
+                    </button>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <footer className="bg-slate-950 text-slate-400 py-8 text-center border-t border-slate-900">
+                <div className="container mx-auto px-4">
+                    <p className="text-sm font-baloo mb-2">
+                        Design and Developed By
+                    </p>
+                    <button 
+                        onClick={onDevClick} 
+                        className="text-primary font-bold text-lg hover:text-sky-300 transition-colors underline decoration-dotted underline-offset-4"
+                    >
+                        {DEVELOPER_NAME}
+                    </button>
+                    <p className="text-xs text-slate-600 mt-4">© {new Date().getFullYear()} Mess Manager Pro. All rights reserved.</p>
+                </div>
+            </footer>
         </div>
     );
 };
@@ -552,7 +716,7 @@ const BorderDetailModal = ({
     }
 
     return (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
             <div className="bg-white rounded-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative shadow-2xl">
                 <button onClick={onClose} className="absolute top-4 right-4 bg-slate-100 p-2 rounded-full hover:bg-slate-200 transition-colors"><X size={20} /></button>
                 <div className="p-6 border-b">
@@ -699,7 +863,7 @@ const LoginRegister = ({ setManager, setBorderView }: any) => {
 
   if (showBorderSelect) {
       return (
-          <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 p-4">
+          <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 p-4 animate-fade-in">
               <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md text-center">
                   <h2 className="text-xl font-bold mb-4">আপনার নাম সিলেক্ট করুন</h2>
                   <select className="w-full p-3 border rounded mb-4" value={selectedBorderId} onChange={e => setSelectedBorderId(e.target.value)}>
@@ -780,6 +944,9 @@ const App: React.FC = () => {
   const [profileEdit, setProfileEdit] = useState(false);
   const [profileForm, setProfileForm] = useState<Manager>({} as Manager);
   const [borderProfileForm, setBorderProfileForm] = useState({ mobile: '', bloodGroup: '' });
+
+  // Developer Modal State
+  const [showDevModal, setShowDevModal] = useState(false);
 
   // Restore session
   useEffect(() => {
@@ -926,302 +1093,307 @@ const App: React.FC = () => {
       setExpenses([]);
   };
 
-  // Rendering
-  if (!hasStarted) return <LandingPage onStart={() => setHasStarted(true)} />;
-
-  if (borderView && managerInfoForBorder) {
-      const totalMeals = Object.values(borderView.dailyUsage).reduce((a: number, b: any) => a + (Number(b.meals)||0), 0);
-      const totalRice = Object.values(borderView.dailyUsage).reduce((a: number, b: any) => a + (Number(b.rice)||0), 0);
-      const totalDeposit = borderView.deposits.reduce((a,b) => a + Number(b.amount), 0);
-      const totalRiceDeposit = borderView.riceDeposits.reduce((a,b) => a + (Number(b.amount)||0), 0);
-      const totalSharedExtra = expenses.filter(e => e.type === 'extra').reduce((a,b) => a + Number(b.amount), 0);
-      const myShareExtra = borders.length > 0 ? totalSharedExtra / borders.length : 0;
-      const totalCost = (totalMeals * Number(managerInfoForBorder.mealRate)) + Number(borderView.extraCost) + Number(borderView.guestCost) + myShareExtra;
-      const balance = totalDeposit - totalCost;
-
-      return (
-          <Layout title="বর্ডার ড্যাশবোর্ড" subtitle={`স্বাগতম, ${borderView.name}`} action={<button onClick={handleBorderLogout} className="bg-red-50 text-red-600 px-4 py-2 rounded-full font-bold flex gap-2 items-center hover:bg-red-100 transition-colors"><LogOut size={18}/> বের হন</button>}>
-               <div className="flex bg-white p-1 rounded mb-6 border overflow-x-auto sticky top-20 z-20 shadow-sm">
-                   {['overview','meals','market','profile'].map(v => (
-                       <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500'}`}>
-                           {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : 'প্রোফাইল'}
-                       </button>
-                   ))}
-               </div>
-
-               {activeBorderTab === 'overview' && (
-                   <div className="space-y-6">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-emerald-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                <h3 className="text-emerald-100 text-xs">মোট জমা টাকা</h3>
-                                <p className="text-2xl font-bold font-baloo">{totalDeposit} ৳</p>
-                                <DollarSign className="absolute bottom-2 right-2 opacity-20"/>
-                            </div>
-                            <div className="bg-orange-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                <h3 className="text-orange-100 text-xs">মোট জমা চাল</h3>
-                                <p className="text-2xl font-bold font-baloo">{totalRiceDeposit} পট</p>
-                                <Utensils className="absolute bottom-2 right-2 opacity-20"/>
-                            </div>
-                             <div className={`p-4 rounded-xl shadow-lg text-white relative overflow-hidden ${balance >= 0 ? 'bg-blue-600' : 'bg-red-600'}`}>
-                                <h3 className="text-white/80 text-xs">অবশিষ্ট টাকা</h3>
-                                <p className="text-2xl font-bold font-baloo">{Math.abs(balance).toFixed(0)} ৳</p>
-                                <p className="text-[10px] bg-white/20 inline-block px-1 rounded">{balance >= 0 ? "পাবেন" : "দিবেন"}</p>
-                            </div>
-                            <div className="bg-yellow-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                <h3 className="text-yellow-100 text-xs">অবশিষ্ট চাল</h3>
-                                <p className="text-2xl font-bold font-baloo">{(totalRiceDeposit - totalRice).toFixed(1)} পট</p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white p-6 rounded-xl shadow border">
-                            <h3 className="font-bold border-b pb-3 mb-4 text-slate-800">খরচের বিস্তারিত</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                                <div className="p-3 bg-slate-50 rounded">
-                                    <p className="text-xs text-slate-500">মিল খরচ</p>
-                                    <p className="font-bold font-baloo">{(totalMeals * Number(managerInfoForBorder.mealRate)).toFixed(0)} ৳</p>
-                                </div>
-                                <div className="p-3 bg-blue-50 rounded">
-                                    <p className="text-xs text-slate-500">গেস্ট খরচ</p>
-                                    <p className="font-bold font-baloo text-blue-600">{borderView.guestCost} ৳</p>
-                                </div>
-                                <div className="p-3 bg-red-50 rounded">
-                                    <p className="text-xs text-slate-500">অতিরিক্ত খরচ</p>
-                                    <p className="font-bold font-baloo text-red-600">{borderView.extraCost} ৳</p>
-                                </div>
-                                <div className="p-3 bg-orange-50 rounded">
-                                    <p className="text-xs text-slate-500">বাজার খরচ (শেয়ার)</p>
-                                    <p className="font-bold font-baloo text-orange-600">{myShareExtra.toFixed(0)} ৳</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white p-6 rounded-xl shadow border">
-                                 <h3 className="font-bold border-b pb-3 mb-4 text-slate-800 text-emerald-600">টাকা জমা ইতিহাস</h3>
-                                 <div className="max-h-60 overflow-y-auto">
-                                    <table className="w-full text-sm">
-                                        <thead className="bg-slate-50 text-xs"><tr><th className="p-2 text-left">তারিখ</th><th className="p-2 text-right">পরিমাণ</th></tr></thead>
-                                        <tbody>
-                                            {borderView.deposits.map(d => (<tr key={d.id} className="border-b"><td className="p-2 font-baloo">{d.date}</td><td className="p-2 text-right font-bold text-emerald-600 font-baloo">{d.amount} ৳</td></tr>))}
-                                        </tbody>
-                                    </table>
-                                 </div>
-                            </div>
-                            <div className="bg-white p-6 rounded-xl shadow border">
-                                 <h3 className="font-bold border-b pb-3 mb-4 text-slate-800 text-orange-600">চাল জমা ইতিহাস</h3>
-                                 <div className="max-h-60 overflow-y-auto">
-                                    <table className="w-full text-sm">
-                                        <thead className="bg-slate-50 text-xs"><tr><th className="p-2 text-left">তারিখ/ধরণ</th><th className="p-2 text-right">পরিমাণ</th></tr></thead>
-                                        <tbody>
-                                            {borderView.riceDeposits.map(d => (<tr key={d.id} className="border-b"><td className="p-2 font-baloo text-xs">{d.type === 'previous_balance' ? 'পূর্বের জের' : d.date}</td><td className="p-2 text-right font-bold text-orange-600 font-baloo">{d.amount} পট</td></tr>))}
-                                        </tbody>
-                                    </table>
-                                 </div>
-                            </div>
-                        </div>
-                   </div>
-               )}
-
-               {activeBorderTab === 'meals' && (
-                   <div className="bg-white rounded-xl shadow border overflow-hidden">
-                        <div className="p-4 bg-slate-50 font-bold text-slate-700">মিল চার্ট</div>
-                        <div className="max-h-[600px] overflow-y-auto">
-                            <table className="w-full text-sm text-center">
-                                <thead className="bg-slate-100 sticky top-0"><tr><th className="p-2">তারিখ</th><th className="p-2">মিল</th><th className="p-2">চাল</th></tr></thead>
-                                <tbody className="divide-y">{Array.from({length: 31}, (_, i) => i + 1).map(d => borderView.dailyUsage[d]?.meals || borderView.dailyUsage[d]?.rice ? (<tr key={d}><td className="p-2 font-baloo">{d}</td><td className="p-2 font-bold text-blue-600 font-baloo">{borderView.dailyUsage[d]?.meals}</td><td className="p-2 font-bold text-orange-600 font-baloo">{borderView.dailyUsage[d]?.rice}</td></tr>) : null)}</tbody>
-                            </table>
-                        </div>
-                   </div>
-               )}
-
-               {activeBorderTab === 'market' && (
-                    <div className="bg-white rounded-xl shadow border overflow-hidden">
-                        <div className="max-h-[600px] overflow-y-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-100 sticky top-0"><tr><th className="p-3">তারিখ</th><th className="p-3">বিবরণ</th><th className="p-3 text-right">টাকা</th></tr></thead>
-                                <tbody className="divide-y">
-                                    {expenses.map(e => (
-                                        <tr key={e.id} className={`hover:bg-slate-50 ${e.type === 'extra' ? 'bg-red-50' : ''}`}>
-                                            <td className="p-3 font-baloo">{e.date}</td>
-                                            <td className="p-3">{e.shopper} {e.type === 'extra' && <span className="text-[10px] bg-red-200 px-1 rounded">অতিরিক্ত বাজার :</span>}</td>
-                                            <td className="p-3 text-right font-bold font-baloo">{e.amount}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-               )}
-
-               {activeBorderTab === 'profile' && (
-                    <div className="bg-white rounded-xl shadow border p-6 max-w-lg mx-auto">
-                        <h3 className="font-bold mb-4">প্রোফাইল আপডেট</h3>
-                        <div className="space-y-3">
-                            <input className="w-full p-3 border rounded" value={borderProfileForm.mobile} onChange={e => setBorderProfileForm({...borderProfileForm, mobile: e.target.value})} placeholder="মোবাইল" />
-                            <select className="w-full p-3 border rounded" value={borderProfileForm.bloodGroup} onChange={e => setBorderProfileForm({...borderProfileForm, bloodGroup: e.target.value})}>
-                                <option value="">রক্তের গ্রুপ</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
-                            </select>
-                            <button onClick={handleBorderProfileUpdate} className="w-full bg-primary text-white py-3 rounded font-bold">আপডেট করুন</button>
-                        </div>
-                    </div>
-               )}
-          </Layout>
-      );
-  }
-
-  if (!manager) return <LoginRegister setManager={setManager} setBorderView={handleSetBorderView} />;
-
   return (
-      <Layout 
-        title={manager.messName} 
-        subtitle={`ম্যানেজার: ${manager.name}`} 
-        managerInfo={{name: manager.name, mobile: manager.mobile}}
-        action={
-            <button onClick={handleLogout} className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-bold border border-white/20">
-                <LogOut size={16} /> <span className="hidden md:inline">লগ আউট</span>
-            </button>
-        }
-      >
-        <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar / Tabs (Desktop) & Mobile Nav */}
-            <div className="lg:w-64 flex-shrink-0">
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 sticky top-24 flex lg:flex-col flex-row gap-1 overflow-x-auto lg:overflow-visible">
-                    {[
-                        {id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard},
-                        {id: 'borders', label: 'বর্ডার তালিকা', icon: Users},
-                        {id: 'daily', label: 'দৈনিক মিল', icon: Calendar},
-                        {id: 'system', label: 'বাবুর্চি হিসাব', icon: ClipboardList},
-                        {id: 'market', label: 'বাজার খরচ', icon: ShoppingCart},
-                        {id: 'reports', label: 'রিপোর্ট', icon: FileText},
-                        {id: 'settings', label: 'সেটিংস', icon: Settings},
-                    ].map(item => (
-                        <button 
-                            key={item.id}
-                            onClick={() => setActiveTab(item.id as any)} 
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all whitespace-nowrap lg:w-full text-left
-                                ${activeTab === item.id 
-                                    ? 'bg-primary text-white shadow-md' 
-                                    : 'text-slate-600 hover:bg-slate-50'}`}
-                        >
-                            <item.icon size={20}/> <span>{item.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+      <>
+        {/* Global Components */}
+        <PWAInstallPrompt />
+        <DeveloperModal isOpen={showDevModal} onClose={() => setShowDevModal(false)} />
 
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
-                {activeTab === 'dashboard' && (
-                    <div className="space-y-6 animate-fade-in">
-                        <ManagerOverview manager={manager} borders={borders} expenses={expenses} />
-                    </div>
-                )}
-                {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} /></div>}
-                {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} /></div>}
-                {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => setManager(m)} /></div>}
-                {activeTab === 'market' && <div className="animate-fade-in"><MarketView expenses={expenses} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onUpdate={handleUpdateExpense} /></div>}
-                {activeTab === 'reports' && <div className="animate-fade-in"><Reports manager={manager} borders={borders} expenses={expenses} /></div>}
-                {activeTab === 'settings' && (
-                    <div className="animate-fade-in bg-white p-8 rounded-xl shadow border border-slate-200 max-w-xl mx-auto">
-                        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 pb-4 border-b"><Settings className="text-slate-700"/> সিস্টেম সেটিংস</h2>
-                        
-                        {/* Manager Profile Edit - Restored */}
-                        <div className="mb-8 border-b pb-6">
-                           <div className="flex justify-between items-center mb-4">
-                               <h3 className="font-bold text-slate-700">ম্যানেজার প্রোফাইল & ক্রেডেনশিয়াল</h3>
-                               <button onClick={() => setProfileEdit(!profileEdit)} className="text-blue-600 text-sm hover:underline">{profileEdit ? 'বন্ধ করুন' : 'এডিট করুন'}</button>
-                           </div>
-                           {profileEdit ? (
-                               <div className="space-y-3 bg-slate-50 p-4 rounded">
-                                   <label className="text-xs font-bold block mt-2">ব্যক্তিগত তথ্য</label>
-                                   <input placeholder="নাম" className="w-full p-2 border rounded" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
-                                   <input placeholder="মেসের নাম" className="w-full p-2 border rounded" value={profileForm.messName} onChange={e => setProfileForm({...profileForm, messName: e.target.value})} />
-                                   <input placeholder="মোবাইল" className="w-full p-2 border rounded" value={profileForm.mobile} onChange={e => setProfileForm({...profileForm, mobile: e.target.value})} />
-                                   <input placeholder="রক্তের গ্রুপ" className="w-full p-2 border rounded" value={profileForm.bloodGroup || ''} onChange={e => setProfileForm({...profileForm, bloodGroup: e.target.value})} />
-                                   
-                                   <label className="text-xs font-bold block mt-4 text-red-600">ক্রেডেনশিয়াল আপডেট (সাবধানে পরিবর্তন করুন)</label>
-                                   <input placeholder="আপনার নতুন পাসওয়ার্ড" className="w-full p-2 border rounded border-red-200" value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
-                                   <input placeholder="বর্ডার গ্রুপ ইউজারনেম" className="w-full p-2 border rounded border-red-200" value={profileForm.borderUsername} onChange={e => setProfileForm({...profileForm, borderUsername: e.target.value})} />
-                                   <input placeholder="বর্ডার গ্রুপ পাসওয়ার্ড" className="w-full p-2 border rounded border-red-200" value={profileForm.borderPassword} onChange={e => setProfileForm({...profileForm, borderPassword: e.target.value})} />
-                                   
-                                   <button onClick={handleUpdateManagerProfile} className="bg-green-600 text-white px-4 py-2 rounded w-full font-bold mt-2 shadow">সেভ করুন</button>
-                               </div>
-                           ) : (
-                               <div className="text-sm text-slate-600 space-y-1">
-                                   <p>নাম: <b>{manager.name}</b></p>
-                                   <p>মেস: <b>{manager.messName}</b></p>
-                                   <p>মোবাইল: <b>{manager.mobile}</b></p>
-                                   <p>রক্তের গ্রুপ: <b>{manager.bloodGroup || '-'}</b></p>
-                               </div>
-                           )}
+        {/* Conditional Views */}
+        {!hasStarted ? (
+            <LandingPage onStart={() => setHasStarted(true)} onDevClick={() => setShowDevModal(true)} />
+        ) : (
+            <>
+                {borderView && managerInfoForBorder ? (
+                    <Layout 
+                        title="বর্ডার ড্যাশবোর্ড" 
+                        subtitle={`স্বাগতম, ${borderView.name}`} 
+                        action={<button onClick={handleBorderLogout} className="bg-red-50 text-red-600 px-4 py-2 rounded-full font-bold flex gap-2 items-center hover:bg-red-100 transition-colors"><LogOut size={18}/> বের হন</button>}
+                        onDeveloperClick={() => setShowDevModal(true)}
+                    >
+                         <div className="flex bg-white p-1 rounded mb-6 border overflow-x-auto sticky top-20 z-20 shadow-sm">
+                             {['overview','meals','market','profile'].map(v => (
+                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500'}`}>
+                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : 'প্রোফাইল'}
+                                 </button>
+                             ))}
+                         </div>
+
+                         {activeBorderTab === 'overview' && (
+                             <div className="space-y-6">
+                                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                      <div className="bg-emerald-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+                                          <h3 className="text-emerald-100 text-xs">মোট জমা টাকা</h3>
+                                          <p className="text-2xl font-bold font-baloo">{borderView.deposits.reduce((a,b) => a + Number(b.amount), 0)} ৳</p>
+                                          <DollarSign className="absolute bottom-2 right-2 opacity-20"/>
+                                      </div>
+                                      <div className="bg-orange-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+                                          <h3 className="text-orange-100 text-xs">মোট জমা চাল</h3>
+                                          <p className="text-2xl font-bold font-baloo">{borderView.riceDeposits.reduce((a,b) => a + (Number(b.amount)||0), 0)} পট</p>
+                                          <Utensils className="absolute bottom-2 right-2 opacity-20"/>
+                                      </div>
+                                       <div className={`p-4 rounded-xl shadow-lg text-white relative overflow-hidden bg-blue-600`}>
+                                          <h3 className="text-white/80 text-xs">ব্যালেন্স দেখুন</h3>
+                                          <p className="text-xl font-bold font-baloo mt-1">রিপোর্ট দেখুন</p>
+                                          <p className="text-[10px] bg-white/20 inline-block px-1 rounded mt-1">বিস্তারিত</p>
+                                      </div>
+                                      <div className="bg-yellow-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+                                          <h3 className="text-yellow-100 text-xs">চাল খাওয়া</h3>
+                                          <p className="text-2xl font-bold font-baloo">{(Object.values(borderView.dailyUsage).reduce((a:number,b:any)=>a+(Number(b.rice)||0),0) as number).toFixed(1)} পট</p>
+                                      </div>
+                                  </div>
+
+                                  <div className="bg-white p-6 rounded-xl shadow border">
+                                      <h3 className="font-bold border-b pb-3 mb-4 text-slate-800">খরচের বিস্তারিত</h3>
+                                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                          <div className="p-3 bg-slate-50 rounded">
+                                              <p className="text-xs text-slate-500">মিল সংখ্যা</p>
+                                              <p className="font-bold font-baloo">{Object.values(borderView.dailyUsage).reduce((a:number,b:any)=>a+(Number(b.meals)||0),0)}</p>
+                                          </div>
+                                          <div className="p-3 bg-blue-50 rounded">
+                                              <p className="text-xs text-slate-500">গেস্ট খরচ</p>
+                                              <p className="font-bold font-baloo text-blue-600">{borderView.guestCost} ৳</p>
+                                          </div>
+                                          <div className="p-3 bg-red-50 rounded">
+                                              <p className="text-xs text-slate-500">অতিরিক্ত খরচ</p>
+                                              <p className="font-bold font-baloo text-red-600">{borderView.extraCost} ৳</p>
+                                          </div>
+                                          <div className="p-3 bg-orange-50 rounded">
+                                              <p className="text-xs text-slate-500">মিল রেট</p>
+                                              <p className="font-bold font-baloo text-orange-600">{managerInfoForBorder.mealRate} ৳</p>
+                                          </div>
+                                      </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                      <div className="bg-white p-6 rounded-xl shadow border">
+                                           <h3 className="font-bold border-b pb-3 mb-4 text-slate-800 text-emerald-600">টাকা জমা ইতিহাস</h3>
+                                           <div className="max-h-60 overflow-y-auto">
+                                              <table className="w-full text-sm">
+                                                  <thead className="bg-slate-50 text-xs"><tr><th className="p-2 text-left">তারিখ</th><th className="p-2 text-right">পরিমাণ</th></tr></thead>
+                                                  <tbody>
+                                                      {borderView.deposits.map(d => (<tr key={d.id} className="border-b"><td className="p-2 font-baloo">{d.date}</td><td className="p-2 text-right font-bold text-emerald-600 font-baloo">{d.amount} ৳</td></tr>))}
+                                                  </tbody>
+                                              </table>
+                                           </div>
+                                      </div>
+                                      <div className="bg-white p-6 rounded-xl shadow border">
+                                           <h3 className="font-bold border-b pb-3 mb-4 text-slate-800 text-orange-600">চাল জমা ইতিহাস</h3>
+                                           <div className="max-h-60 overflow-y-auto">
+                                              <table className="w-full text-sm">
+                                                  <thead className="bg-slate-50 text-xs"><tr><th className="p-2 text-left">তারিখ/ধরণ</th><th className="p-2 text-right">পরিমাণ</th></tr></thead>
+                                                  <tbody>
+                                                      {borderView.riceDeposits.map(d => (<tr key={d.id} className="border-b"><td className="p-2 font-baloo text-xs">{d.type === 'previous_balance' ? 'পূর্বের জের' : d.date}</td><td className="p-2 text-right font-bold text-orange-600 font-baloo">{d.amount} পট</td></tr>))}
+                                                  </tbody>
+                                              </table>
+                                           </div>
+                                      </div>
+                                  </div>
+                             </div>
+                         )}
+
+                         {activeBorderTab === 'meals' && (
+                             <div className="bg-white rounded-xl shadow border overflow-hidden">
+                                  <div className="p-4 bg-slate-50 font-bold text-slate-700">মিল চার্ট</div>
+                                  <div className="max-h-[600px] overflow-y-auto">
+                                      <table className="w-full text-sm text-center">
+                                          <thead className="bg-slate-100 sticky top-0"><tr><th className="p-2">তারিখ</th><th className="p-2">মিল</th><th className="p-2">চাল</th></tr></thead>
+                                          <tbody className="divide-y">{Array.from({length: 31}, (_, i) => i + 1).map(d => borderView.dailyUsage[d]?.meals || borderView.dailyUsage[d]?.rice ? (<tr key={d}><td className="p-2 font-baloo">{d}</td><td className="p-2 font-bold text-blue-600 font-baloo">{borderView.dailyUsage[d]?.meals}</td><td className="p-2 font-bold text-orange-600 font-baloo">{borderView.dailyUsage[d]?.rice}</td></tr>) : null)}</tbody>
+                                      </table>
+                                  </div>
+                             </div>
+                         )}
+
+                         {activeBorderTab === 'market' && (
+                              <div className="bg-white rounded-xl shadow border overflow-hidden">
+                                  <div className="max-h-[600px] overflow-y-auto">
+                                      <table className="w-full text-sm text-left">
+                                          <thead className="bg-slate-100 sticky top-0"><tr><th className="p-3">তারিখ</th><th className="p-3">বিবরণ</th><th className="p-3 text-right">টাকা</th></tr></thead>
+                                          <tbody className="divide-y">
+                                              {expenses.map(e => (
+                                                  <tr key={e.id} className={`hover:bg-slate-50 ${e.type === 'extra' ? 'bg-red-50' : ''}`}>
+                                                      <td className="p-3 font-baloo">{e.date}</td>
+                                                      <td className="p-3">{e.shopper} {e.type === 'extra' && <span className="text-[10px] bg-red-200 px-1 rounded">অতিরিক্ত বাজার :</span>}</td>
+                                                      <td className="p-3 text-right font-bold font-baloo">{e.amount}</td>
+                                                  </tr>
+                                              ))}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                              </div>
+                         )}
+
+                         {activeBorderTab === 'profile' && (
+                              <div className="bg-white rounded-xl shadow border p-6 max-w-lg mx-auto">
+                                  <h3 className="font-bold mb-4">প্রোফাইল আপডেট</h3>
+                                  <div className="space-y-3">
+                                      <input className="w-full p-3 border rounded" value={borderProfileForm.mobile} onChange={e => setBorderProfileForm({...borderProfileForm, mobile: e.target.value})} placeholder="মোবাইল" />
+                                      <select className="w-full p-3 border rounded" value={borderProfileForm.bloodGroup} onChange={e => setBorderProfileForm({...borderProfileForm, bloodGroup: e.target.value})}>
+                                          <option value="">রক্তের গ্রুপ</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                      </select>
+                                      <button onClick={handleBorderProfileUpdate} className="w-full bg-primary text-white py-3 rounded font-bold">আপডেট করুন</button>
+                                  </div>
+                              </div>
+                         )}
+                    </Layout>
+                ) : manager ? (
+                    <Layout 
+                        title={manager.messName} 
+                        subtitle={`ম্যানেজার: ${manager.name}`} 
+                        managerInfo={{name: manager.name, mobile: manager.mobile}}
+                        action={
+                            <button onClick={handleLogout} className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-all flex items-center gap-2 text-sm font-bold border border-white/20">
+                                <LogOut size={16} /> <span className="hidden md:inline">লগ আউট</span>
+                            </button>
+                        }
+                        onDeveloperClick={() => setShowDevModal(true)}
+                    >
+                        <div className="flex flex-col lg:flex-row gap-6">
+                            {/* Sidebar / Tabs (Desktop) & Mobile Nav */}
+                            <div className="lg:w-64 flex-shrink-0">
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 sticky top-24 flex lg:flex-col flex-row gap-1 overflow-x-auto lg:overflow-visible">
+                                    {[
+                                        {id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard},
+                                        {id: 'borders', label: 'বর্ডার তালিকা', icon: Users},
+                                        {id: 'daily', label: 'দৈনিক মিল', icon: Calendar},
+                                        {id: 'system', label: 'বাবুর্চি হিসাব', icon: ClipboardList},
+                                        {id: 'market', label: 'বাজার খরচ', icon: ShoppingCart},
+                                        {id: 'reports', label: 'রিপোর্ট', icon: FileText},
+                                        {id: 'settings', label: 'সেটিংস', icon: Settings},
+                                    ].map(item => (
+                                        <button 
+                                            key={item.id}
+                                            onClick={() => setActiveTab(item.id as any)} 
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-all whitespace-nowrap lg:w-full text-left
+                                                ${activeTab === item.id 
+                                                    ? 'bg-primary text-white shadow-md' 
+                                                    : 'text-slate-600 hover:bg-slate-50'}`}
+                                        >
+                                            <item.icon size={20}/> <span>{item.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Main Content */}
+                            <div className="flex-1 min-w-0">
+                                {activeTab === 'dashboard' && (
+                                    <div className="space-y-6 animate-fade-in">
+                                        <ManagerOverview manager={manager} borders={borders} expenses={expenses} />
+                                    </div>
+                                )}
+                                {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} /></div>}
+                                {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} /></div>}
+                                {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => setManager(m)} /></div>}
+                                {activeTab === 'market' && <div className="animate-fade-in"><MarketView expenses={expenses} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onUpdate={handleUpdateExpense} /></div>}
+                                {activeTab === 'reports' && <div className="animate-fade-in"><Reports manager={manager} borders={borders} expenses={expenses} /></div>}
+                                {activeTab === 'settings' && (
+                                    <div className="animate-fade-in bg-white p-8 rounded-xl shadow border border-slate-200 max-w-xl mx-auto">
+                                        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 pb-4 border-b"><Settings className="text-slate-700"/> সিস্টেম সেটিংস</h2>
+                                        
+                                        {/* Manager Profile Edit */}
+                                        <div className="mb-8 border-b pb-6">
+                                           <div className="flex justify-between items-center mb-4">
+                                               <h3 className="font-bold text-slate-700">ম্যানেজার প্রোফাইল & ক্রেডেনশিয়াল</h3>
+                                               <button onClick={() => setProfileEdit(!profileEdit)} className="text-blue-600 text-sm hover:underline">{profileEdit ? 'বন্ধ করুন' : 'এডিট করুন'}</button>
+                                           </div>
+                                           {profileEdit ? (
+                                               <div className="space-y-3 bg-slate-50 p-4 rounded">
+                                                   <label className="text-xs font-bold block mt-2">ব্যক্তিগত তথ্য</label>
+                                                   <input placeholder="নাম" className="w-full p-2 border rounded" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
+                                                   <input placeholder="মেসের নাম" className="w-full p-2 border rounded" value={profileForm.messName} onChange={e => setProfileForm({...profileForm, messName: e.target.value})} />
+                                                   <input placeholder="মোবাইল" className="w-full p-2 border rounded" value={profileForm.mobile} onChange={e => setProfileForm({...profileForm, mobile: e.target.value})} />
+                                                   <input placeholder="রক্তের গ্রুপ" className="w-full p-2 border rounded" value={profileForm.bloodGroup || ''} onChange={e => setProfileForm({...profileForm, bloodGroup: e.target.value})} />
+                                                   
+                                                   <label className="text-xs font-bold block mt-4 text-red-600">ক্রেডেনশিয়াল আপডেট (সাবধানে পরিবর্তন করুন)</label>
+                                                   <input placeholder="আপনার নতুন পাসওয়ার্ড" className="w-full p-2 border rounded border-red-200" value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
+                                                   <input placeholder="বর্ডার গ্রুপ ইউজারনেম" className="w-full p-2 border rounded border-red-200" value={profileForm.borderUsername} onChange={e => setProfileForm({...profileForm, borderUsername: e.target.value})} />
+                                                   <input placeholder="বর্ডার গ্রুপ পাসওয়ার্ড" className="w-full p-2 border rounded border-red-200" value={profileForm.borderPassword} onChange={e => setProfileForm({...profileForm, borderPassword: e.target.value})} />
+                                                   
+                                                   <button onClick={handleUpdateManagerProfile} className="bg-green-600 text-white px-4 py-2 rounded w-full font-bold mt-2 shadow">সেভ করুন</button>
+                                               </div>
+                                           ) : (
+                                               <div className="text-sm text-slate-600 space-y-1">
+                                                   <p>নাম: <b>{manager.name}</b></p>
+                                                   <p>মেস: <b>{manager.messName}</b></p>
+                                                   <p>মোবাইল: <b>{manager.mobile}</b></p>
+                                                   <p>রক্তের গ্রুপ: <b>{manager.bloodGroup || '-'}</b></p>
+                                               </div>
+                                           )}
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="block text-sm font-bold text-slate-700 mb-2">বর্তমান মিল রেট</label>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-2xl font-bold text-blue-600">৳</span>
+                                                    <input type="number" step="0.01" className="flex-1 border-2 border-blue-100 p-3 rounded-lg text-lg font-bold text-slate-700 focus:border-blue-500 outline-none transition-colors" 
+                                                        value={manager.mealRate} 
+                                                        onChange={e => setManager({...manager, mealRate: parseFloat(e.target.value) || 0})}
+                                                        onBlur={() => dbService.updateManager(manager.username, { mealRate: manager.mealRate })}
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-slate-500 mt-2">⚠️ মিল রেট পরিবর্তন করলে সকল বর্ডারের খরচের হিসাব সাথে সাথে আপডেট হয়ে যাবে।</p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-bold text-slate-700 mb-2">মাস</label>
+                                                    <select className="w-full border p-3 rounded-lg bg-slate-50 font-semibold" value={manager.month} onChange={e => {
+                                                        const m = e.target.value;
+                                                        setManager({...manager, month: m});
+                                                        dbService.updateManager(manager.username, { month: m });
+                                                    }}>
+                                                        {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-slate-700 mb-2">বছর</label>
+                                                    <select className="w-full border p-3 rounded-lg bg-slate-50 font-semibold" value={manager.year} onChange={e => {
+                                                        const y = parseInt(e.target.value);
+                                                        setManager({...manager, year: y});
+                                                        dbService.updateManager(manager.username, { year: y });
+                                                    }}>
+                                                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-8 mt-8 border-t border-slate-100">
+                                                <button onClick={async () => {
+                                                    if(window.confirm("সতর্কতা: আপনি কি নিশ্চিত যে আপনি সম্পূর্ণ সিস্টেম মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।")) {
+                                                        await dbService.deleteSystem(manager.username);
+                                                        handleLogout();
+                                                    }
+                                                }} className="w-full bg-red-50 text-red-600 p-4 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2 border border-red-100">
+                                                    <Trash2 size={20}/> সম্পূর্ণ ডাটাবেস রিসেট করুন
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">বর্তমান মিল রেট</label>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-2xl font-bold text-blue-600">৳</span>
-                                    <input type="number" step="0.01" className="flex-1 border-2 border-blue-100 p-3 rounded-lg text-lg font-bold text-slate-700 focus:border-blue-500 outline-none transition-colors" 
-                                        value={manager.mealRate} 
-                                        onChange={e => setManager({...manager, mealRate: parseFloat(e.target.value) || 0})}
-                                        onBlur={() => dbService.updateManager(manager.username, { mealRate: manager.mealRate })}
-                                    />
-                                </div>
-                                <p className="text-xs text-slate-500 mt-2">⚠️ মিল রেট পরিবর্তন করলে সকল বর্ডারের খরচের হিসাব সাথে সাথে আপডেট হয়ে যাবে।</p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">মাস</label>
-                                    <select className="w-full border p-3 rounded-lg bg-slate-50 font-semibold" value={manager.month} onChange={e => {
-                                        const m = e.target.value;
-                                        setManager({...manager, month: m});
-                                        dbService.updateManager(manager.username, { month: m });
-                                    }}>
-                                        {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">বছর</label>
-                                    <select className="w-full border p-3 rounded-lg bg-slate-50 font-semibold" value={manager.year} onChange={e => {
-                                        const y = parseInt(e.target.value);
-                                        setManager({...manager, year: y});
-                                        dbService.updateManager(manager.username, { year: y });
-                                    }}>
-                                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="pt-8 mt-8 border-t border-slate-100">
-                                <button onClick={async () => {
-                                    if(window.confirm("সতর্কতা: আপনি কি নিশ্চিত যে আপনি সম্পূর্ণ সিস্টেম মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।")) {
-                                        await dbService.deleteSystem(manager.username);
-                                        handleLogout();
-                                    }
-                                }} className="w-full bg-red-50 text-red-600 p-4 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2 border border-red-100">
-                                    <Trash2 size={20}/> সম্পূর্ণ ডাটাবেস রিসেট করুন
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                        {/* Edit Modal */}
+                        {editingBorder && (
+                            <BorderDetailModal 
+                                border={editingBorder} 
+                                onClose={() => setEditingBorder(null)}
+                                onUpdateDeposits={(deposits: Deposit[]) => handleUpdateBorder(editingBorder.id, { deposits })}
+                                onUpdateRice={(riceDeposits: RiceDeposit[]) => handleUpdateBorder(editingBorder.id, { riceDeposits })}
+                                onUpdateExtra={(extraCost: number) => handleUpdateBorder(editingBorder.id, { extraCost })}
+                                onUpdateGuest={(guestCost: number) => handleUpdateBorder(editingBorder.id, { guestCost })}
+                                onDeleteBorder={handleDeleteBorder}
+                            />
+                        )}
+                    </Layout>
+                ) : (
+                    <LoginRegister setManager={setManager} setBorderView={handleSetBorderView} />
                 )}
-            </div>
-        </div>
-
-        {/* Edit Modal */}
-        {editingBorder && (
-            <BorderDetailModal 
-                border={editingBorder} 
-                onClose={() => setEditingBorder(null)}
-                onUpdateDeposits={(deposits: Deposit[]) => handleUpdateBorder(editingBorder.id, { deposits })}
-                onUpdateRice={(riceDeposits: RiceDeposit[]) => handleUpdateBorder(editingBorder.id, { riceDeposits })}
-                onUpdateExtra={(extraCost: number) => handleUpdateBorder(editingBorder.id, { extraCost })}
-                onUpdateGuest={(guestCost: number) => handleUpdateBorder(editingBorder.id, { guestCost })}
-                onDeleteBorder={handleDeleteBorder}
-            />
+            </>
         )}
-      </Layout>
+      </>
   );
 };
 
