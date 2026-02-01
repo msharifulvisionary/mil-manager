@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0ea5e9" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1046/1046857.png">
+    <title>মেস ম্যানেজার প্রো</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Baloo+Da+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Hind Siliguri', 'sans-serif'],
+              baloo: ['Baloo Da 2', 'cursive'],
+            },
+            colors: {
+              primary: '#0ea5e9', // Sky 500
+              secondary: '#64748b', // Slate 500
+              accent: '#10b981', // Emerald 500
+              danger: '#ef4444', // Red 500
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body { font-family: 'Hind Siliguri', sans-serif; background-color: #f1f5f9; }
+      /* Hide scrollbar for print/capture areas but keep functionality */
+      .print-area {
+        background: white;
+      }
+      input, select, textarea {
+        font-size: 16px; /* Prevents zoom on iPhone */
+      }
+      .font-baloo { font-family: 'Baloo Da 2', cursive; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "html2canvas": "https://esm.sh/html2canvas@^1.4.1",
+    "jspdf": "https://esm.sh/jspdf@^4.0.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "firebase/": "https://esm.sh/firebase@^12.8.0/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
