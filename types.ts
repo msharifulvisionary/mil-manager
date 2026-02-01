@@ -35,6 +35,13 @@ export interface SystemDaily {
   [day: number]: SystemDailyEntry;
 }
 
+// New: Bazaar Schedule Entry
+export interface BazaarShift {
+  date: number; // Day of the month
+  borderId: string; // Empty string if unassigned
+  borderName: string;
+}
+
 export interface Border {
   id: string; // Firestore Doc ID
   name: string;
@@ -65,6 +72,9 @@ export interface Manager {
 
   // New: System wide daily meal/rice tracking (Cook's View)
   systemDaily?: SystemDaily; 
+  
+  // New: Bazaar Schedule
+  bazaarSchedule?: { [day: number]: BazaarShift };
 }
 
 export interface Expense {

@@ -4,10 +4,10 @@ import {
   Users, FileText, ShoppingCart, Settings, LogOut, 
   Trash2, PlusCircle, Edit2, Save, X, Activity, DollarSign, Calendar, ChevronRight,
   Copy, UserCircle, Phone, Droplet, LayoutDashboard, Utensils, Eye, EyeOff, List, ArrowRight, ShieldCheck, ClipboardList,
-  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook
+  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays
 } from 'lucide-react';
 
-import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry } from './types';
+import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift } from './types';
 import * as dbService from './services/firebaseService';
 import Layout from './components/Layout';
 import Reports from './components/Reports';
@@ -28,8 +28,7 @@ const DeveloperModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 <div className="h-32 bg-gradient-to-r from-primary to-blue-600 relative">
                     <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                          <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-200 shadow-lg overflow-hidden flex items-center justify-center">
-                            {/* Placeholder Avatar if no image provided */}
-                             <span className="text-3xl font-bold text-slate-400">SI</span>
+                             <img src="https://i.imgur.com/mm2jLrd.png" alt="Developer" className="w-full h-full object-cover" />
                          </div>
                     </div>
                 </div>
@@ -214,6 +213,188 @@ const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick:
 };
 
 // --- SUB-COMPONENTS ---
+
+// New: Bazaar Schedule Component
+const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate }: { manager: Manager, borders: Border[], isManager: boolean, currentUser?: Border, onUpdate: (m: Manager) => void }) => {
+    const [interval, setInterval] = useState(2);
+    const [startDay, setStartDay] = useState(1);
+    
+    // Sort schedule by date
+    const sortedDays = Object.values(manager.bazaarSchedule || {}).sort((a, b) => a.date - b.date);
+
+    // Helpers
+    const getMonthIndex = (monthName: string) => {
+        const idx = MONTHS.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
+        return idx !== -1 ? idx : 0; // Default to Jan if not found
+    };
+    
+    const getDayName = (day: number) => {
+        const date = new Date(manager.year, getMonthIndex(manager.month), day);
+        return date.toLocaleDateString('bn-BD', { weekday: 'long' });
+    };
+
+    // Manager Action: Generate Schedule
+    const generateSchedule = async () => {
+        if(!window.confirm("সতর্কতা: এটি আগের বাজার লিস্ট মুছে নতুন লিস্ট তৈরি করবে। আপনি কি নিশ্চিত?")) return;
+
+        const monthIdx = getMonthIndex(manager.month);
+        const daysInMonth = new Date(manager.year, monthIdx + 1, 0).getDate();
+        const newSchedule: { [day: number]: BazaarShift } = {};
+
+        // Force convert to numbers to avoid string concatenation
+        const start = Number(startDay);
+        const intv = Number(interval);
+
+        for (let d = start; d <= daysInMonth; d += intv) {
+            newSchedule[d] = { date: d, borderId: '', borderName: '' };
+        }
+
+        const updatedManager = { ...manager, bazaarSchedule: newSchedule };
+        try {
+            await dbService.updateManager(manager.username, { bazaarSchedule: newSchedule });
+            // Important: Call onUpdate to update parent state immediately
+            onUpdate(updatedManager);
+            alert("নতুন বাজার শিডিউল তৈরি হয়েছে!");
+        } catch(e) { 
+            console.error(e);
+            alert("সমস্যা হয়েছে! ইন্টারনেট কানেকশন চেক করুন।"); 
+        }
+    };
+
+    // Manager Action: Assign Border
+    const assignBorder = async (day: number, borderId: string) => {
+        const border = borders.find(b => b.id === borderId);
+        const updatedSchedule = { 
+            ...manager.bazaarSchedule, 
+            [day]: { 
+                date: day, 
+                borderId: borderId, 
+                borderName: border ? border.name : '' 
+            } 
+        };
+        
+        // If borderId is empty, clear it
+        if(!borderId) {
+             updatedSchedule[day] = { date: day, borderId: '', borderName: '' };
+        }
+
+        try {
+            await dbService.updateManager(manager.username, { bazaarSchedule: updatedSchedule });
+            onUpdate({ ...manager, bazaarSchedule: updatedSchedule });
+        } catch(e) { alert("আপডেট ব্যর্থ হয়েছে!"); }
+    };
+
+    // Border Action: Book Slot
+    const bookSlot = async (day: number) => {
+        if(!currentUser) return;
+        if(!window.confirm(`${day} তারিখে বাজার করার দায়িত্ব নিতে চান?`)) return;
+
+        const updatedSchedule = {
+            ...manager.bazaarSchedule,
+            [day]: {
+                date: day,
+                borderId: currentUser.id,
+                borderName: currentUser.name
+            }
+        };
+
+        try {
+            await dbService.updateManager(manager.username, { bazaarSchedule: updatedSchedule });
+            onUpdate({ ...manager, bazaarSchedule: updatedSchedule });
+            alert("আপনার নাম যুক্ত হয়েছে!");
+        } catch(e) { alert("সমস্যা হয়েছে!"); }
+    };
+
+    return (
+        <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4 md:p-6 animate-fade-in">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800 mb-6 border-b pb-4">
+                <CalendarDays className="text-primary"/> বাজার লিস্ট (শিডিউল)
+            </h2>
+
+            {/* Manager Controls */}
+            {isManager && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 flex flex-col md:flex-row gap-4 items-end">
+                    <div className="w-full md:w-auto">
+                        <label className="text-xs font-bold text-slate-600 block mb-1">কত দিন পর পর?</label>
+                        <select value={interval} onChange={e => setInterval(parseInt(e.target.value))} className="w-full md:w-32 p-2 border rounded font-bold">
+                            <option value={1}>প্রতিদিন</option>
+                            <option value={2}>২ দিন পর পর</option>
+                            <option value={3}>৩ দিন পর পর</option>
+                            <option value={4}>৪ দিন পর পর</option>
+                            <option value={5}>৫ দিন পর পর</option>
+                        </select>
+                    </div>
+                    <div className="w-full md:w-auto">
+                        <label className="text-xs font-bold text-slate-600 block mb-1">শুরু হবে কত তারিখে?</label>
+                        <input type="number" min="1" max="31" value={startDay} onChange={e => setStartDay(parseInt(e.target.value))} className="w-full md:w-32 p-2 border rounded font-bold" />
+                    </div>
+                    <button onClick={generateSchedule} className="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700 w-full md:w-auto">
+                        অটোমেটিক লিস্ট তৈরি করুন
+                    </button>
+                </div>
+            )}
+
+            {/* Schedule List */}
+            <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-slate-800 text-white">
+                        <tr>
+                            <th className="p-3">তারিখ & বার</th>
+                            <th className="p-3">বাজারকারী (নাম)</th>
+                            {isManager && <th className="p-3 text-center">অ্যাকশন</th>}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {sortedDays.length === 0 ? (
+                            <tr><td colSpan={3} className="p-8 text-center text-slate-400">কোন শিডিউল নেই। ম্যানেজার জেনারেট করুন।</td></tr>
+                        ) : (
+                            sortedDays.map((shift) => (
+                                <tr key={shift.date} className="hover:bg-slate-50 transition-colors">
+                                    <td className="p-3">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-lg font-baloo text-slate-800">{shift.date} তারিখ</span>
+                                            <span className="text-xs text-slate-500 bg-slate-200 px-2 py-0.5 rounded w-fit">{getDayName(shift.date)}</span>
+                                        </div>
+                                    </td>
+                                    <td className="p-3">
+                                        {shift.borderId ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                                    {shift.borderName?.charAt(0)}
+                                                </div>
+                                                <span className="font-bold text-slate-700">{shift.borderName}</span>
+                                            </div>
+                                        ) : (
+                                            !isManager && currentUser ? (
+                                                <button onClick={() => bookSlot(shift.date)} className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-bold hover:bg-green-200 border border-green-200 transition-colors">
+                                                    আমি বাজার করবো (Book)
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-slate-400 italic">এখনও ফাঁকা আছে</span>
+                                            )
+                                        )}
+                                    </td>
+                                    {isManager && (
+                                        <td className="p-3 text-center">
+                                            <select 
+                                                value={shift.borderId || ''} 
+                                                onChange={(e) => assignBorder(shift.date, e.target.value)}
+                                                className="p-2 border rounded text-xs bg-white focus:ring-2 focus:ring-primary outline-none"
+                                            >
+                                                <option value="">-- নির্বাচন করুন --</option>
+                                                {borders.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                            </select>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
 
 // New: System Daily Entry Component
 const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdate: (m: Manager) => void }) => {
@@ -720,7 +901,8 @@ const BorderDetailModal = ({
             <div className="bg-white rounded-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative shadow-2xl">
                 <button onClick={onClose} className="absolute top-4 right-4 bg-slate-100 p-2 rounded-full hover:bg-slate-200 transition-colors"><X size={20} /></button>
                 <div className="p-6 border-b">
-                    <h2 className="text-2xl font-bold text-slate-800">ম্যানেজার : <span className="text-primary">{border.name}</span></h2>
+                    {/* Fixed Text Label */}
+                    <h2 className="text-2xl font-bold text-slate-800">ম্যানেজ : <span className="text-primary">{border.name}</span></h2>
                 </div>
                 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -937,8 +1119,8 @@ const App: React.FC = () => {
   
   const [borders, setBorders] = useState<Border[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'>('dashboard');
-  const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'>('overview');
+  const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'|'schedule'>('dashboard');
+  const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'>('overview');
   
   const [editingBorder, setEditingBorder] = useState<Border | null>(null);
   const [profileEdit, setProfileEdit] = useState(false);
@@ -1112,9 +1294,9 @@ const App: React.FC = () => {
                         onDeveloperClick={() => setShowDevModal(true)}
                     >
                          <div className="flex bg-white p-1 rounded mb-6 border overflow-x-auto sticky top-20 z-20 shadow-sm">
-                             {['overview','meals','market','profile'].map(v => (
+                             {['overview','meals','market','schedule','profile'].map(v => (
                                  <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500'}`}>
-                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : 'প্রোফাইল'}
+                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : 'প্রোফাইল'}
                                  </button>
                              ))}
                          </div>
@@ -1223,6 +1405,16 @@ const App: React.FC = () => {
                               </div>
                          )}
 
+                         {activeBorderTab === 'schedule' && (
+                             <BazaarSchedulePage 
+                                manager={managerInfoForBorder} 
+                                borders={borders} 
+                                isManager={false} 
+                                currentUser={borderView}
+                                onUpdate={(m) => setManagerInfoForBorder(m)}
+                             />
+                         )}
+
                          {activeBorderTab === 'profile' && (
                               <div className="bg-white rounded-xl shadow border p-6 max-w-lg mx-auto">
                                   <h3 className="font-bold mb-4">প্রোফাইল আপডেট</h3>
@@ -1255,6 +1447,7 @@ const App: React.FC = () => {
                                     {[
                                         {id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard},
                                         {id: 'borders', label: 'বর্ডার তালিকা', icon: Users},
+                                        {id: 'schedule', label: 'বাজার লিস্ট', icon: CalendarDays},
                                         {id: 'daily', label: 'দৈনিক মিল', icon: Calendar},
                                         {id: 'system', label: 'বাবুর্চি হিসাব', icon: ClipboardList},
                                         {id: 'market', label: 'বাজার খরচ', icon: ShoppingCart},
@@ -1283,6 +1476,7 @@ const App: React.FC = () => {
                                     </div>
                                 )}
                                 {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} /></div>}
+                                {activeTab === 'schedule' && <div className="animate-fade-in"><BazaarSchedulePage manager={manager} borders={borders} isManager={true} currentUser={undefined} onUpdate={(m) => setManager(m)} /></div>}
                                 {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} /></div>}
                                 {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => setManager(m)} /></div>}
                                 {activeTab === 'market' && <div className="animate-fade-in"><MarketView expenses={expenses} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onUpdate={handleUpdateExpense} /></div>}

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Border, Manager, Expense, SystemDailyEntry } from '../types';
+import { Border, Manager, Expense, SystemDailyEntry, MONTHS, BazaarShift } from '../types';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Download, Image as ImageIcon } from 'lucide-react';
@@ -19,6 +19,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
   const extraMarketRef = useRef<HTMLDivElement>(null);
   const borderListRef = useRef<HTMLDivElement>(null);
   const systemDailyRef = useRef<HTMLDivElement>(null);
+  const bazaarScheduleRef = useRef<HTMLDivElement>(null);
 
   const downloadReport = async (ref: React.RefObject<HTMLDivElement>, filename: string, type: 'pdf' | 'image', orientation: 'p'|'l' = 'l') => {
     if (!ref.current) return;
@@ -100,6 +101,17 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
   }
   const sysTotals = getSystemDailyTotals();
 
+  // Helper for Bazaar Schedule
+  const getMonthIndex = (monthName: string) => {
+      const idx = MONTHS.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
+      return idx !== -1 ? idx : 0;
+  };
+  const getDayName = (day: number) => {
+      const date = new Date(manager.year, getMonthIndex(manager.month), day);
+      return date.toLocaleDateString('bn-BD', { weekday: 'long' });
+  };
+  const sortedBazaarSchedule = manager.bazaarSchedule ? (Object.values(manager.bazaarSchedule) as BazaarShift[]).sort((a,b) => a.date - b.date) : [];
+
   const ReportCard = ({ title, desc, onPdf, onImg }: any) => (
       <div className="bg-white p-5 rounded-lg shadow-md border-t-4 border-primary hover:shadow-lg transition-all group">
           <h3 className="text-lg font-bold mb-1 text-slate-800 group-hover:text-primary transition-colors">{title}</h3>
@@ -141,6 +153,10 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
         <ReportCard title="দৈনিক মিলের হিসাব" desc="বর্ডার ভিত্তিক দৈনিক মিলের তালিকা।" onPdf={() => downloadReport(dailyMealRef, `Daily_Meal_${manager.month}`, 'pdf', 'l')} onImg={() => downloadReport(dailyMealRef, `Daily_Meal_${manager.month}`, 'image', 'l')} />
         <ReportCard title="মাসিক চালের হিসাব" desc="চাল জমা, খাওয়া ও ব্যালেন্স।" onPdf={() => downloadReport(monthlyRiceRef, `Monthly_Rice_${manager.month}`, 'pdf', 'p')} onImg={() => downloadReport(monthlyRiceRef, `Monthly_Rice_${manager.month}`, 'image', 'p')} />
         <ReportCard title="মাসিক মিল ও টাকা" desc="সম্পূর্ণ আর্থিক বিবরণী ও ব্যালেন্স।" onPdf={() => downloadReport(monthlyCostRef, `Monthly_Final_${manager.month}`, 'pdf', 'l')} onImg={() => downloadReport(monthlyCostRef, `Monthly_Final_${manager.month}`, 'image', 'l')} />
+        
+        {/* New Report */}
+        <ReportCard title="বাজার লিস্ট (শিডিউল)" desc="মাসের বাজার করার শিডিউল।" onPdf={() => downloadReport(bazaarScheduleRef, `Bazaar_Schedule_${manager.month}`, 'pdf', 'p')} onImg={() => downloadReport(bazaarScheduleRef, `Bazaar_Schedule_${manager.month}`, 'image', 'p')} />
+
       </div>
 
       {/* --- HIDDEN PRINT AREAS --- */}
@@ -415,6 +431,37 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 <p className="border-t border-black pt-1 w-40 font-semibold">ম্যানেজার স্বাক্ষর</p>
             </div>
         </div>
+      </div>
+      
+      {/* 9. Bazaar Schedule Report */}
+      <div style={{ display: 'none' }} ref={bazaarScheduleRef} className="bg-white p-8 w-[1000px] mx-auto">
+        <Header title="বাজার শিডিউল (লিস্ট)" />
+        <table className="w-full border-collapse text-sm border border-gray-800 text-center">
+            <thead>
+                <tr className="bg-slate-800 text-white">
+                    <th className="border border-gray-600 p-3">তারিখ</th>
+                    <th className="border border-gray-600 p-3">বার</th>
+                    <th className="border border-gray-600 p-3">বাজারকারী (নাম)</th>
+                    <th className="border border-gray-600 p-3">মন্তব্য / সিগনেচার</th>
+                </tr>
+            </thead>
+            <tbody>
+                {sortedBazaarSchedule.length === 0 ? (
+                    <tr><td colSpan={4} className="p-4">কোন শিডিউল নেই</td></tr>
+                ) : (
+                    sortedBazaarSchedule.map((shift: any) => (
+                        <tr key={shift.date} className="hover:bg-gray-50">
+                            <td className="border border-gray-600 p-3 font-bold text-lg">{shift.date}</td>
+                            <td className="border border-gray-600 p-3">{getDayName(shift.date)}</td>
+                            <td className="border border-gray-600 p-3 font-bold text-lg">
+                                {shift.borderName ? shift.borderName : <span className="text-gray-300">-- ফাঁকা --</span>}
+                            </td>
+                            <td className="border border-gray-600 p-3"></td>
+                        </tr>
+                    ))
+                )}
+            </tbody>
+        </table>
       </div>
 
     </div>
