@@ -4,10 +4,10 @@ import {
   Users, FileText, ShoppingCart, Settings, LogOut, 
   Trash2, PlusCircle, Edit2, Save, X, Activity, DollarSign, Calendar, ChevronRight,
   Copy, UserCircle, Phone, Droplet, LayoutDashboard, Utensils, Eye, EyeOff, List, ArrowRight, ShieldCheck, ClipboardList,
-  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays
+  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus
 } from 'lucide-react';
 
-import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift } from './types';
+import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper } from './types';
 import * as dbService from './services/firebaseService';
 import Layout from './components/Layout';
 import Reports from './components/Reports';
@@ -214,10 +214,12 @@ const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick:
 
 // --- SUB-COMPONENTS ---
 
-// New: Bazaar Schedule Component
+// New: Bazaar Schedule Component (Updated)
 const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate }: { manager: Manager, borders: Border[], isManager: boolean, currentUser?: Border, onUpdate: (m: Manager) => void }) => {
     const [interval, setInterval] = useState(2);
     const [startDay, setStartDay] = useState(1);
+    const [manualDate, setManualDate] = useState(1);
+    const [selectedBorderToAdd, setSelectedBorderToAdd] = useState('');
     
     // Sort schedule by date
     const sortedDays = Object.values(manager.bazaarSchedule || {}).sort((a, b) => a.date - b.date);
@@ -225,7 +227,7 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
     // Helpers
     const getMonthIndex = (monthName: string) => {
         const idx = MONTHS.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
-        return idx !== -1 ? idx : 0; // Default to Jan if not found
+        return idx !== -1 ? idx : 0;
     };
     
     const getDayName = (day: number) => {
@@ -233,7 +235,7 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
         return date.toLocaleDateString('bn-BD', { weekday: 'long' });
     };
 
-    // Manager Action: Generate Schedule
+    // Manager: Generate Schedule (Resets existing)
     const generateSchedule = async () => {
         if(!window.confirm("সতর্কতা: এটি আগের বাজার লিস্ট মুছে নতুন লিস্ট তৈরি করবে। আপনি কি নিশ্চিত?")) return;
 
@@ -241,69 +243,91 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
         const daysInMonth = new Date(manager.year, monthIdx + 1, 0).getDate();
         const newSchedule: { [day: number]: BazaarShift } = {};
 
-        // Force convert to numbers to avoid string concatenation
         const start = Number(startDay);
         const intv = Number(interval);
 
         for (let d = start; d <= daysInMonth; d += intv) {
-            newSchedule[d] = { date: d, borderId: '', borderName: '' };
+            newSchedule[d] = { date: d, shoppers: [] };
         }
 
+        updateSchedule(newSchedule);
+    };
+
+    // Manager: Add Single Date
+    const addSingleDate = () => {
+        const day = Number(manualDate);
+        if(!day || day < 1 || day > 31) return alert("সঠিক তারিখ দিন");
+        
+        const currentSchedule = { ...manager.bazaarSchedule };
+        if(currentSchedule[day]) return alert("এই তারিখটি ইতিমধ্যে আছে!");
+
+        currentSchedule[day] = { date: day, shoppers: [] };
+        updateSchedule(currentSchedule);
+        alert("তারিখ যুক্ত হয়েছে!");
+    };
+
+    // Manager: Delete Date
+    const deleteDate = (date: number) => {
+        if(!window.confirm(`${date} তারিখের বাজার বাতিল করতে চান?`)) return;
+        const currentSchedule = { ...manager.bazaarSchedule };
+        delete currentSchedule[date];
+        updateSchedule(currentSchedule);
+    };
+
+    // Manager: Add Shopper to Date
+    const addShopperToDate = (date: number, borderId: string) => {
+        if(!borderId) return;
+        const border = borders.find(b => b.id === borderId);
+        if(!border) return;
+
+        const currentSchedule = { ...manager.bazaarSchedule };
+        if(!currentSchedule[date]) return;
+
+        // Check duplicates
+        if(currentSchedule[date].shoppers.find(s => s.id === borderId)) return alert("এই মেম্বার ইতিমধ্যে যুক্ত আছে");
+
+        currentSchedule[date].shoppers.push({ id: border.id, name: border.name });
+        updateSchedule(currentSchedule);
+        setSelectedBorderToAdd(''); // reset selection
+    };
+
+    // Manager: Remove Shopper from Date
+    const removeShopperFromDate = (date: number, shopperId: string) => {
+        if(!window.confirm("মুছে ফেলতে চান?")) return;
+        const currentSchedule = { ...manager.bazaarSchedule };
+        if(!currentSchedule[date]) return;
+
+        currentSchedule[date].shoppers = currentSchedule[date].shoppers.filter(s => s.id !== shopperId);
+        updateSchedule(currentSchedule);
+    };
+
+    // Border: Join/Book Date
+    const bookSlot = (date: number) => {
+        if(!currentUser) return;
+        if(!window.confirm(`${date} তারিখে বাজার টিমে যুক্ত হতে চান?`)) return;
+
+        const currentSchedule = { ...manager.bazaarSchedule };
+        if(!currentSchedule[date]) return;
+
+        // Check if already joined
+        if(currentSchedule[date].shoppers.find(s => s.id === currentUser.id)) return alert("আপনি ইতিমধ্যে যুক্ত আছেন");
+
+        currentSchedule[date].shoppers.push({ id: currentUser.id, name: currentUser.name });
+        updateSchedule(currentSchedule);
+        alert("আপনি যুক্ত হয়েছেন!");
+    };
+
+    // Common Update Function
+    const updateSchedule = async (newSchedule: { [day: number]: BazaarShift }) => {
         const updatedManager = { ...manager, bazaarSchedule: newSchedule };
         try {
             await dbService.updateManager(manager.username, { bazaarSchedule: newSchedule });
-            // Important: Call onUpdate to update parent state immediately
             onUpdate(updatedManager);
-            alert("নতুন বাজার শিডিউল তৈরি হয়েছে!");
         } catch(e) { 
             console.error(e);
-            alert("সমস্যা হয়েছে! ইন্টারনেট কানেকশন চেক করুন।"); 
+            alert("আপডেট ব্যর্থ হয়েছে!"); 
         }
-    };
-
-    // Manager Action: Assign Border
-    const assignBorder = async (day: number, borderId: string) => {
-        const border = borders.find(b => b.id === borderId);
-        const updatedSchedule = { 
-            ...manager.bazaarSchedule, 
-            [day]: { 
-                date: day, 
-                borderId: borderId, 
-                borderName: border ? border.name : '' 
-            } 
-        };
-        
-        // If borderId is empty, clear it
-        if(!borderId) {
-             updatedSchedule[day] = { date: day, borderId: '', borderName: '' };
-        }
-
-        try {
-            await dbService.updateManager(manager.username, { bazaarSchedule: updatedSchedule });
-            onUpdate({ ...manager, bazaarSchedule: updatedSchedule });
-        } catch(e) { alert("আপডেট ব্যর্থ হয়েছে!"); }
-    };
-
-    // Border Action: Book Slot
-    const bookSlot = async (day: number) => {
-        if(!currentUser) return;
-        if(!window.confirm(`${day} তারিখে বাজার করার দায়িত্ব নিতে চান?`)) return;
-
-        const updatedSchedule = {
-            ...manager.bazaarSchedule,
-            [day]: {
-                date: day,
-                borderId: currentUser.id,
-                borderName: currentUser.name
-            }
-        };
-
-        try {
-            await dbService.updateManager(manager.username, { bazaarSchedule: updatedSchedule });
-            onUpdate({ ...manager, bazaarSchedule: updatedSchedule });
-            alert("আপনার নাম যুক্ত হয়েছে!");
-        } catch(e) { alert("সমস্যা হয়েছে!"); }
-    };
+    }
 
     return (
         <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4 md:p-6 animate-fade-in">
@@ -313,24 +337,40 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
 
             {/* Manager Controls */}
             {isManager && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 flex flex-col md:flex-row gap-4 items-end">
-                    <div className="w-full md:w-auto">
-                        <label className="text-xs font-bold text-slate-600 block mb-1">কত দিন পর পর?</label>
-                        <select value={interval} onChange={e => setInterval(parseInt(e.target.value))} className="w-full md:w-32 p-2 border rounded font-bold">
-                            <option value={1}>প্রতিদিন</option>
-                            <option value={2}>২ দিন পর পর</option>
-                            <option value={3}>৩ দিন পর পর</option>
-                            <option value={4}>৪ দিন পর পর</option>
-                            <option value={5}>৫ দিন পর পর</option>
-                        </select>
+                <div className="space-y-4 mb-8">
+                    {/* Auto Generator */}
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col md:flex-row gap-4 items-end">
+                        <div className="w-full md:w-auto">
+                            <label className="text-xs font-bold text-slate-600 block mb-1">কত দিন পর পর?</label>
+                            <select value={interval} onChange={e => setInterval(parseInt(e.target.value))} className="w-full md:w-32 p-2 border rounded font-bold">
+                                <option value={1}>প্রতিদিন</option>
+                                <option value={2}>২ দিন পর পর</option>
+                                <option value={3}>৩ দিন পর পর</option>
+                                <option value={4}>৪ দিন পর পর</option>
+                                <option value={5}>৫ দিন পর পর</option>
+                            </select>
+                        </div>
+                        <div className="w-full md:w-auto">
+                            <label className="text-xs font-bold text-slate-600 block mb-1">শুরু হবে কত তারিখে?</label>
+                            <input type="number" min="1" max="31" value={startDay} onChange={e => setStartDay(parseInt(e.target.value))} className="w-full md:w-32 p-2 border rounded font-bold" />
+                        </div>
+                        <button onClick={generateSchedule} className="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700 w-full md:w-auto">
+                            অটোমেটিক জেনারেট
+                        </button>
                     </div>
-                    <div className="w-full md:w-auto">
-                        <label className="text-xs font-bold text-slate-600 block mb-1">শুরু হবে কত তারিখে?</label>
-                        <input type="number" min="1" max="31" value={startDay} onChange={e => setStartDay(parseInt(e.target.value))} className="w-full md:w-32 p-2 border rounded font-bold" />
+
+                    {/* Manual Add */}
+                    <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 flex items-center gap-4">
+                        <div className="flex-1">
+                            <label className="text-xs font-bold text-emerald-700 block mb-1">নতুন তারিখ যোগ করুন</label>
+                            <div className="flex gap-2">
+                                <input type="number" min="1" max="31" placeholder="তারিখ (1-31)" value={manualDate} onChange={e => setManualDate(parseInt(e.target.value))} className="w-full md:w-40 p-2 border rounded font-bold" />
+                                <button onClick={addSingleDate} className="bg-emerald-600 text-white px-3 py-2 rounded font-bold hover:bg-emerald-700 flex items-center gap-1">
+                                    <PlusCircle size={18}/> যোগ করুন
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <button onClick={generateSchedule} className="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700 w-full md:w-auto">
-                        অটোমেটিক লিস্ট তৈরি করুন
-                    </button>
                 </div>
             )}
 
@@ -339,51 +379,69 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
                 <table className="w-full text-sm text-left">
                     <thead className="bg-slate-800 text-white">
                         <tr>
-                            <th className="p-3">তারিখ & বার</th>
-                            <th className="p-3">বাজারকারী (নাম)</th>
-                            {isManager && <th className="p-3 text-center">অ্যাকশন</th>}
+                            <th className="p-3 w-1/4">তারিখ & বার</th>
+                            <th className="p-3 w-1/2">বাজারকারী টিম</th>
+                            {isManager && <th className="p-3 w-1/4 text-center">অ্যাকশন</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {sortedDays.length === 0 ? (
-                            <tr><td colSpan={3} className="p-8 text-center text-slate-400">কোন শিডিউল নেই। ম্যানেজার জেনারেট করুন।</td></tr>
+                            <tr><td colSpan={3} className="p-8 text-center text-slate-400">কোন শিডিউল নেই।</td></tr>
                         ) : (
                             sortedDays.map((shift) => (
                                 <tr key={shift.date} className="hover:bg-slate-50 transition-colors">
-                                    <td className="p-3">
+                                    <td className="p-3 align-top">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-lg font-baloo text-slate-800">{shift.date} তারিখ</span>
                                             <span className="text-xs text-slate-500 bg-slate-200 px-2 py-0.5 rounded w-fit">{getDayName(shift.date)}</span>
                                         </div>
                                     </td>
-                                    <td className="p-3">
-                                        {shift.borderId ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                                                    {shift.borderName?.charAt(0)}
-                                                </div>
-                                                <span className="font-bold text-slate-700">{shift.borderName}</span>
-                                            </div>
-                                        ) : (
-                                            !isManager && currentUser ? (
-                                                <button onClick={() => bookSlot(shift.date)} className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-bold hover:bg-green-200 border border-green-200 transition-colors">
-                                                    আমি বাজার করবো (Book)
-                                                </button>
+                                    <td className="p-3 align-top">
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {shift.shoppers && shift.shoppers.length > 0 ? (
+                                                shift.shoppers.map((shopper: BazaarShopper) => (
+                                                    <span key={shopper.id} className="inline-flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full font-bold border border-primary/20">
+                                                        {shopper.name}
+                                                        {isManager && (
+                                                            <button onClick={() => removeShopperFromDate(shift.date, shopper.id)} className="text-red-500 hover:text-red-700 ml-1">
+                                                                <X size={14}/>
+                                                            </button>
+                                                        )}
+                                                    </span>
+                                                ))
                                             ) : (
-                                                <span className="text-xs text-slate-400 italic">এখনও ফাঁকা আছে</span>
-                                            )
-                                        )}
+                                                <span className="text-slate-400 italic text-xs">কাউকে দেওয়া হয়নি</span>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Action Buttons inside cell */}
+                                        <div className="mt-2">
+                                            {!isManager && currentUser && !shift.shoppers?.find(s => s.id === currentUser.id) && (
+                                                <button onClick={() => bookSlot(shift.date)} className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-bold hover:bg-green-200 border border-green-200 transition-colors flex items-center gap-1 w-fit">
+                                                    <UserPlus size={14}/> আমি বাজার করবো
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                     {isManager && (
-                                        <td className="p-3 text-center">
-                                            <select 
-                                                value={shift.borderId || ''} 
-                                                onChange={(e) => assignBorder(shift.date, e.target.value)}
-                                                className="p-2 border rounded text-xs bg-white focus:ring-2 focus:ring-primary outline-none"
-                                            >
-                                                <option value="">-- নির্বাচন করুন --</option>
-                                                {borders.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                            </select>
+                                        <td className="p-3 text-center align-top">
+                                            <div className="flex flex-col gap-2 items-center">
+                                                <div className="flex gap-1 w-full max-w-[200px]">
+                                                    <select 
+                                                        className="p-1.5 border rounded text-xs bg-white w-full outline-none"
+                                                        onChange={(e) => {
+                                                            if(e.target.value) addShopperToDate(shift.date, e.target.value);
+                                                            e.target.value = ''; // reset ui
+                                                        }}
+                                                    >
+                                                        <option value="">+ মেম্বার যুক্ত করুন</option>
+                                                        {borders.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                                    </select>
+                                                </div>
+                                                <button onClick={() => deleteDate(shift.date)} className="text-red-500 hover:bg-red-50 p-2 rounded transition-colors flex items-center gap-1 text-xs font-bold border border-transparent hover:border-red-100">
+                                                    <Trash2 size={16}/> তারিখ ডিলিট
+                                                </button>
+                                            </div>
                                         </td>
                                     )}
                                 </tr>

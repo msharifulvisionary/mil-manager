@@ -441,7 +441,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 <tr className="bg-slate-800 text-white">
                     <th className="border border-gray-600 p-3">তারিখ</th>
                     <th className="border border-gray-600 p-3">বার</th>
-                    <th className="border border-gray-600 p-3">বাজারকারী (নাম)</th>
+                    <th className="border border-gray-600 p-3">বাজারকারী টিম</th>
                     <th className="border border-gray-600 p-3">মন্তব্য / সিগনেচার</th>
                 </tr>
             </thead>
@@ -449,12 +449,21 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 {sortedBazaarSchedule.length === 0 ? (
                     <tr><td colSpan={4} className="p-4">কোন শিডিউল নেই</td></tr>
                 ) : (
-                    sortedBazaarSchedule.map((shift: any) => (
+                    sortedBazaarSchedule.map((shift: BazaarShift) => (
                         <tr key={shift.date} className="hover:bg-gray-50">
                             <td className="border border-gray-600 p-3 font-bold text-lg">{shift.date}</td>
                             <td className="border border-gray-600 p-3">{getDayName(shift.date)}</td>
                             <td className="border border-gray-600 p-3 font-bold text-lg">
-                                {shift.borderName ? shift.borderName : <span className="text-gray-300">-- ফাঁকা --</span>}
+                                {shift.shoppers && shift.shoppers.length > 0 ? (
+                                    shift.shoppers.map((s, i) => (
+                                        <span key={s.id}>
+                                            {s.name}
+                                            {i < shift.shoppers.length - 1 ? ', ' : ''}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-gray-300">-- ফাঁকা --</span>
+                                )}
                             </td>
                             <td className="border border-gray-600 p-3"></td>
                         </tr>

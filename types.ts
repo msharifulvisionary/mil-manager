@@ -36,10 +36,14 @@ export interface SystemDaily {
 }
 
 // New: Bazaar Schedule Entry
+export interface BazaarShopper {
+  id: string;
+  name: string;
+}
+
 export interface BazaarShift {
   date: number; // Day of the month
-  borderId: string; // Empty string if unassigned
-  borderName: string;
+  shoppers: BazaarShopper[]; // Array of shoppers
 }
 
 export interface Border {
