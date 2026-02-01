@@ -218,8 +218,8 @@ const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick:
 const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate }: { manager: Manager, borders: Border[], isManager: boolean, currentUser?: Border, onUpdate: (m: Manager) => void }) => {
     const [interval, setInterval] = useState(2);
     const [startDay, setStartDay] = useState(1);
-    const [manualDate, setManualDate] = useState(1);
-    const [selectedBorderToAdd, setSelectedBorderToAdd] = useState('');
+    const [manualDateInput, setManualDateInput] = useState('');
+    const [editDateData, setEditDateData] = useState<{oldDate: number, newDateInput: string} | null>(null);
     
     // Sort schedule by date
     const sortedDays = Object.values(manager.bazaarSchedule || {}).sort((a, b) => a.date - b.date);
@@ -234,6 +234,18 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
         const date = new Date(manager.year, getMonthIndex(manager.month), day);
         return date.toLocaleDateString('bn-BD', { weekday: 'long' });
     };
+
+    const getFullDateString = (day: number) => {
+        const month = getMonthIndex(manager.month) + 1;
+        const mStr = month < 10 ? `0${month}` : month;
+        const dStr = day < 10 ? `0${day}` : day;
+        return `${manager.year}-${mStr}-${dStr}`;
+    }
+
+    const getDayFromDateString = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.getDate();
+    }
 
     // Manager: Generate Schedule (Resets existing)
     const generateSchedule = async () => {
@@ -255,15 +267,43 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
 
     // Manager: Add Single Date
     const addSingleDate = () => {
-        const day = Number(manualDate);
-        if(!day || day < 1 || day > 31) return alert("সঠিক তারিখ দিন");
+        if(!manualDateInput) return alert("তারিখ সিলেক্ট করুন");
+        const day = getDayFromDateString(manualDateInput);
         
         const currentSchedule = { ...manager.bazaarSchedule };
         if(currentSchedule[day]) return alert("এই তারিখটি ইতিমধ্যে আছে!");
 
         currentSchedule[day] = { date: day, shoppers: [] };
         updateSchedule(currentSchedule);
+        setManualDateInput('');
         alert("তারিখ যুক্ত হয়েছে!");
+    };
+
+    // Manager: Edit Date (Move Data)
+    const saveEditedDate = () => {
+        if(!editDateData || !editDateData.newDateInput) return;
+        const newDay = getDayFromDateString(editDateData.newDateInput);
+        const oldDay = editDateData.oldDate;
+
+        if(newDay === oldDay) {
+            setEditDateData(null);
+            return;
+        }
+
+        const currentSchedule = { ...manager.bazaarSchedule };
+        if(currentSchedule[newDay]) {
+            alert("এই তারিখটি ইতিমধ্যে লিস্টে আছে! দয়া করে অন্য তারিখ নিন বা আগেরটি ডিলিট করুন।");
+            return;
+        }
+
+        // Copy data to new key
+        currentSchedule[newDay] = { ...currentSchedule[oldDay], date: newDay };
+        // Delete old key
+        delete currentSchedule[oldDay];
+
+        updateSchedule(currentSchedule);
+        setEditDateData(null);
+        alert("তারিখ আপডেট হয়েছে!");
     };
 
     // Manager: Delete Date
@@ -274,7 +314,7 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
         updateSchedule(currentSchedule);
     };
 
-    // Manager: Add Shopper to Date
+    // Manager: Add Shopper to Date (FIXED for Mutability)
     const addShopperToDate = (date: number, borderId: string) => {
         if(!borderId) return;
         const border = borders.find(b => b.id === borderId);
@@ -283,12 +323,17 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
         const currentSchedule = { ...manager.bazaarSchedule };
         if(!currentSchedule[date]) return;
 
-        // Check duplicates
-        if(currentSchedule[date].shoppers.find(s => s.id === borderId)) return alert("এই মেম্বার ইতিমধ্যে যুক্ত আছে");
+        const shift = { ...currentSchedule[date] }; // Clone the shift object
+        const shoppers = [...(shift.shoppers || [])]; // Clone the shoppers array
 
-        currentSchedule[date].shoppers.push({ id: border.id, name: border.name });
+        // Check duplicates
+        if(shoppers.find(s => s.id === borderId)) return alert("এই মেম্বার ইতিমধ্যে যুক্ত আছে");
+
+        shoppers.push({ id: border.id, name: border.name });
+        shift.shoppers = shoppers; // Assign new array to shift
+        currentSchedule[date] = shift; // Assign new shift to schedule
+
         updateSchedule(currentSchedule);
-        setSelectedBorderToAdd(''); // reset selection
     };
 
     // Manager: Remove Shopper from Date
@@ -297,7 +342,10 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
         const currentSchedule = { ...manager.bazaarSchedule };
         if(!currentSchedule[date]) return;
 
-        currentSchedule[date].shoppers = currentSchedule[date].shoppers.filter(s => s.id !== shopperId);
+        const shift = { ...currentSchedule[date] };
+        shift.shoppers = shift.shoppers.filter(s => s.id !== shopperId);
+        currentSchedule[date] = shift;
+
         updateSchedule(currentSchedule);
     };
 
@@ -309,10 +357,16 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
         const currentSchedule = { ...manager.bazaarSchedule };
         if(!currentSchedule[date]) return;
 
-        // Check if already joined
-        if(currentSchedule[date].shoppers.find(s => s.id === currentUser.id)) return alert("আপনি ইতিমধ্যে যুক্ত আছেন");
+        const shift = { ...currentSchedule[date] };
+        const shoppers = [...(shift.shoppers || [])];
 
-        currentSchedule[date].shoppers.push({ id: currentUser.id, name: currentUser.name });
+        // Check if already joined
+        if(shoppers.find(s => s.id === currentUser.id)) return alert("আপনি ইতিমধ্যে যুক্ত আছেন");
+
+        shoppers.push({ id: currentUser.id, name: currentUser.name });
+        shift.shoppers = shoppers;
+        currentSchedule[date] = shift;
+
         updateSchedule(currentSchedule);
         alert("আপনি যুক্ত হয়েছেন!");
     };
@@ -330,10 +384,30 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4 md:p-6 animate-fade-in">
+        <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4 md:p-6 animate-fade-in relative">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800 mb-6 border-b pb-4">
                 <CalendarDays className="text-primary"/> বাজার লিস্ট (শিডিউল)
             </h2>
+
+            {/* Edit Date Modal */}
+            {editDateData && (
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl animate-fade-in">
+                    <div className="bg-white p-6 rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm">
+                        <h3 className="font-bold text-lg mb-4 text-slate-800">তারিখ পরিবর্তন করুন</h3>
+                        <p className="text-sm text-slate-500 mb-2">বর্তমান: {editDateData.oldDate} তারিখ ({getDayName(editDateData.oldDate)})</p>
+                        <input 
+                            type="date" 
+                            className="w-full p-3 border rounded-lg font-bold mb-4"
+                            value={editDateData.newDateInput}
+                            onChange={(e) => setEditDateData({...editDateData, newDateInput: e.target.value})}
+                        />
+                        <div className="flex gap-2">
+                            <button onClick={() => setEditDateData(null)} className="flex-1 bg-slate-200 py-2 rounded font-bold text-slate-700">বন্ধ করুন</button>
+                            <button onClick={saveEditedDate} className="flex-1 bg-primary text-white py-2 rounded font-bold shadow">সেভ করুন</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Manager Controls */}
             {isManager && (
@@ -362,9 +436,14 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
                     {/* Manual Add */}
                     <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 flex items-center gap-4">
                         <div className="flex-1">
-                            <label className="text-xs font-bold text-emerald-700 block mb-1">নতুন তারিখ যোগ করুন</label>
+                            <label className="text-xs font-bold text-emerald-700 block mb-1">নতুন তারিখ যোগ করুন (ক্যালেন্ডার)</label>
                             <div className="flex gap-2">
-                                <input type="number" min="1" max="31" placeholder="তারিখ (1-31)" value={manualDate} onChange={e => setManualDate(parseInt(e.target.value))} className="w-full md:w-40 p-2 border rounded font-bold" />
+                                <input 
+                                    type="date" 
+                                    value={manualDateInput} 
+                                    onChange={e => setManualDateInput(e.target.value)} 
+                                    className="w-full md:w-auto p-2 border rounded font-bold flex-1" 
+                                />
                                 <button onClick={addSingleDate} className="bg-emerald-600 text-white px-3 py-2 rounded font-bold hover:bg-emerald-700 flex items-center gap-1">
                                     <PlusCircle size={18}/> যোগ করুন
                                 </button>
@@ -428,19 +507,24 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
                                             <div className="flex flex-col gap-2 items-center">
                                                 <div className="flex gap-1 w-full max-w-[200px]">
                                                     <select 
-                                                        className="p-1.5 border rounded text-xs bg-white w-full outline-none"
+                                                        className="p-1.5 border rounded text-xs bg-white w-full outline-none focus:ring-1"
+                                                        value=""
                                                         onChange={(e) => {
                                                             if(e.target.value) addShopperToDate(shift.date, e.target.value);
-                                                            e.target.value = ''; // reset ui
                                                         }}
                                                     >
                                                         <option value="">+ মেম্বার যুক্ত করুন</option>
                                                         {borders.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                                                     </select>
                                                 </div>
-                                                <button onClick={() => deleteDate(shift.date)} className="text-red-500 hover:bg-red-50 p-2 rounded transition-colors flex items-center gap-1 text-xs font-bold border border-transparent hover:border-red-100">
-                                                    <Trash2 size={16}/> তারিখ ডিলিট
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => setEditDateData({ oldDate: shift.date, newDateInput: getFullDateString(shift.date) })} className="text-blue-500 hover:bg-blue-50 p-2 rounded transition-colors flex items-center gap-1 text-xs font-bold border border-transparent hover:border-blue-100">
+                                                        <Edit2 size={16}/> এডিট
+                                                    </button>
+                                                    <button onClick={() => deleteDate(shift.date)} className="text-red-500 hover:bg-red-50 p-2 rounded transition-colors flex items-center gap-1 text-xs font-bold border border-transparent hover:border-red-100">
+                                                        <Trash2 size={16}/> ডিলিট
+                                                    </button>
+                                                </div>
                                             </div>
                                         </td>
                                     )}
