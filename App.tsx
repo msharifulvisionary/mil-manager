@@ -930,13 +930,13 @@ const App: React.FC = () => {
   if (!hasStarted) return <LandingPage onStart={() => setHasStarted(true)} />;
 
   if (borderView && managerInfoForBorder) {
-      const totalMeals = Object.values(borderView.dailyUsage).reduce((a: number, b: any) => a + (b.meals||0), 0);
-      const totalRice = Object.values(borderView.dailyUsage).reduce((a: number, b: any) => a + (b.rice||0), 0);
-      const totalDeposit = borderView.deposits.reduce((a,b) => a + b.amount, 0);
-      const totalRiceDeposit = borderView.riceDeposits.reduce((a,b) => a + (b.amount||0), 0);
-      const totalSharedExtra = expenses.filter(e => e.type === 'extra').reduce((a,b) => a + b.amount, 0);
+      const totalMeals = Object.values(borderView.dailyUsage).reduce((a: number, b: any) => a + (Number(b.meals)||0), 0);
+      const totalRice = Object.values(borderView.dailyUsage).reduce((a: number, b: any) => a + (Number(b.rice)||0), 0);
+      const totalDeposit = borderView.deposits.reduce((a,b) => a + Number(b.amount), 0);
+      const totalRiceDeposit = borderView.riceDeposits.reduce((a,b) => a + (Number(b.amount)||0), 0);
+      const totalSharedExtra = expenses.filter(e => e.type === 'extra').reduce((a,b) => a + Number(b.amount), 0);
       const myShareExtra = borders.length > 0 ? totalSharedExtra / borders.length : 0;
-      const totalCost = (totalMeals * managerInfoForBorder.mealRate) + borderView.extraCost + borderView.guestCost + myShareExtra;
+      const totalCost = (totalMeals * Number(managerInfoForBorder.mealRate)) + Number(borderView.extraCost) + Number(borderView.guestCost) + myShareExtra;
       const balance = totalDeposit - totalCost;
 
       return (
@@ -978,7 +978,7 @@ const App: React.FC = () => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                                 <div className="p-3 bg-slate-50 rounded">
                                     <p className="text-xs text-slate-500">মিল খরচ</p>
-                                    <p className="font-bold font-baloo">{(totalMeals * managerInfoForBorder.mealRate).toFixed(0)} ৳</p>
+                                    <p className="font-bold font-baloo">{(totalMeals * Number(managerInfoForBorder.mealRate)).toFixed(0)} ৳</p>
                                 </div>
                                 <div className="p-3 bg-blue-50 rounded">
                                     <p className="text-xs text-slate-500">গেস্ট খরচ</p>
