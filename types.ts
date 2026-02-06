@@ -57,6 +57,13 @@ export interface Border {
   dailyUsage: DailyUsage;
   extraCost: number; // Personal Extra / Fine
   guestCost: number; // New: Guest Meal Cost
+  order?: number; // New: For shuffling/sorting
+}
+
+export interface RiceConfig {
+  morningDiff: number; // e.g., -2 (Meals - 2)
+  lunchDiff: number;
+  dinnerDiff: number;
 }
 
 export interface Manager {
@@ -76,6 +83,8 @@ export interface Manager {
 
   // New: System wide daily meal/rice tracking (Cook's View)
   systemDaily?: SystemDaily; 
+  riceConfig?: RiceConfig; // New: Config for auto rice calc
+  prevRiceBalance?: number; // New: Previous month rice balance
   
   // New: Bazaar Schedule
   bazaarSchedule?: { [day: number]: BazaarShift };

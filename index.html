@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Baloo+Da+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -29,6 +30,7 @@
     </script>
     <style>
       body { font-family: 'Hind Siliguri', sans-serif; background-color: #f1f5f9; }
+      .dark body { background-color: #0f172a; color: #e2e8f0; }
       /* Hide scrollbar for print/capture areas but keep functionality */
       .print-area {
         background: white;
@@ -37,6 +39,17 @@
         font-size: 16px; /* Prevents zoom on iPhone */
       }
       .font-baloo { font-family: 'Baloo Da 2', cursive; }
+      
+      /* Dark mode overrides */
+      .dark .bg-white { background-color: #1e293b; color: #e2e8f0; }
+      .dark .text-slate-800 { color: #f1f5f9; }
+      .dark .text-slate-700 { color: #e2e8f0; }
+      .dark .text-slate-600 { color: #cbd5e1; }
+      .dark .text-slate-500 { color: #94a3b8; }
+      .dark .border-slate-200 { border-color: #334155; }
+      .dark .bg-slate-50 { background-color: #0f172a; }
+      .dark .bg-slate-100 { background-color: #334155; }
+      .dark input, .dark select { background-color: #334155; border-color: #475569; color: white; }
     </style>
   <script type="importmap">
 {

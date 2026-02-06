@@ -111,7 +111,8 @@ export const getBorders = async (managerId: string): Promise<Border[]> => {
     const data = doc.data();
     borders.push({ id: doc.id, guestCost: 0, ...data } as Border);
   });
-  return borders.sort((a,b) => a.name.localeCompare(b.name));
+  // Sort by 'order' field if available, otherwise fallback to name or insertion
+  return borders.sort((a,b) => (a.order || 0) - (b.order || 0));
 };
 
 export const updateBorder = async (borderId: string, data: Partial<Border>) => {

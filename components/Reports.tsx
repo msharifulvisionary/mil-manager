@@ -78,9 +78,10 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
     const mealsEaten = getTotalMeals(b);
     const riceEaten = getTotalRice(b);
     
-    const mealCost = mealsEaten * manager.mealRate;
+    // Updated Logic: Round Meal Cost and Exclude Shared Extra
+    const mealCost = Math.round(mealsEaten * manager.mealRate);
     const sharedExtraCost = borders.length > 0 ? (totalExtraBazaar / borders.length) : 0;
-    const totalCost = mealCost + b.extraCost + b.guestCost + sharedExtraCost;
+    const totalCost = mealCost + b.extraCost + b.guestCost; // Shared extra excluded
     
     const moneyBalance = totalMoneyDeposit - totalCost; 
     const riceBalance = totalRiceDeposit - riceEaten;
@@ -391,7 +392,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     <th className="border border-gray-600 p-2 bg-emerald-700">টাকা জমা</th>
                     <th className="border border-gray-600 p-2">মোট মিল</th>
                     <th className="border border-gray-600 p-2">মিল খরচ</th>
-                    <th className="border border-gray-600 p-2">অতিরিক্ত খরচ (নিজ+গেস্ট+বাজার)</th>
+                    <th className="border border-gray-600 p-2">অতিরিক্ত খরচ (নিজ+গেস্ট)</th>
                     <th className="border border-gray-600 p-2 bg-rose-700">মোট খরচ</th>
                     <th className="border border-gray-600 p-2 bg-blue-900">ম্যানেজার পাবে (ডিউ)</th>
                     <th className="border border-gray-600 p-2 bg-green-900">ম্যানেজার দিবে (ফেরত)</th>
@@ -400,8 +401,8 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
             <tbody>
                 {borders.map((b, idx) => {
                     const stats = calculateBorderStats(b);
-                    // Total Extra = Personal + Guest + Shared
-                    const totalExtraDisplay = b.extraCost + b.guestCost + stats.sharedExtraCost;
+                    // Total Extra = Personal + Guest (Shared extra is excluded)
+                    const totalExtraDisplay = b.extraCost + b.guestCost;
                     
                     return (
                         <tr key={b.id} className="text-center hover:bg-gray-50 text-gray-900">
