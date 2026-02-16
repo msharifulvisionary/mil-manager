@@ -482,8 +482,27 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
 
     const handleSave = async () => {
         try {
-            await dbService.updateManager(manager.username, { systemDaily: localData, riceConfig, prevRiceBalance: prevRice });
-            onUpdate({ ...manager, systemDaily: localData, riceConfig, prevRiceBalance: prevRice });
+            // Filter out empty entries before saving to keep database clean
+            const cleanedData = { ...localData };
+            Object.keys(cleanedData).forEach(day => {
+                const d = parseInt(day);
+                const entry = cleanedData[d];
+                const isEmpty = 
+                    (entry.morning?.meal === 0 || !entry.morning?.meal) && 
+                    (entry.morning?.rice === 0 || !entry.morning?.rice) &&
+                    (entry.lunch?.meal === 0 || !entry.lunch?.meal) && 
+                    (entry.lunch?.rice === 0 || !entry.lunch?.rice) &&
+                    (entry.dinner?.meal === 0 || !entry.dinner?.meal) && 
+                    (entry.dinner?.rice === 0 || !entry.dinner?.rice);
+                
+                if (isEmpty) {
+                    delete cleanedData[d];
+                }
+            });
+
+            await dbService.updateManager(manager.username, { systemDaily: cleanedData, riceConfig, prevRiceBalance: prevRice });
+            onUpdate({ ...manager, systemDaily: cleanedData, riceConfig, prevRiceBalance: prevRice });
+            setLocalData(cleanedData);
             alert("সংরক্ষিত হয়েছে!");
         } catch(e) { alert("এরর!"); }
     };
@@ -585,6 +604,8 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
     const calcMealRate = totalMeals > 0 ? (marketCost / totalMeals) : 0;
 
     const [showBorderList, setShowBorderList] = useState(false);
+    const [showDailyMealReport, setShowDailyMealReport] = useState(false);
+    const [showDailyRiceReport, setShowDailyRiceReport] = useState(false);
 
     const copyCreds = () => {
         const text = `মেস লগইন তথ্য:\nইউজারনেম: ${manager.username}\nপাসওয়ার্ড: ${manager.borderPassword}`;
@@ -623,8 +644,96 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
         )
     }
 
+    if (showDailyMealReport) {
+        return (
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in">
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">দৈনিক মিল আপডেট (১-{MONTHS.find((_, i) => MONTHS[i] === manager.month) ? new Date(manager.year, MONTHS.indexOf(manager.month) + 1, 0).getDate() : 31} তারিখ)</h2>
+                    <button onClick={() => setShowDailyMealReport(false)} className="bg-slate-100 text-slate-600 px-3 py-1 rounded hover:bg-slate-200">বন্ধ করুন</button>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-center text-sm border-collapse">
+                        <thead className="bg-slate-800 text-white">
+                            <tr>
+                                <th className="p-2 border border-slate-600">বর্ডার নাম</th>
+                                {Array.from({ length: new Date(manager.year, MONTHS.indexOf(manager.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                    <th key={d} className="p-1 border border-slate-600 text-[10px] min-w-[25px]">{d}</th>
+                                ))}
+                                <th className="p-2 border border-slate-600 bg-blue-700">মোট</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {borders.map(b => (
+                                <tr key={b.id} className="border-b hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700">
+                                    <td className="p-2 font-semibold text-left border dark:border-slate-600 sticky left-0 bg-white dark:bg-slate-800 z-10">{b.name}</td>
+                                    {Array.from({ length: new Date(manager.year, MONTHS.indexOf(manager.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                        <td key={d} className="p-1 border dark:border-slate-600 font-mono text-[11px]">
+                                            {b.dailyUsage[d]?.meals || '-'}
+                                        </td>
+                                    ))}
+                                    <td className="p-2 font-bold border dark:border-slate-600 bg-blue-50 dark:bg-blue-900/20">
+                                        {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    }
+
+    if (showDailyRiceReport) {
+        return (
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in">
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">দৈনিক চাল আপডেট (১-{MONTHS.find((_, i) => MONTHS[i] === manager.month) ? new Date(manager.year, MONTHS.indexOf(manager.month) + 1, 0).getDate() : 31} তারিখ)</h2>
+                    <button onClick={() => setShowDailyRiceReport(false)} className="bg-slate-100 text-slate-600 px-3 py-1 rounded hover:bg-slate-200">বন্ধ করুন</button>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-center text-sm border-collapse">
+                        <thead className="bg-slate-800 text-white">
+                            <tr>
+                                <th className="p-2 border border-slate-600">বর্ডার নাম</th>
+                                {Array.from({ length: new Date(manager.year, MONTHS.indexOf(manager.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                    <th key={d} className="p-1 border border-slate-600 text-[10px] min-w-[25px]">{d}</th>
+                                ))}
+                                <th className="p-2 border border-slate-600 bg-orange-700">মোট</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {borders.map(b => (
+                                <tr key={b.id} className="border-b hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700">
+                                    <td className="p-2 font-semibold text-left border dark:border-slate-600 sticky left-0 bg-white dark:bg-slate-800 z-10">{b.name}</td>
+                                    {Array.from({ length: new Date(manager.year, MONTHS.indexOf(manager.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                        <td key={d} className="p-1 border dark:border-slate-600 font-mono text-[11px]">
+                                            {b.dailyUsage[d]?.rice || '-'}
+                                        </td>
+                                    ))}
+                                    <td className="p-2 font-bold border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/20">
+                                        {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0).toFixed(1)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 animate-fade-in">
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onClick={() => setShowDailyMealReport(true)} className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
+                    <Calendar size={24} /> দৈনিক মিল আপডেট
+                </button>
+                <button onClick={() => setShowDailyRiceReport(true)} className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
+                    <Utensils size={24} /> দৈনিক চাল আপডেট
+                </button>
+            </div>
+
             {/* Credentials Card */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-blue-100 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="text-center md:text-left">
@@ -1128,7 +1237,7 @@ const BorderDetailModal = ({
 // Login/Register Component
 const LoginRegister = ({ setManager, setBorderView }: any) => {
   const [isRegister, setIsRegister] = useState(false);
-  const [activeTab, setActiveTab] = useState<'manager' | 'border'>('manager');
+  const [activeTab, setActiveTab] = useState<'manager' | 'border'>('border');
   const [showPass, setShowPass] = useState(false);
   
   const [regForm, setRegForm] = useState<Manager>({ username: '', password: '', name: '', messName: '', year: 2025, month: MONTHS[0], mobile: '', mealRate: 0, borderUsername: '', borderPassword: '', bloodGroup: '' });
@@ -1192,8 +1301,8 @@ const LoginRegister = ({ setManager, setBorderView }: any) => {
       <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-xl max-w-md w-full animate-fade-in">
         <h1 className="text-3xl font-bold text-center text-primary mb-6 font-baloo">মেস ম্যানেজার প্রো</h1>
         <div className="flex mb-6 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
-          <button className={`flex-1 py-2 rounded font-bold ${activeTab === 'manager' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-500'}`} onClick={() => setActiveTab('manager')}>ম্যানেজার</button>
           <button className={`flex-1 py-2 rounded font-bold ${activeTab === 'border' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-500'}`} onClick={() => setActiveTab('border')}>বর্ডার</button>
+          <button className={`flex-1 py-2 rounded font-bold ${activeTab === 'manager' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-500'}`} onClick={() => setActiveTab('manager')}>ম্যানেজার</button>
         </div>
 
         {activeTab === 'manager' ? (
