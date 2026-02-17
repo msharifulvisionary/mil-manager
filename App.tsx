@@ -927,24 +927,28 @@ const DailyEntry = ({ borders, onSave, manager, onUpdateManager }: any) => {
     }, [selectedDay, borders]);
 
     const handleLocalChange = (borderId: string, field: 'meals' | 'rice', value: string) => {
-        let newRice = localUsage[borderId]?.rice;
-        
-        if (field === 'meals' && manager.autoRiceEnabled) {
-            const mealVal = parseFloat(value) || 0;
-            const rule = manager.autoRiceRules?.find((r: any) => r.meal === mealVal);
-            if (rule) {
-                newRice = rule.rice.toString();
+        setLocalUsage(prev => {
+            let newRice = prev[borderId]?.rice;
+            
+            if (field === 'meals' && manager.autoRiceEnabled) {
+                const mealVal = parseFloat(value) || 0;
+                const rule = manager.autoRiceRules?.find((r: any) => r.meal === mealVal);
+                if (rule) {
+                    newRice = rule.rice.toString();
+                }
+            } else if (field === 'rice') {
+                newRice = value;
             }
-        }
 
-        setLocalUsage(prev => ({
-            ...prev,
-            [borderId]: {
-                ...prev[borderId],
-                [field]: value,
-                rice: newRice
-            }
-        }));
+            return {
+                ...prev,
+                [borderId]: {
+                    ...prev[borderId],
+                    [field]: value,
+                    rice: newRice
+                }
+            };
+        });
     };
 
     const handleBlur = (border: Border, field: 'meals' | 'rice') => {
@@ -1068,6 +1072,29 @@ const DailyEntry = ({ borders, onSave, manager, onUpdateManager }: any) => {
 };
 
 // 4. MarketView component
+const formatBengaliDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const day = date.getDate();
+    const month = date.getMonth();
+    const year = date.getFullYear();
+
+    const bengaliMonths = [
+        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    ];
+
+    const bengaliDigits: { [key: string]: string } = {
+        '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'
+    };
+
+    const toBengaliDigits = (num: number) => {
+        return num.toString().split('').map(d => bengaliDigits[d] || d).join('');
+    };
+
+    return `${toBengaliDigits(day)} ${bengaliMonths[month]} ${toBengaliDigits(year)}`;
+};
+
 const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
     const [form, setForm] = useState<Partial<Expense>>({ date: new Date().toISOString().split('T')[0], type: 'market', amount: 0, shopper: '' });
     const [isEditing, setIsEditing] = useState(false);
@@ -1168,7 +1195,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                             {filteredExpenses.map((e: Expense) => (
                                 <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-700 group">
-                                    <td className="py-3 text-slate-600 dark:text-slate-300 font-baloo">{e.date}</td>
+                                    <td className="py-3 text-slate-600 dark:text-slate-300 font-baloo">{formatBengaliDate(e.date)}</td>
                                     <td className="py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${e.type === 'extra' ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}>
                                             {e.type === 'extra' ? 'অতিরিক্ত' : 'বাজার'}
