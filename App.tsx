@@ -909,41 +909,159 @@ const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, exp
 
 // ... (Rest of the components: DailyEntry, MarketView, BorderDetailModal, LoginRegister remain unchanged) ...
 // 3. Daily Entry
-const DailyEntry = ({ borders, onSave }: any) => {
+const DailyEntry = ({ borders, onSave, manager, onUpdateManager }: any) => {
     const days = Array.from({length: 31}, (_, i) => i + 1);
     const [selectedDay, setSelectedDay] = useState(new Date().getDate());
+    const [localUsage, setLocalUsage] = useState<{[borderId: string]: {meals: string, rice: string}}>({});
+    const [showAutoConfig, setShowAutoConfig] = useState(false);
+
+    useEffect(() => {
+        const initialLocal: any = {};
+        borders.forEach((b: Border) => {
+            initialLocal[b.id] = {
+                meals: (b.dailyUsage[selectedDay]?.meals || 0).toString(),
+                rice: (b.dailyUsage[selectedDay]?.rice || 0).toString()
+            };
+        });
+        setLocalUsage(initialLocal);
+    }, [selectedDay, borders]);
+
+    const handleLocalChange = (borderId: string, field: 'meals' | 'rice', value: string) => {
+        let newRice = localUsage[borderId]?.rice;
+        
+        if (field === 'meals' && manager.autoRiceEnabled) {
+            const mealVal = parseFloat(value) || 0;
+            const rule = manager.autoRiceRules?.find((r: any) => r.meal === mealVal);
+            if (rule) {
+                newRice = rule.rice.toString();
+            }
+        }
+
+        setLocalUsage(prev => ({
+            ...prev,
+            [borderId]: {
+                ...prev[borderId],
+                [field]: value,
+                rice: newRice
+            }
+        }));
+    };
+
+    const handleBlur = (border: Border, field: 'meals' | 'rice') => {
+        const meals = parseFloat(localUsage[border.id]?.meals) || 0;
+        const rice = parseFloat(localUsage[border.id]?.rice) || 0;
+        onSave(border, selectedDay, meals, rice);
+    };
+
+    const toggleAutoRice = async () => {
+        const newState = !manager.autoRiceEnabled;
+        await onUpdateManager({ autoRiceEnabled: newState });
+    };
+
+    const addRule = async () => {
+        const rules = [...(manager.autoRiceRules || []), { meal: 0, rice: 0 }];
+        await onUpdateManager({ autoRiceRules: rules });
+    };
+
+    const updateRule = async (index: number, field: 'meal' | 'rice', value: number) => {
+        const rules = [...(manager.autoRiceRules || [])];
+        rules[index] = { ...rules[index], [field]: value };
+        await onUpdateManager({ autoRiceRules: rules });
+    };
+
+    const removeRule = async (index: number) => {
+        const rules = (manager.autoRiceRules || []).filter((_: any, i: number) => i !== index);
+        await onUpdateManager({ autoRiceRules: rules });
+    };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 md:p-6">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-white"><Calendar className="text-primary"/> দৈনিক মিল ও চাল এন্ট্রি</h2>
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 p-2 rounded-lg">
-                    <label className="text-slate-600 dark:text-slate-300 font-medium">তারিখ:</label>
-                    <select value={selectedDay} onChange={e => setSelectedDay(parseInt(e.target.value))} className="bg-white dark:bg-slate-800 border p-1.5 rounded font-bold outline-none font-baloo dark:text-white">
-                        {days.map(d => <option key={d} value={d}>{d} তারিখ</option>)}
-                    </select>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {borders.map((b: Border) => (
-                    <div key={b.id} className="bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-4 shadow-sm hover:shadow-md flex flex-col gap-3">
-                        <div className="font-bold text-lg text-slate-800 dark:text-white border-b dark:border-slate-700 pb-2">{b.name}</div>
-                        <div className="flex justify-between items-center">
-                             <div className="flex flex-col gap-1 w-[48%]">
-                                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">মিল</span>
-                                <input type="number" step="0.5" className="w-full p-2 border rounded text-center font-bold text-blue-600 outline-none focus:ring-1 font-baloo dark:bg-slate-800"
-                                  defaultValue={b.dailyUsage[selectedDay]?.meals || 0}
-                                  onBlur={(e) => onSave(b, selectedDay, parseFloat(e.target.value) || 0, b.dailyUsage[selectedDay]?.rice || 0)} />
-                             </div>
-                             <div className="flex flex-col gap-1 w-[48%]">
-                                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">চাল (পট)</span>
-                                <input type="number" step="0.1" className="w-full p-2 border rounded text-center font-bold text-orange-600 outline-none focus:ring-1 font-baloo dark:bg-slate-800"
-                                  defaultValue={b.dailyUsage[selectedDay]?.rice || 0} 
-                                  onBlur={(e) => onSave(b, selectedDay, b.dailyUsage[selectedDay]?.meals || 0, parseFloat(e.target.value) || 0)} />
-                             </div>
+        <div className="space-y-4">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 md:p-6">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-white"><Calendar className="text-primary"/> দৈনিক মিল ও চাল এন্ট্রি</h2>
+                    
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button 
+                            onClick={() => setShowAutoConfig(!showAutoConfig)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-sm transition-colors ${manager.autoRiceEnabled ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}
+                        >
+                            <Settings size={16} /> অটো চাল হিসাব: {manager.autoRiceEnabled ? 'ON' : 'OFF'}
+                        </button>
+
+                        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 p-2 rounded-lg">
+                            <label className="text-slate-600 dark:text-slate-300 font-medium">তারিখ:</label>
+                            <select value={selectedDay} onChange={e => setSelectedDay(parseInt(e.target.value))} className="bg-white dark:bg-slate-800 border p-1.5 rounded font-bold outline-none font-baloo dark:text-white">
+                                {days.map(d => <option key={d} value={d}>{d} তারিখ</option>)}
+                            </select>
                         </div>
                     </div>
-                ))}
+                </div>
+
+                {showAutoConfig && (
+                    <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 animate-fade-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                <Activity size={18} className="text-primary" /> অটো চাল হিসাব সেটিংস
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-500">স্ট্যাটাস:</span>
+                                <button 
+                                    onClick={toggleAutoRice}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${manager.autoRiceEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${manager.autoRiceEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">এখানে মিল অনুযায়ী কত চাল হবে তা সেট করে দিন। মিল লিখলে অটো চালের হিসাব বসে যাবে।</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                {(manager.autoRiceRules || []).map((rule: any, idx: number) => (
+                                    <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg border dark:border-slate-700 shadow-sm">
+                                        <div className="flex-1">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400 block">মিল</label>
+                                            <input type="number" step="0.5" value={rule.meal} onChange={e => updateRule(idx, 'meal', parseFloat(e.target.value)||0)} className="w-full bg-transparent font-bold text-blue-600 outline-none" />
+                                        </div>
+                                        <ArrowRight size={14} className="text-slate-300" />
+                                        <div className="flex-1">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400 block">চাল</label>
+                                            <input type="number" step="0.1" value={rule.rice} onChange={e => updateRule(idx, 'rice', parseFloat(e.target.value)||0)} className="w-full bg-transparent font-bold text-orange-600 outline-none" />
+                                        </div>
+                                        <button onClick={() => removeRule(idx)} className="text-red-400 hover:text-red-600 p-1"><X size={16}/></button>
+                                    </div>
+                                ))}
+                                <button onClick={addRule} className="flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-400 hover:text-primary hover:border-primary transition-all font-bold text-sm">
+                                    <PlusCircle size={16} /> নিয়ম যোগ করুন
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {borders.map((b: Border) => (
+                        <div key={b.id} className="bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-4 shadow-sm hover:shadow-md flex flex-col gap-3">
+                            <div className="font-bold text-lg text-slate-800 dark:text-white border-b dark:border-slate-700 pb-2">{b.name}</div>
+                            <div className="flex justify-between items-center">
+                                 <div className="flex flex-col gap-1 w-[48%]">
+                                    <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">মিল</span>
+                                    <input type="number" step="0.5" className="w-full p-2 border rounded text-center font-bold text-blue-600 outline-none focus:ring-1 font-baloo dark:bg-slate-800"
+                                      value={localUsage[b.id]?.meals || ''}
+                                      onChange={(e) => handleLocalChange(b.id, 'meals', e.target.value)}
+                                      onBlur={() => handleBlur(b, 'meals')} />
+                                 </div>
+                                 <div className="flex flex-col gap-1 w-[48%]">
+                                    <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">চাল (পট)</span>
+                                    <input type="number" step="0.1" className="w-full p-2 border rounded text-center font-bold text-orange-600 outline-none focus:ring-1 font-baloo dark:bg-slate-800"
+                                      value={localUsage[b.id]?.rice || ''} 
+                                      onChange={(e) => handleLocalChange(b.id, 'rice', e.target.value)}
+                                      onBlur={() => handleBlur(b, 'rice')} />
+                                 </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -1818,7 +1936,11 @@ const App: React.FC = () => {
                                 )}
                                 {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} /></div>}
                                 {activeTab === 'schedule' && <div className="animate-fade-in"><BazaarSchedulePage manager={manager} borders={borders} isManager={true} currentUser={undefined} onUpdate={(m) => setManager(m)} /></div>}
-                                {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} /></div>}
+                                {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} manager={manager} onUpdateManager={(data: any) => {
+                                    const updated = { ...manager, ...data };
+                                    setManager(updated);
+                                    dbService.updateManager(manager.username, data);
+                                }} /></div>}
                                 {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => setManager(m)} /></div>}
                                 {activeTab === 'market' && <div className="animate-fade-in"><MarketView expenses={expenses} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onUpdate={handleUpdateExpense} /></div>}
                                 {activeTab === 'reports' && <div className="animate-fade-in"><Reports manager={manager} borders={borders} expenses={expenses} /></div>}
