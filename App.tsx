@@ -482,25 +482,24 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
 
     const handleSave = async () => {
         try {
-            // Include all entries from localData to ensure zero/deleted values are saved
             const dataToSave = { ...localData };
             
-            // Optional: Ensure all 31 days have at least an empty object if we want to be very thorough, 
-            // but Firebase updateDoc will only update the fields we provide.
-            // Since we want to save exactly what's in localData (including 0s):
-            
+            const updatedManager = { 
+                ...manager, 
+                systemDaily: dataToSave, 
+                riceConfig, 
+                prevRiceBalance: prevRice 
+            };
+
             await dbService.updateManager(manager.username, { 
                 systemDaily: dataToSave, 
                 riceConfig, 
                 prevRiceBalance: prevRice 
             });
             
-            onUpdate({ 
-                ...manager, 
-                systemDaily: dataToSave, 
-                riceConfig, 
-                prevRiceBalance: prevRice 
-            });
+            // Critical: Update both state and localStorage
+            onUpdate(updatedManager);
+            localStorage.setItem('messManager', JSON.stringify(updatedManager));
             
             setLocalData(dataToSave);
             alert("সংরক্ষিত হয়েছে!");
@@ -1559,16 +1558,27 @@ const App: React.FC = () => {
       }
   }, []);
 
-  // Fetch Manager Data
+  // Fetch Manager Data (Load once when manager is available)
+  const hasLoadedRef = React.useRef(false);
   useEffect(() => {
-      if(manager) {
+      if(manager && !hasLoadedRef.current) {
           loadData();
+          hasLoadedRef.current = true;
       }
   }, [manager]);
 
   const loadData = async () => {
       if(!manager) return;
       try {
+        // Fetch fresh manager data to ensure systemDaily is up to date
+        const managerDoc = await dbService.getDoc(dbService.doc(dbService.db, "managers", manager.username));
+        if (managerDoc.exists()) {
+            const freshManager = managerDoc.data() as Manager;
+            setManager(freshManager);
+            setProfileForm(freshManager);
+            localStorage.setItem('messManager', JSON.stringify(freshManager));
+        }
+
         const [b, e] = await Promise.all([
             dbService.getBorders(manager.username),
             dbService.getExpenses(manager.username)
@@ -1983,7 +1993,10 @@ const App: React.FC = () => {
                                     setManager(updated);
                                     dbService.updateManager(manager.username, data);
                                 }} /></div>}
-                                {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => setManager(m)} /></div>}
+                                    {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => {
+                                        setManager(m);
+                                        localStorage.setItem('messManager', JSON.stringify(m));
+                                    }} /></div>}
                                 {activeTab === 'market' && <div className="animate-fade-in"><MarketView expenses={expenses} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onUpdate={handleUpdateExpense} /></div>}
                                 {activeTab === 'reports' && <div className="animate-fade-in"><Reports manager={manager} borders={borders} expenses={expenses} /></div>}
                                 {activeTab === 'settings' && (
