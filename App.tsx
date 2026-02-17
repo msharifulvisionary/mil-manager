@@ -11,6 +11,7 @@ import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDa
 import * as dbService from './services/firebaseService';
 import Layout from './components/Layout';
 import Reports from './components/Reports';
+import IftaarManagement from './components/IftaarManagement';
 import { FACEBOOK_LINK, DEVELOPER_NAME } from './constants';
 
 // --- DEVELOPER MODAL ---
@@ -1516,8 +1517,8 @@ const App: React.FC = () => {
   
   const [borders, setBorders] = useState<Border[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'|'schedule'>('dashboard');
-  const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'>('overview');
+  const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'|'schedule'|'iftaar'>('dashboard');
+  const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'|'iftaar'>('overview');
   
   const [editingBorder, setEditingBorder] = useState<Border | null>(null);
   const [profileEdit, setProfileEdit] = useState(false);
@@ -1752,11 +1753,11 @@ const App: React.FC = () => {
                         onDeveloperClick={() => setShowDevModal(true)}
                     >
                          <div className="flex bg-white dark:bg-slate-800 p-1 rounded mb-6 border dark:border-slate-700 overflow-x-auto sticky top-20 z-20 shadow-sm">
-                             {['overview','meals','market','schedule','profile'].map(v => (
-                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
-                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : 'প্রোফাইল'}
-                                 </button>
-                             ))}
+{['overview','meals','market','schedule','iftaar','profile'].map(v => (
+	                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+	                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : v === 'iftaar' ? 'ইফতার হিসাব' : 'প্রোফাইল'}
+	                                 </button>
+	                             ))}
                          </div>
 
                          {activeBorderTab === 'overview' && (
@@ -1923,6 +1924,13 @@ const App: React.FC = () => {
                                 onUpdate={(m) => setManagerInfoForBorder(m)}
                              />
                          )}
+                         {activeBorderTab === 'iftaar' && (
+                             <IftaarManagement 
+                                manager={managerInfoForBorder!} 
+                                isManager={false} 
+                                onBack={() => setActiveBorderTab('overview')}
+                             />
+                         )}
                          {activeBorderTab === 'profile' && (
                               <div className="bg-white dark:bg-slate-800 rounded-xl shadow border dark:border-slate-700 p-6 max-w-lg mx-auto">
                                   <h3 className="font-bold mb-4 dark:text-white">প্রোফাইল আপডেট</h3>
@@ -1959,6 +1967,7 @@ const App: React.FC = () => {
                                         {id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard},
                                         {id: 'borders', label: 'বর্ডার তালিকা', icon: Users},
                                         {id: 'schedule', label: 'বাজার লিস্ট', icon: CalendarDays},
+                                        {id: 'iftaar', label: 'ইফতার', icon: Utensils},
                                         {id: 'daily', label: 'দৈনিক মিল', icon: Calendar},
                                         {id: 'system', label: 'বাবুর্চি হিসাব', icon: ClipboardList},
                                         {id: 'market', label: 'বাজার খরচ', icon: ShoppingCart},
@@ -1998,6 +2007,7 @@ const App: React.FC = () => {
                                         localStorage.setItem('messManager', JSON.stringify(m));
                                     }} /></div>}
                                 {activeTab === 'market' && <div className="animate-fade-in"><MarketView expenses={expenses} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onUpdate={handleUpdateExpense} /></div>}
+                                {activeTab === 'iftaar' && <div className="animate-fade-in"><IftaarManagement manager={manager} isManager={true} onBack={() => setActiveTab('dashboard')} /></div>}
                                 {activeTab === 'reports' && <div className="animate-fade-in"><Reports manager={manager} borders={borders} expenses={expenses} /></div>}
                                 {activeTab === 'settings' && (
                                     <div className="animate-fade-in bg-white dark:bg-slate-800 p-8 rounded-xl shadow border border-slate-200 dark:border-slate-700 max-w-xl mx-auto">
