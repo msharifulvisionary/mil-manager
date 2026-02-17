@@ -7,6 +7,26 @@ import { IftaarConfig, IftaarDeposit, IftaarExpense, IftaarBazaarSchedule, Manag
 import * as dbService from '../services/firebaseService';
 import html2canvas from 'html2canvas';
 
+const formatBanglaDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const months = [
+    'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+    'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+  ];
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  
+  const banglaNums: { [key: string]: string } = {
+    '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'
+  };
+  
+  const toBangla = (num: number | string) => num.toString().split('').map(d => banglaNums[d] || d).join('');
+  
+  return `${toBangla(day)} ${month} ${toBangla(year)}`;
+};
+
 interface IftaarManagementProps {
   manager: Manager;
   isManager: boolean;
@@ -126,11 +146,31 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
 
   const downloadImage = async (title: string) => {
     if (!reportRef.current) return;
-    const canvas = await html2canvas(reportRef.current, { scale: 2 });
-    const link = document.createElement('a');
-    link.download = `Iftaar_${title}_${config.month}_${config.year}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    try {
+      // Temporarily show the hidden element for capturing
+      const element = reportRef.current;
+      const parent = element.parentElement;
+      if (parent) parent.classList.remove('hidden');
+      
+      const canvas = await html2canvas(element, { 
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+      
+      if (parent) parent.classList.add('hidden');
+      
+      const link = document.createElement('a');
+      link.download = `Iftaar_${title}_${config.month}_${config.year}.png`;
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Image download error:", error);
+      alert("ইমেজ ডাউনলোড করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।");
+    }
   };
 
   const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
@@ -212,7 +252,7 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                 <div>
                     <h3 className="font-bold text-amber-800 dark:text-amber-400">পরবর্তী বাজার</h3>
                     {nextBazaar ? (
-                        <p className="text-lg font-baloo dark:text-white">{nextBazaar.shopper} - {nextBazaar.date}</p>
+                        <p className="text-lg font-baloo dark:text-white">{nextBazaar.shopper} - {formatBanglaDate(nextBazaar.date)}</p>
                     ) : (
                         <p className="text-slate-500 italic">কোন শিডিউল নেই</p>
                     )}
@@ -225,21 +265,33 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                 <h3 className="font-bold border-b dark:border-slate-700 pb-3 mb-4 flex items-center gap-2">
                   <List size={18} className="text-primary"/> আপনার বাজারের নাম দিন
                 </h3>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                    <input 
                       type="text" 
                       placeholder="আপনার নাম লিখুন..."
                       id="borderShopperName"
-                      className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                   />
+                   <input 
+                      type="date" 
+                      id="borderShopperDate"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                    />
                    <button 
                     onClick={async () => {
-                      const input = document.getElementById('borderShopperName') as HTMLInputElement;
-                      if(!input.value) return alert('নাম লিখুন');
+                      const nameInput = document.getElementById('borderShopperName') as HTMLInputElement;
+                      const dateInput = document.getElementById('borderShopperDate') as HTMLInputElement;
+                      if(!nameInput.value) return alert('আপনার নাম লিখুন');
+                      if(!dateInput.value) return alert('তারিখ সিলেক্ট করুন');
                       try {
-                        await dbService.addIftaarBazaarSchedule({ shopper: input.value, date: new Date().toISOString().split('T')[0], managerId: manager.username });
-                        input.value = '';
-                        alert('নাম যোগ হয়েছে!');
+                        await dbService.addIftaarBazaarSchedule({ 
+                          shopper: nameInput.value, 
+                          date: dateInput.value, 
+                          managerId: manager.username 
+                        });
+                        nameInput.value = '';
+                        alert('আপনার বাজারের নাম এবং তারিখ যোগ হয়েছে!');
                         fetchData();
                       } catch(e) { alert('Error'); }
                     }}
@@ -297,8 +349,8 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                             {deposits.map((d, i) => (
                                 <tr key={d.id} className="text-center">
                                     <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
-                                    <td className="border border-slate-300 p-3 font-baloo">{d.date}</td>
-                                    <td className="border border-slate-300 p-3">{d.name}</td>
+                                  <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(d.date)}</td>
+                                  <td className="border border-slate-300 p-3">{d.name}</td>
                                     <td className="border border-slate-300 p-3 font-bold font-baloo">{d.amount} ৳</td>
                                 </tr>
                             ))}
@@ -324,7 +376,7 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                             {expenses.map((e, i) => (
                                 <tr key={e.id} className="text-center">
                                     <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
-                                    <td className="border border-slate-300 p-3 font-baloo">{e.date}</td>
+                                    <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(e.date)}</td>
                                     <td className="border border-slate-300 p-3">{e.shopper}</td>
                                     <td className="border border-slate-300 p-3 font-bold font-baloo">{e.amount} ৳</td>
                                 </tr>
@@ -350,7 +402,7 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                             {schedules.map((s, i) => (
                                 <tr key={s.id} className="text-center">
                                     <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
-                                    <td className="border border-slate-300 p-3 font-baloo">{s.date}</td>
+                                    <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(s.date)}</td>
                                     <td className="border border-slate-300 p-3">{s.shopper}</td>
                                 </tr>
                             ))}
@@ -375,7 +427,7 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                 <tbody className="divide-y dark:divide-slate-700">
                   {deposits.map(d => (
                     <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className="p-4 font-baloo">{d.date}</td>
+                      <td className="p-4 font-baloo">{formatBanglaDate(d.date)}</td>
                       <td className="p-4 font-bold">{d.name}</td>
                       <td className="p-4 text-right font-bold font-baloo text-emerald-600 dark:text-emerald-400">{d.amount} ৳</td>
                       {isManager && (
@@ -424,7 +476,7 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                 <tbody className="divide-y dark:divide-slate-700">
                   {expenses.map(e => (
                     <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className="p-4 font-baloo">{e.date}</td>
+                      <td className="p-4 font-baloo">{formatBanglaDate(e.date)}</td>
                       <td className="p-4 font-bold">{e.shopper}</td>
                       <td className="p-4 text-right font-bold font-baloo text-rose-600 dark:text-rose-400">{e.amount} ৳</td>
                       {isManager && (
@@ -472,7 +524,7 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
                 <tbody className="divide-y dark:divide-slate-700">
                   {schedules.map(s => (
                     <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className="p-4 font-baloo">{s.date}</td>
+                      <td className="p-4 font-baloo">{formatBanglaDate(s.date)}</td>
                       <td className="p-4 font-bold">{s.shopper}</td>
                       {isManager && (
                         <td className="p-4 text-center">
