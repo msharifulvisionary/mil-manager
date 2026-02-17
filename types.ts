@@ -97,6 +97,38 @@ export interface Manager {
   // New: Auto Rice Calculation Feature
   autoRiceEnabled?: boolean;
   autoRiceRules?: AutoRiceRule[];
+  iftaarConfig?: IftaarConfig;
+}
+
+export interface IftaarConfig {
+  messName: string;
+  managerName: string;
+  managerMobile: string;
+  month: string;
+  year: number;
+}
+
+export interface IftaarDeposit {
+  id: string;
+  name: string;
+  amount: number;
+  date: string; // ISO date
+  managerId: string;
+}
+
+export interface IftaarExpense {
+  id: string;
+  date: string;
+  shopper: string;
+  amount: number;
+  managerId: string;
+}
+
+export interface IftaarBazaarSchedule {
+  id: string;
+  date: string;
+  shopper: string;
+  managerId: string;
 }
 
 export interface Expense {
