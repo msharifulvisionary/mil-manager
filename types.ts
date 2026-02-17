@@ -66,6 +66,11 @@ export interface RiceConfig {
   dinnerDiff: number;
 }
 
+export interface AutoRiceRule {
+  meal: number;
+  rice: number;
+}
+
 export interface Manager {
   username: string; // ID
   password: string; 
@@ -88,6 +93,10 @@ export interface Manager {
   
   // New: Bazaar Schedule
   bazaarSchedule?: { [day: number]: BazaarShift };
+
+  // New: Auto Rice Calculation Feature
+  autoRiceEnabled?: boolean;
+  autoRiceRules?: AutoRiceRule[];
 }
 
 export interface Expense {
