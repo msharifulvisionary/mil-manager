@@ -482,29 +482,32 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
 
     const handleSave = async () => {
         try {
-            // Filter out empty entries before saving to keep database clean
-            const cleanedData = { ...localData };
-            Object.keys(cleanedData).forEach(day => {
-                const d = parseInt(day);
-                const entry = cleanedData[d];
-                const isEmpty = 
-                    (entry.morning?.meal === 0 || !entry.morning?.meal) && 
-                    (entry.morning?.rice === 0 || !entry.morning?.rice) &&
-                    (entry.lunch?.meal === 0 || !entry.lunch?.meal) && 
-                    (entry.lunch?.rice === 0 || !entry.lunch?.rice) &&
-                    (entry.dinner?.meal === 0 || !entry.dinner?.meal) && 
-                    (entry.dinner?.rice === 0 || !entry.dinner?.rice);
-                
-                if (isEmpty) {
-                    delete cleanedData[d];
-                }
+            // Include all entries from localData to ensure zero/deleted values are saved
+            const dataToSave = { ...localData };
+            
+            // Optional: Ensure all 31 days have at least an empty object if we want to be very thorough, 
+            // but Firebase updateDoc will only update the fields we provide.
+            // Since we want to save exactly what's in localData (including 0s):
+            
+            await dbService.updateManager(manager.username, { 
+                systemDaily: dataToSave, 
+                riceConfig, 
+                prevRiceBalance: prevRice 
             });
-
-            await dbService.updateManager(manager.username, { systemDaily: cleanedData, riceConfig, prevRiceBalance: prevRice });
-            onUpdate({ ...manager, systemDaily: cleanedData, riceConfig, prevRiceBalance: prevRice });
-            setLocalData(cleanedData);
+            
+            onUpdate({ 
+                ...manager, 
+                systemDaily: dataToSave, 
+                riceConfig, 
+                prevRiceBalance: prevRice 
+            });
+            
+            setLocalData(dataToSave);
             alert("সংরক্ষিত হয়েছে!");
-        } catch(e) { alert("এরর!"); }
+        } catch(e) { 
+            console.error("Save error:", e);
+            alert("সেভ করতে সমস্যা হয়েছে!"); 
+        }
     };
 
     return (
@@ -583,8 +586,13 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
     let systemRice = 0;
     
     // Daily Specific Stats
-    const today = new Date().getDate();
-    const todayStats = manager.systemDaily?.[today] || { morning: {meal:0, rice:0}, lunch: {meal:0, rice:0}, dinner: {meal:0, rice:0} };
+    const [viewDay, setViewDay] = useState(new Date().getDate());
+    const maxDaysInMonth = MONTHS.find((_, i) => MONTHS[i] === manager.month) ? new Date(manager.year, MONTHS.indexOf(manager.month) + 1, 0).getDate() : 31;
+    
+    const handlePrevDay = () => setViewDay(prev => prev > 1 ? prev - 1 : maxDaysInMonth);
+    const handleNextDay = () => setViewDay(prev => prev < maxDaysInMonth ? prev + 1 : 1);
+
+    const todayStats = manager.systemDaily?.[viewDay] || { morning: {meal:0, rice:0}, lunch: {meal:0, rice:0}, dinner: {meal:0, rice:0} };
 
     if(manager.systemDaily) {
         Object.values(manager.systemDaily).forEach(d => {
@@ -792,11 +800,19 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
                      </div>
                  </div>
                  
-                 {/* System Daily Stats (Today) */}
+                 {/* System Daily Stats (With Date Navigation) */}
                  <div className="col-span-2 md:col-span-3 bg-slate-800 text-white p-4 rounded-xl shadow border border-slate-600">
                     <div className="flex justify-between items-center mb-3 border-b border-slate-600 pb-2">
-                        <h4 className="text-slate-300 text-xs font-bold uppercase">সিস্টেম ডেইলি হিসাব ({today} তারিখ)</h4>
-                        <span className="text-xs bg-slate-600 px-2 py-0.5 rounded">আজকের মিল</span>
+                        <h4 className="text-slate-300 text-xs font-bold uppercase">সিস্টেম ডেইলি হিসাব ({viewDay} তারিখ)</h4>
+                        <div className="flex items-center gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); handlePrevDay(); }} className="p-1 hover:bg-slate-700 rounded transition-colors">
+                                <ArrowUp size={16} className="-rotate-90" />
+                            </button>
+                            <span className="text-xs bg-slate-600 px-2 py-0.5 rounded">{viewDay} তারিখ</span>
+                            <button onClick={(e) => { e.stopPropagation(); handleNextDay(); }} className="p-1 hover:bg-slate-700 rounded transition-colors">
+                                <ArrowUp size={16} className="rotate-90" />
+                            </button>
+                        </div>
                     </div>
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="bg-orange-900/30 p-2 rounded">
@@ -811,7 +827,6 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
                             <span className="text-[10px] text-purple-200 block uppercase">রাত</span>
                             <span className="font-bold text-lg">{todayStats.dinner?.meal || 0}</span>
                         </div>
-                        {/* Removed Total Month Meal box as requested */}
                     </div>
                  </div>
             </div>
