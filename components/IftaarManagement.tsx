@@ -318,101 +318,7 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
               </div>
             </div>
 
-            {/* Hidden component for Image Download */}
-            <div className="hidden">
-              <div ref={reportRef} className="p-10 bg-white text-slate-900 w-[800px]">
-                  <div className="text-center border-b-2 border-primary pb-6 mb-6">
-                      <h1 className="text-3xl font-bold font-baloo text-primary mb-2">{config.messName}</h1>
-                      <p className="text-xl font-bold">
-                        {activeTab === 'deposits' ? 'ইফতার টাকা জমার তালিকা' : 
-                         activeTab === 'expenses' ? 'ইফতার বাজার খরচের তালিকা' : 
-                         'ইফতার বাজার শিডিউল তালিকা'}
-                      </p>
-                      <div className="flex justify-center gap-6 mt-4 text-sm font-medium">
-                          <span>ম্যানেজার: {config.managerName}</span>
-                          <span>মোবাইল: {config.managerMobile}</span>
-                          <span>মাস: {config.month}, {config.year}</span>
-                      </div>
-                  </div>
 
-                  {activeTab === 'deposits' && (
-                    <table className="w-full border-collapse border border-slate-300">
-                        <thead>
-                            <tr className="bg-slate-100">
-                                <th className="border border-slate-300 p-3">ক্রমিক নং</th>
-                                <th className="border border-slate-300 p-3">তারিখ</th>
-                                <th className="border border-slate-300 p-3">নাম</th>
-                                <th className="border border-slate-300 p-3">পরিমাণ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {deposits.map((d, i) => (
-                                <tr key={d.id} className="text-center">
-                                    <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
-                                  <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(d.date)}</td>
-                                  <td className="border border-slate-300 p-3">{d.name}</td>
-                                    <td className="border border-slate-300 p-3 font-bold font-baloo">{d.amount} ৳</td>
-                                </tr>
-                            ))}
-                            <tr className="bg-slate-50 font-bold">
-                                <td colSpan={3} className="border border-slate-300 p-3 text-right">মোট জমা:</td>
-                                <td className="border border-slate-300 p-3 text-center font-baloo">{totalDeposits} ৳</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                  )}
-
-                  {activeTab === 'expenses' && (
-                    <table className="w-full border-collapse border border-slate-300">
-                        <thead>
-                            <tr className="bg-slate-100">
-                                <th className="border border-slate-300 p-3">ক্রমিক নং</th>
-                                <th className="border border-slate-300 p-3">তারিখ</th>
-                                <th className="border border-slate-300 p-3">বাজারকারী</th>
-                                <th className="border border-slate-300 p-3">পরিমাণ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {expenses.map((e, i) => (
-                                <tr key={e.id} className="text-center">
-                                    <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
-                                    <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(e.date)}</td>
-                                    <td className="border border-slate-300 p-3">{e.shopper}</td>
-                                    <td className="border border-slate-300 p-3 font-bold font-baloo">{e.amount} ৳</td>
-                                </tr>
-                            ))}
-                            <tr className="bg-slate-50 font-bold">
-                                <td colSpan={3} className="border border-slate-300 p-3 text-right">মোট খরচ:</td>
-                                <td className="border border-slate-300 p-3 text-center font-baloo">{totalExpenses} ৳</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                  )}
-
-                  {activeTab === 'schedule' && (
-                    <table className="w-full border-collapse border border-slate-300">
-                        <thead>
-                            <tr className="bg-slate-100">
-                                <th className="border border-slate-300 p-3">ক্রমিক নং</th>
-                                <th className="border border-slate-300 p-3">তারিখ</th>
-                                <th className="border border-slate-300 p-3">বাজারকারী</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {schedules.map((s, i) => (
-                                <tr key={s.id} className="text-center">
-                                    <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
-                                    <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(s.date)}</td>
-                                    <td className="border border-slate-300 p-3">{s.shopper}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                  )}
-
-                  <div className="mt-10 text-right italic text-sm text-slate-400">Generated by Mess Manager App</div>
-              </div>
-            </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
               <table className="w-full text-sm">
@@ -573,6 +479,102 @@ const IftaarManagement: React.FC<IftaarManagementProps> = ({ manager, isManager,
             </button>
           </div>
         )}
+      </div>
+
+      {/* Hidden component for Image Download */}
+      <div className="hidden">
+        <div ref={reportRef} className="p-10 bg-white text-slate-900 w-[800px]">
+            <div className="text-center border-b-2 border-primary pb-6 mb-6">
+                <h1 className="text-3xl font-bold font-baloo text-primary mb-2">{config.messName}</h1>
+                <p className="text-xl font-bold">
+                  {activeTab === 'deposits' ? 'ইফতার টাকা জমার তালিকা' : 
+                   activeTab === 'expenses' ? 'ইফতার বাজার খরচের তালিকা' : 
+                   'ইফতার বাজার শিডিউল তালিকা'}
+                </p>
+                <div className="flex justify-center gap-6 mt-4 text-sm font-medium">
+                    <span>ম্যানেজার: {config.managerName}</span>
+                    <span>মোবাইল: {config.managerMobile}</span>
+                    <span>মাস: {config.month}, {config.year}</span>
+                </div>
+            </div>
+
+            {activeTab === 'deposits' && (
+              <table className="w-full border-collapse border border-slate-300">
+                  <thead>
+                      <tr className="bg-slate-100">
+                          <th className="border border-slate-300 p-3">ক্রমিক নং</th>
+                          <th className="border border-slate-300 p-3">তারিখ</th>
+                          <th className="border border-slate-300 p-3">নাম</th>
+                          <th className="border border-slate-300 p-3">পরিমাণ</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {deposits.map((d, i) => (
+                          <tr key={d.id} className="text-center">
+                              <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
+                            <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(d.date)}</td>
+                            <td className="border border-slate-300 p-3">{d.name}</td>
+                              <td className="border border-slate-300 p-3 font-bold font-baloo">{d.amount} ৳</td>
+                          </tr>
+                      ))}
+                      <tr className="bg-slate-50 font-bold">
+                          <td colSpan={3} className="border border-slate-300 p-3 text-right">মোট জমা:</td>
+                          <td className="border border-slate-300 p-3 text-center font-baloo">{totalDeposits} ৳</td>
+                      </tr>
+                  </tbody>
+              </table>
+            )}
+
+            {activeTab === 'expenses' && (
+              <table className="w-full border-collapse border border-slate-300">
+                  <thead>
+                      <tr className="bg-slate-100">
+                          <th className="border border-slate-300 p-3">ক্রমিক নং</th>
+                          <th className="border border-slate-300 p-3">তারিখ</th>
+                          <th className="border border-slate-300 p-3">বাজারকারী</th>
+                          <th className="border border-slate-300 p-3">পরিমাণ</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {expenses.map((e, i) => (
+                          <tr key={e.id} className="text-center">
+                              <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
+                              <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(e.date)}</td>
+                              <td className="border border-slate-300 p-3">{e.shopper}</td>
+                              <td className="border border-slate-300 p-3 font-bold font-baloo">{e.amount} ৳</td>
+                          </tr>
+                      ))}
+                      <tr className="bg-slate-50 font-bold">
+                          <td colSpan={3} className="border border-slate-300 p-3 text-right">মোট খরচ:</td>
+                          <td className="border border-slate-300 p-3 text-center font-baloo">{totalExpenses} ৳</td>
+                      </tr>
+                  </tbody>
+              </table>
+            )}
+
+            {activeTab === 'schedule' && (
+              <table className="w-full border-collapse border border-slate-300">
+                  <thead>
+                      <tr className="bg-slate-100">
+                          <th className="border border-slate-300 p-3">ক্রমিক নং</th>
+                          <th className="border border-slate-300 p-3">তারিখ</th>
+                          <th className="border border-slate-300 p-3">বাজারকারী</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {schedules.map((s, i) => (
+                          <tr key={s.id} className="text-center">
+                              <td className="border border-slate-300 p-3 font-baloo">{i+1}</td>
+                              <td className="border border-slate-300 p-3 font-baloo">{formatBanglaDate(s.date)}</td>
+                              <td className="border border-slate-300 p-3">{s.shopper}</td>
+                          </tr>
+                      ))}
+                  </tbody>
+              </table>
+            )}
+
+            <div className="mt-10 text-right italic text-sm text-slate-400">Generated by Mess Manager App</div>
+        </div>
       </div>
 
       {/* Forms Modals */}
