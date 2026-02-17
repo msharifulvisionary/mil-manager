@@ -14,7 +14,7 @@ import {
   writeBatch
 } from "firebase/firestore";
 import { FIREBASE_CONFIG } from "../constants";
-import { Manager, Border, Expense } from "../types";
+import { Manager, Border, Expense, IftaarDeposit, IftaarExpense, IftaarBazaarSchedule } from "../types";
 
 const app = initializeApp(FIREBASE_CONFIG);
 export const db = getFirestore(app);
@@ -147,4 +147,78 @@ export const deleteExpense = async (expenseId: string) => {
 
 export const updateExpense = async (expenseId: string, data: Partial<Expense>) => {
   await updateDoc(doc(db, "expenses", expenseId), data);
+};
+
+// --- Iftaar Management ---
+
+// Deposits
+export const addIftaarDeposit = async (deposit: Omit<IftaarDeposit, 'id'>) => {
+  const docRef = await addDoc(collection(db, "iftaarDeposits"), deposit);
+  return { id: docRef.id, ...deposit };
+};
+
+export const getIftaarDeposits = async (managerId: string): Promise<IftaarDeposit[]> => {
+  const q = query(collection(db, "iftaarDeposits"), where("managerId", "==", managerId));
+  const querySnapshot = await getDocs(q);
+  const deposits: IftaarDeposit[] = [];
+  querySnapshot.forEach((doc) => {
+    deposits.push({ id: doc.id, ...doc.data() } as IftaarDeposit);
+  });
+  return deposits.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
+export const updateIftaarDeposit = async (id: string, data: Partial<IftaarDeposit>) => {
+  await updateDoc(doc(db, "iftaarDeposits"), id, data);
+};
+
+export const deleteIftaarDeposit = async (id: string) => {
+  await deleteDoc(doc(db, "iftaarDeposits", id));
+};
+
+// Expenses
+export const addIftaarExpense = async (expense: Omit<IftaarExpense, 'id'>) => {
+  const docRef = await addDoc(collection(db, "iftaarExpenses"), expense);
+  return { id: docRef.id, ...expense };
+};
+
+export const getIftaarExpenses = async (managerId: string): Promise<IftaarExpense[]> => {
+  const q = query(collection(db, "iftaarExpenses"), where("managerId", "==", managerId));
+  const querySnapshot = await getDocs(q);
+  const expenses: IftaarExpense[] = [];
+  querySnapshot.forEach((doc) => {
+    expenses.push({ id: doc.id, ...doc.data() } as IftaarExpense);
+  });
+  return expenses.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
+export const updateIftaarExpense = async (id: string, data: Partial<IftaarExpense>) => {
+  await updateDoc(doc(db, "iftaarExpenses"), id, data);
+};
+
+export const deleteIftaarExpense = async (id: string) => {
+  await deleteDoc(doc(db, "iftaarExpenses", id));
+};
+
+// Bazaar Schedule
+export const addIftaarBazaarSchedule = async (schedule: Omit<IftaarBazaarSchedule, 'id'>) => {
+  const docRef = await addDoc(collection(db, "iftaarBazaarSchedules"), schedule);
+  return { id: docRef.id, ...schedule };
+};
+
+export const getIftaarBazaarSchedules = async (managerId: string): Promise<IftaarBazaarSchedule[]> => {
+  const q = query(collection(db, "iftaarBazaarSchedules"), where("managerId", "==", managerId));
+  const querySnapshot = await getDocs(q);
+  const schedules: IftaarBazaarSchedule[] = [];
+  querySnapshot.forEach((doc) => {
+    schedules.push({ id: doc.id, ...doc.data() } as IftaarBazaarSchedule);
+  });
+  return schedules.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
+export const updateIftaarBazaarSchedule = async (id: string, data: Partial<IftaarBazaarSchedule>) => {
+  await updateDoc(doc(db, "iftaarBazaarSchedules"), id, data);
+};
+
+export const deleteIftaarBazaarSchedule = async (id: string) => {
+  await deleteDoc(doc(db, "iftaarBazaarSchedules", id));
 };
