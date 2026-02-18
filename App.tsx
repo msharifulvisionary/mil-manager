@@ -1518,7 +1518,7 @@ const App: React.FC = () => {
   const [borders, setBorders] = useState<Border[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'|'schedule'|'iftaar'>('dashboard');
-  const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'|'iftaar'>('overview');
+  const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'|'iftaar'|'reports'|'system'>('overview');
   
   const [editingBorder, setEditingBorder] = useState<Border | null>(null);
   const [profileEdit, setProfileEdit] = useState(false);
@@ -1753,12 +1753,85 @@ const App: React.FC = () => {
                         onDeveloperClick={() => setShowDevModal(true)}
                     >
                          <div className="flex bg-white dark:bg-slate-800 p-1 rounded mb-6 border dark:border-slate-700 overflow-x-auto sticky top-20 z-20 shadow-sm">
-{['overview','meals','market','schedule','iftaar','profile'].map(v => (
-	                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
-	                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : v === 'iftaar' ? 'ইফতার হিসাব' : 'প্রোফাইল'}
-	                                 </button>
-	                             ))}
+{['overview','meals','market','schedule','iftaar','reports','system','profile'].map(v => (
+		                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+		                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : v === 'iftaar' ? 'ইফতার হিসাব' : v === 'reports' ? 'রিপোর্ট' : v === 'system' ? 'ডেইলি আপডেট' : 'প্রোফাইল'}
+		                                 </button>
+		                             ))}
                          </div>
+
+                         {activeBorderTab === 'reports' && (
+                             <div className="animate-fade-in">
+                                 <Reports manager={managerInfoForBorder} borders={borders} expenses={expenses} />
+                             </div>
+                         )}
+
+                         {activeBorderTab === 'system' && (
+                             <div className="animate-fade-in space-y-6">
+                                 <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border dark:border-slate-700">
+                                     <div className="flex items-center gap-3 mb-6 border-b dark:border-slate-700 pb-4">
+                                         <div className="bg-primary/10 p-2 rounded-lg text-primary">
+                                             <Activity size={24} />
+                                         </div>
+                                         <div>
+                                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">দৈনিক মিল ও চাল আপডেট</h3>
+                                             <p className="text-sm text-slate-500 dark:text-slate-400">ম্যানেজার কর্তৃক এন্ট্রি করা প্রতিদিনের হিসাব</p>
+                                         </div>
+                                     </div>
+                                     
+                                     <div className="overflow-x-auto">
+                                         <table className="w-full text-sm border-collapse">
+                                             <thead>
+                                                 <tr className="bg-slate-50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300">
+                                                     <th className="p-3 text-left border dark:border-slate-700">তারিখ</th>
+                                                     <th className="p-3 text-center border dark:border-slate-700 bg-orange-50/50 dark:bg-orange-900/10">সকাল (মিল/চাল)</th>
+                                                     <th className="p-3 text-center border dark:border-slate-700 bg-blue-50/50 dark:bg-blue-900/10">দুপুর (মিল/চাল)</th>
+                                                     <th className="p-3 text-center border dark:border-slate-700 bg-purple-50/50 dark:bg-purple-900/10">রাত (মিল/চাল)</th>
+                                                     <th className="p-3 text-center border dark:border-slate-700 bg-emerald-50/50 dark:bg-emerald-900/10 font-bold">মোট</th>
+                                                 </tr>
+                                             </thead>
+                                             <tbody className="divide-y dark:divide-slate-700">
+                                                 {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
+                                                     const entry = managerInfoForBorder.systemDaily?.[day];
+                                                     if (!entry) return null;
+                                                     
+                                                     const totalM = (entry.morning?.meal || 0) + (entry.lunch?.meal || 0) + (entry.dinner?.meal || 0);
+                                                     const totalR = (entry.morning?.rice || 0) + (entry.lunch?.rice || 0) + (entry.dinner?.rice || 0);
+                                                     
+                                                     if (totalM === 0 && totalR === 0) return null;
+
+                                                     return (
+                                                         <tr key={day} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                                             <td className="p-3 border dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300">{day} তারিখ</td>
+                                                             <td className="p-3 border dark:border-slate-700 text-center">
+                                                                 <span className="font-bold text-orange-600">{entry.morning?.meal || 0}</span>
+                                                                 <span className="mx-1 text-slate-300">/</span>
+                                                                 <span className="text-slate-600 dark:text-slate-400">{entry.morning?.rice || 0}</span>
+                                                             </td>
+                                                             <td className="p-3 border dark:border-slate-700 text-center">
+                                                                 <span className="font-bold text-blue-600">{entry.lunch?.meal || 0}</span>
+                                                                 <span className="mx-1 text-slate-300">/</span>
+                                                                 <span className="text-slate-600 dark:text-slate-400">{entry.lunch?.rice || 0}</span>
+                                                             </td>
+                                                             <td className="p-3 border dark:border-slate-700 text-center">
+                                                                 <span className="font-bold text-purple-600">{entry.dinner?.meal || 0}</span>
+                                                                 <span className="mx-1 text-slate-300">/</span>
+                                                                 <span className="text-slate-600 dark:text-slate-400">{entry.dinner?.rice || 0}</span>
+                                                             </td>
+                                                             <td className="p-3 border dark:border-slate-700 text-center bg-emerald-50/30 dark:bg-emerald-900/5">
+                                                                 <span className="font-bold text-emerald-600">{totalM}</span>
+                                                                 <span className="mx-1 text-slate-300">/</span>
+                                                                 <span className="font-bold text-slate-700 dark:text-slate-300">{totalR}</span>
+                                                             </td>
+                                                         </tr>
+                                                     );
+                                                 })}
+                                             </tbody>
+                                         </table>
+                                     </div>
+                                 </div>
+                             </div>
+                         )}
 
                          {activeBorderTab === 'overview' && (
                              <div className="space-y-6">
