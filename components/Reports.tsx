@@ -24,19 +24,25 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
   const downloadReport = async (ref: React.RefObject<HTMLDivElement>, filename: string, type: 'pdf' | 'image', orientation: 'p'|'l' = 'l') => {
     if (!ref.current) return;
     
-    // Temporarily show the hidden container for capture
     const element = ref.current;
+    const originalStyle = element.style.cssText;
+    
+    // Ensure it's visible and has proper layout for capture
     element.style.display = 'block';
+    element.style.position = 'absolute';
+    element.style.left = '-9999px';
+    element.style.top = '0';
     
     try {
       const canvas = await html2canvas(element, { 
-          scale: 2, 
+          scale: 3, // Higher scale for HD
           useCORS: true, 
           backgroundColor: '#ffffff',
+          logging: false,
           windowWidth: element.scrollWidth,
           windowHeight: element.scrollHeight
       });
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       
       if (type === 'image') {
           const link = document.createElement('a');
@@ -47,22 +53,36 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
           const pdf = new jsPDF({
             orientation: orientation,
             unit: 'mm',
-            format: 'a4'
+            format: 'a4',
+            compress: true
           });
           
-          const imgProps = pdf.getImageProperties(imgData);
           const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          const pdfHeight = pdf.internal.pageSize.getHeight();
           
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          // Calculate dimensions to fit A4 while maintaining aspect ratio
+          const imgProps = pdf.getImageProperties(imgData);
+          const ratio = imgProps.width / imgProps.height;
+          
+          let renderWidth = pdfWidth - 20; // 10mm margin each side
+          let renderHeight = renderWidth / ratio;
+          
+          if (renderHeight > pdfHeight - 20) {
+            renderHeight = pdfHeight - 20;
+            renderWidth = renderHeight * ratio;
+          }
+          
+          const x = (pdfWidth - renderWidth) / 2;
+          const y = 10; // Top margin
+          
+          pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
           pdf.save(`${filename}.pdf`);
       }
     } catch (err) {
       console.error(err);
       alert("রিপোর্ট জেনারেট করতে সমস্যা হয়েছে।");
     } finally {
-        // Hide again
-       element.style.display = 'none';
+       element.style.cssText = originalStyle;
     }
   };
 
@@ -78,10 +98,9 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
     const mealsEaten = getTotalMeals(b);
     const riceEaten = getTotalRice(b);
     
-    // Updated Logic: Round Meal Cost and Exclude Shared Extra
     const mealCost = Math.round(mealsEaten * manager.mealRate);
     const sharedExtraCost = borders.length > 0 ? (totalExtraBazaar / borders.length) : 0;
-    const totalCost = mealCost + b.extraCost + b.guestCost; // Shared extra excluded
+    const totalCost = mealCost + b.extraCost + b.guestCost; 
     
     const moneyBalance = totalMoneyDeposit - totalCost; 
     const riceBalance = totalRiceDeposit - riceEaten;
@@ -89,7 +108,6 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
     return { totalMoneyDeposit, totalRiceDeposit, mealsEaten, riceEaten, mealCost, sharedExtraCost, totalCost, moneyBalance, riceBalance };
   };
 
-  // Calculate System Daily Totals
   const getSystemDailyTotals = () => {
     let tMeals = 0, tRice = 0;
     if(manager.systemDaily) {
@@ -102,7 +120,6 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
   }
   const sysTotals = getSystemDailyTotals();
 
-  // Helper for Bazaar Schedule
   const getMonthIndex = (monthName: string) => {
       const idx = MONTHS.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
       return idx !== -1 ? idx : 0;
@@ -129,14 +146,21 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
   );
 
   const Header = ({ title }: { title: string }) => (
-    <div className="text-center mb-4 border-b-2 border-slate-300 pb-2">
-        <h1 className="text-3xl font-bold uppercase text-blue-800">{manager.messName}</h1>
-        <div className="flex justify-center gap-4 text-sm font-semibold mt-1 text-slate-600">
-            <span>ম্যানেজার: {manager.name} ({manager.mobile})</span> | <span>মাস: {manager.month} {manager.year}</span>
+    <div className="text-center mb-6 border-b-4 border-double border-slate-400 pb-4">
+        <h1 className="text-4xl font-black uppercase text-blue-900 mb-2">{manager.messName}</h1>
+        <div className="flex justify-center items-center gap-6 text-base font-bold text-slate-700 mb-3">
+            <span className="bg-slate-100 px-3 py-1 rounded shadow-sm">ম্যানেজার: {manager.name}</span>
+            <span className="bg-slate-100 px-3 py-1 rounded shadow-sm">মোবাইল: {manager.mobile}</span>
+            <span className="bg-slate-100 px-3 py-1 rounded shadow-sm">মাস: {manager.month} {manager.year}</span>
         </div>
-        <h2 className="text-xl font-bold mt-2 bg-slate-100 inline-block px-4 py-1 rounded border border-slate-300">{title}</h2>
+        <div className="inline-block bg-blue-900 text-white px-8 py-2 rounded-full shadow-md">
+            <h2 className="text-2xl font-bold">{title}</h2>
+        </div>
     </div>
   );
+
+  const tableHeaderClass = "bg-slate-800 text-white border border-slate-600 p-3 text-center font-bold align-middle";
+  const tableCellClass = "border border-slate-300 p-2 text-center align-middle text-slate-800";
 
   return (
     <div className="space-y-6">
@@ -145,40 +169,34 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ReportCard title="সিস্টেম ডেইলি এন্ট্রি" desc="সকাল-দুপুর-রাত মিল ও চালের হিসাব।" onPdf={() => downloadReport(systemDailyRef, `System_Daily_${manager.month}`, 'pdf', 'l')} onImg={() => downloadReport(systemDailyRef, `System_Daily_${manager.month}`, 'image', 'l')} />
         <ReportCard title="বর্ডার লিস্ট" desc="নাম, মোবাইল ও রক্তের গ্রুপ।" onPdf={() => downloadReport(borderListRef, `Border_List`, 'pdf', 'p')} onImg={() => downloadReport(borderListRef, `Border_List`, 'image', 'p')} />
-        
-        {/* Market Split */}
         <ReportCard title="সাধারণ বাজার" desc="শুধুমাত্র সাধারণ বাজারের তালিকা।" onPdf={() => downloadReport(generalMarketRef, `General_Market_${manager.month}`, 'pdf', 'p')} onImg={() => downloadReport(generalMarketRef, `General_Market_${manager.month}`, 'image', 'p')} />
         <ReportCard title="অতিরিক্ত বাজার" desc="শুধুমাত্র অতিরিক্ত বাজারের তালিকা।" onPdf={() => downloadReport(extraMarketRef, `Extra_Market_${manager.month}`, 'pdf', 'p')} onImg={() => downloadReport(extraMarketRef, `Extra_Market_${manager.month}`, 'image', 'p')} />
-        
         <ReportCard title="দৈনিক চালের হিসাব" desc="বর্ডার ভিত্তিক দৈনিক চালের তালিকা।" onPdf={() => downloadReport(dailyRiceRef, `Daily_Rice_${manager.month}`, 'pdf', 'l')} onImg={() => downloadReport(dailyRiceRef, `Daily_Rice_${manager.month}`, 'image', 'l')} />
         <ReportCard title="দৈনিক মিলের হিসাব" desc="বর্ডার ভিত্তিক দৈনিক মিলের তালিকা।" onPdf={() => downloadReport(dailyMealRef, `Daily_Meal_${manager.month}`, 'pdf', 'l')} onImg={() => downloadReport(dailyMealRef, `Daily_Meal_${manager.month}`, 'image', 'l')} />
         <ReportCard title="মাসিক চালের হিসাব" desc="চাল জমা, খাওয়া ও ব্যালেন্স।" onPdf={() => downloadReport(monthlyRiceRef, `Monthly_Rice_${manager.month}`, 'pdf', 'p')} onImg={() => downloadReport(monthlyRiceRef, `Monthly_Rice_${manager.month}`, 'image', 'p')} />
         <ReportCard title="মাসিক মিল ও টাকা" desc="সম্পূর্ণ আর্থিক বিবরণী ও ব্যালেন্স।" onPdf={() => downloadReport(monthlyCostRef, `Monthly_Final_${manager.month}`, 'pdf', 'l')} onImg={() => downloadReport(monthlyCostRef, `Monthly_Final_${manager.month}`, 'image', 'l')} />
-        
-        {/* New Report */}
         <ReportCard title="বাজার লিস্ট (শিডিউল)" desc="মাসের বাজার করার শিডিউল।" onPdf={() => downloadReport(bazaarScheduleRef, `Bazaar_Schedule_${manager.month}`, 'pdf', 'p')} onImg={() => downloadReport(bazaarScheduleRef, `Bazaar_Schedule_${manager.month}`, 'image', 'p')} />
-
       </div>
 
       {/* --- HIDDEN PRINT AREAS --- */}
       
       {/* 1. System Daily Report */}
-      <div style={{ display: 'none' }} ref={systemDailyRef} className="bg-white p-6 w-[1600px] mx-auto">
+      <div style={{ display: 'none' }} ref={systemDailyRef} className="bg-white p-10 w-[1400px] mx-auto">
         <Header title="সিস্টেম ডেইলি এন্ট্রি (বাবুর্চি হিসাব)" />
-        <table className="w-full border-collapse text-xs border border-gray-400 text-center">
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-slate-800 text-white">
-                    <th rowSpan={2} className="border p-2 align-middle">তারিখ</th>
-                    <th colSpan={2} className="border p-1 bg-orange-700 align-middle">সকাল</th>
-                    <th colSpan={2} className="border p-1 bg-blue-700 align-middle">দুপুর</th>
-                    <th colSpan={2} className="border p-1 bg-purple-700 align-middle">রাত</th>
-                    <th colSpan={2} className="border p-1 bg-emerald-700 align-middle">মোট</th>
+                <tr>
+                    <th rowSpan={2} className={tableHeaderClass}>তারিখ</th>
+                    <th colSpan={2} className={`${tableHeaderClass} bg-orange-700`}>সকাল</th>
+                    <th colSpan={2} className={`${tableHeaderClass} bg-blue-700`}>দুপুর</th>
+                    <th colSpan={2} className={`${tableHeaderClass} bg-purple-700`}>রাত</th>
+                    <th colSpan={2} className={`${tableHeaderClass} bg-emerald-700`}>মোট</th>
                 </tr>
-                <tr className="bg-slate-700 text-white">
-                    <th className="border p-1 align-middle">মিল</th><th className="border p-1 align-middle">চাল</th>
-                    <th className="border p-1 align-middle">মিল</th><th className="border p-1 align-middle">চাল</th>
-                    <th className="border p-1 align-middle">মিল</th><th className="border p-1 align-middle">চাল</th>
-                    <th className="border p-1 align-middle">মিল</th><th className="border p-1 align-middle">চাল</th>
+                <tr>
+                    <th className={tableHeaderClass}>মিল</th><th className={tableHeaderClass}>চাল</th>
+                    <th className={tableHeaderClass}>মিল</th><th className={tableHeaderClass}>চাল</th>
+                    <th className={tableHeaderClass}>মিল</th><th className={tableHeaderClass}>চাল</th>
+                    <th className={tableHeaderClass}>মিল</th><th className={tableHeaderClass}>চাল</th>
                 </tr>
             </thead>
             <tbody>
@@ -186,46 +204,52 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     const dayData = manager.systemDaily?.[d];
                     const dM = (dayData?.morning?.meal||0) + (dayData?.lunch?.meal||0) + (dayData?.dinner?.meal||0);
                     const dR = (dayData?.morning?.rice||0) + (dayData?.lunch?.rice||0) + (dayData?.dinner?.rice||0);
-                    if(!dM && !dR) return null; // Skip empty days in print? Or keep for structure. Let's keep distinct days.
+                    if(!dM && !dR) return null;
                     return (
-                        <tr key={d} className="border-b border-gray-300">
-                            <td className="border p-2 font-bold bg-slate-100 align-middle">{d}</td>
-                            <td className="border p-1 align-middle">{dayData?.morning?.meal || '-'}</td><td className="border p-1 text-orange-700 font-bold align-middle">{dayData?.morning?.rice || '-'}</td>
-                            <td className="border p-1 align-middle">{dayData?.lunch?.meal || '-'}</td><td className="border p-1 text-blue-700 font-bold align-middle">{dayData?.lunch?.rice || '-'}</td>
-                            <td className="border p-1 align-middle">{dayData?.dinner?.meal || '-'}</td><td className="border p-1 text-purple-700 font-bold align-middle">{dayData?.dinner?.rice || '-'}</td>
-                            <td className="border p-1 bg-emerald-50 font-bold align-middle">{dM}</td><td className="border p-1 bg-emerald-100 font-bold text-emerald-800 align-middle">{dR.toFixed(1)}</td>
+                        <tr key={d} className="hover:bg-slate-50">
+                            <td className={`${tableCellClass} font-bold bg-slate-100`}>{d}</td>
+                            <td className={tableCellClass}>{dayData?.morning?.meal || '-'}</td><td className={`${tableCellClass} text-orange-700 font-bold`}>{dayData?.morning?.rice || '-'}</td>
+                            <td className={tableCellClass}>{dayData?.lunch?.meal || '-'}</td><td className={`${tableCellClass} text-blue-700 font-bold`}>{dayData?.lunch?.rice || '-'}</td>
+                            <td className={tableCellClass}>{dayData?.dinner?.meal || '-'}</td><td className={`${tableCellClass} text-purple-700 font-bold`}>{dayData?.dinner?.rice || '-'}</td>
+                            <td className={`${tableCellClass} bg-emerald-50 font-bold`}>{dM}</td><td className={`${tableCellClass} bg-emerald-100 font-bold text-emerald-800`}>{dR.toFixed(1)}</td>
                         </tr>
                     )
                 })}
                 <tr className="bg-slate-200 font-bold">
-                    <td className="border p-2 align-middle">সর্বমোট</td>
-                    <td colSpan={6} className="border p-2 text-right align-middle">মাসের মোট:</td>
-                    <td className="border p-2 align-middle">{sysTotals.tMeals}</td>
-                    <td className="border p-2 align-middle">{sysTotals.tRice.toFixed(1)}</td>
+                    <td className={tableCellClass}>সর্বমোট</td>
+                    <td colSpan={6} className={`${tableCellClass} text-right pr-4`}>মাসের মোট:</td>
+                    <td className={tableCellClass}>{sysTotals.tMeals}</td>
+                    <td className={tableCellClass}>{sysTotals.tRice.toFixed(1)}</td>
                 </tr>
             </tbody>
         </table>
+        <div className="mt-8 p-4 bg-slate-50 border-2 border-slate-200 rounded-lg grid grid-cols-4 gap-4 text-center font-bold">
+            <div className="p-2 border-r border-slate-300">গত মাসের জমা চাল: <span className="text-blue-700">{manager.prevRiceBalance || 0}</span></div>
+            <div className="p-2 border-r border-slate-300">মোট জমা চাল: <span className="text-green-700">{(manager.prevRiceBalance || 0) + borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0)}</span></div>
+            <div className="p-2 border-r border-slate-300">মোট খাওয়া চাল: <span className="text-red-700">{sysTotals.tRice.toFixed(1)}</span></div>
+            <div className="p-2">অবশিষ্ট চাল: <span className="text-purple-700">{((manager.prevRiceBalance || 0) + borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) - sysTotals.tRice).toFixed(1)}</span></div>
+        </div>
       </div>
 
       {/* 2. Border List Report */}
-      <div style={{ display: 'none' }} ref={borderListRef} className="bg-white p-8 w-[1000px] mx-auto">
+      <div style={{ display: 'none' }} ref={borderListRef} className="bg-white p-10 w-[1000px] mx-auto">
         <Header title="বর্ডার তালিকা ও তথ্য" />
-        <table className="w-full border-collapse text-sm border border-gray-400">
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-slate-800 text-white">
-                    <th className="border p-3 w-16 align-middle">ক্রম</th>
-                    <th className="border p-3 text-left align-middle">বর্ডার নাম</th>
-                    <th className="border p-3 align-middle">মোবাইল নাম্বার</th>
-                    <th className="border p-3 align-middle">রক্তের গ্রুপ</th>
+                <tr>
+                    <th className={`${tableHeaderClass} w-20`}>ক্রমিক নং</th>
+                    <th className={`${tableHeaderClass} text-left pl-6`}>বর্ডার নাম</th>
+                    <th className={tableHeaderClass}>মোবাইল নাম্বার</th>
+                    <th className={tableHeaderClass}>রক্তের গ্রুপ</th>
                 </tr>
             </thead>
             <tbody>
                 {borders.map((b, idx) => (
-                    <tr key={b.id} className="text-center border-b hover:bg-slate-50">
-                        <td className="border p-3 align-middle">{idx + 1}</td>
-                        <td className="border p-3 text-left font-bold align-middle">{b.name}</td>
-                        <td className="border p-3 font-mono align-middle">{b.mobile || '-'}</td>
-                        <td className="border p-3 text-red-600 font-bold align-middle">{b.bloodGroup || '-'}</td>
+                    <tr key={b.id} className="hover:bg-slate-50">
+                        <td className={tableCellClass}>{idx + 1}</td>
+                        <td className={`${tableCellClass} text-left pl-6 font-bold`}>{b.name}</td>
+                        <td className={`${tableCellClass} font-mono`}>{b.mobile || '-'}</td>
+                        <td className={`${tableCellClass} text-red-600 font-bold`}>{b.bloodGroup || '-'}</td>
                     </tr>
                 ))}
             </tbody>
@@ -233,82 +257,86 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       </div>
 
       {/* 3. General Market List Report */}
-      <div style={{ display: 'none' }} ref={generalMarketRef} className="bg-white p-8 w-[1000px] mx-auto">
+      <div style={{ display: 'none' }} ref={generalMarketRef} className="bg-white p-10 w-[1000px] mx-auto">
         <Header title="সাধারণ বাজার তালিকা" />
-        <table className="w-full border-collapse text-sm border border-gray-400">
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-blue-600 text-white">
-                    <th className="border p-2 align-middle">তারিখ</th>
-                    <th className="border p-2 text-left align-middle">বাজারকারী</th>
-                    <th className="border p-2 text-right align-middle">টাকা</th>
+                <tr>
+                    <th className={`${tableHeaderClass} w-20`}>ক্রমিক</th>
+                    <th className={tableHeaderClass}>বাজার করার তারিখ</th>
+                    <th className={`${tableHeaderClass} text-left pl-6`}>বাজারকারীর নাম</th>
+                    <th className={`${tableHeaderClass} text-right pr-6`}>বাজারের টাকা</th>
                 </tr>
             </thead>
             <tbody>
-                {expenses.filter(e => e.type === 'market').map(e => (
-                    <tr key={e.id} className="border-b">
-                        <td className="border p-2 text-center align-middle">{e.date}</td>
-                        <td className="border p-2 font-semibold align-middle">{e.shopper}</td>
-                        <td className="border p-2 text-right font-bold align-middle">{e.amount}</td>
+                {expenses.filter(e => e.type === 'market').map((e, idx) => (
+                    <tr key={e.id} className="hover:bg-slate-50">
+                        <td className={tableCellClass}>{idx + 1}</td>
+                        <td className={tableCellClass}>{e.date}</td>
+                        <td className={`${tableCellClass} text-left pl-6 font-semibold`}>{e.shopper}</td>
+                        <td className={`${tableCellClass} text-right pr-6 font-bold`}>{e.amount}</td>
                     </tr>
                 ))}
-                    <tr className="bg-blue-50 font-bold">
-                        <td colSpan={2} className="border p-2 text-right text-lg align-middle">সর্বমোট:</td>
-                        <td className="border p-2 text-right text-lg align-middle">{expenses.filter(e => e.type === 'market').reduce((a,b)=>a+b.amount,0)}</td>
-                    </tr>
+                <tr className="bg-blue-50 font-bold">
+                    <td colSpan={3} className={`${tableCellClass} text-right pr-6 text-xl`}>মোট সাধারণ বাজার:</td>
+                    <td className={`${tableCellClass} text-right pr-6 text-xl text-blue-800`}>{expenses.filter(e => e.type === 'market').reduce((a,b)=>a+b.amount,0)}</td>
+                </tr>
             </tbody>
         </table>
       </div>
 
       {/* 4. Extra Market List Report */}
-      <div style={{ display: 'none' }} ref={extraMarketRef} className="bg-white p-8 w-[1000px] mx-auto">
+      <div style={{ display: 'none' }} ref={extraMarketRef} className="bg-white p-10 w-[1000px] mx-auto">
         <Header title="অতিরিক্ত বাজার তালিকা" />
-        <table className="w-full border-collapse text-sm border border-gray-400">
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-red-600 text-white">
-                    <th className="border p-2 align-middle">তারিখ</th>
-                    <th className="border p-2 text-left align-middle">বিবরণ</th>
-                    <th className="border p-2 text-right align-middle">টাকা</th>
+                <tr>
+                    <th className={`${tableHeaderClass} w-20`}>ক্রমিক</th>
+                    <th className={tableHeaderClass}>বাজার করার তারিখ</th>
+                    <th className={`${tableHeaderClass} text-left pl-6`}>অতিরিক্ত বাজার এর নাম</th>
+                    <th className={`${tableHeaderClass} text-right pr-6`}>বাজারের টাকা</th>
                 </tr>
             </thead>
             <tbody>
-                {expenses.filter(e => e.type === 'extra').map(e => (
-                    <tr key={e.id} className="border-b">
-                        <td className="border p-2 text-center align-middle">{e.date}</td>
-                        <td className="border p-2 font-semibold align-middle">{e.shopper}</td>
-                        <td className="border p-2 text-right font-bold align-middle">{e.amount}</td>
+                {expenses.filter(e => e.type === 'extra').map((e, idx) => (
+                    <tr key={e.id} className="hover:bg-slate-50">
+                        <td className={tableCellClass}>{idx + 1}</td>
+                        <td className={tableCellClass}>{e.date}</td>
+                        <td className={`${tableCellClass} text-left pl-6 font-semibold`}>{e.shopper}</td>
+                        <td className={`${tableCellClass} text-right pr-6 font-bold`}>{e.amount}</td>
                     </tr>
                 ))}
-                    <tr className="bg-red-50 font-bold">
-                        <td colSpan={2} className="border p-2 text-right text-lg align-middle">সর্বমোট:</td>
-                        <td className="border p-2 text-right text-lg align-middle">{expenses.filter(e => e.type === 'extra').reduce((a,b)=>a+b.amount,0)}</td>
-                    </tr>
+                <tr className="bg-red-50 font-bold">
+                    <td colSpan={3} className={`${tableCellClass} text-right pr-6 text-xl`}>মোট অতিরিক্ত বাজার:</td>
+                    <td className={`${tableCellClass} text-right pr-6 text-xl text-red-800`}>{expenses.filter(e => e.type === 'extra').reduce((a,b)=>a+b.amount,0)}</td>
+                </tr>
             </tbody>
         </table>
       </div>
 
       {/* 5. Daily Rice Sheet */}
-      <div style={{ display: 'none' }} ref={dailyRiceRef} className="bg-white p-6 w-[1600px] mx-auto">
+      <div style={{ display: 'none' }} ref={dailyRiceRef} className="bg-white p-8 w-[1600px] mx-auto">
         <Header title="দৈনিক চালের হিসাব (বর্ডার ভিত্তিক)" />
-        <table className="w-full border-collapse text-[11px] border border-gray-400">
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-gray-200">
-                    <th className="border border-gray-400 p-2 w-8 align-middle">ক্রম</th>
-                    <th className="border border-gray-400 p-2 text-left px-2 w-32 align-middle">বর্ডার নাম</th>
-                    {days.map(d => <th key={d} className="border border-gray-400 p-1 w-6 text-center align-middle">{d}</th>)}
-                    <th className="border border-gray-400 p-2 w-12 bg-yellow-100 align-middle">মোট</th>
+                <tr className="bg-slate-800 text-white">
+                    <th className={`${tableHeaderClass} w-12`}>ক্রম</th>
+                    <th className={`${tableHeaderClass} text-left pl-4 w-48`}>বর্ডার নাম</th>
+                    {days.map(d => <th key={d} className={`${tableHeaderClass} w-10 p-1`}>{d}</th>)}
+                    <th className={`${tableHeaderClass} w-20 bg-yellow-700`}>মোট</th>
                 </tr>
             </thead>
             <tbody>
                 {borders.map((b, idx) => (
-                    <tr key={b.id} className="text-center hover:bg-slate-50">
-                        <td className="border border-gray-400 p-1 align-middle" style={{height: '24px', verticalAlign: 'middle'}}>{idx + 1}</td>
-                        <td className="border border-gray-400 font-bold text-left px-2 truncate align-middle" style={{height: '24px', verticalAlign: 'middle'}}>{b.name}</td>
+                    <tr key={b.id} className="hover:bg-slate-50">
+                        <td className={tableCellClass}>{idx + 1}</td>
+                        <td className={`${tableCellClass} text-left pl-4 font-bold`}>{b.name}</td>
                         {days.map(d => (
-                            <td key={d} className="border border-gray-400 p-0 text-slate-800 align-middle" style={{height: '24px', verticalAlign: 'middle'}}>
+                            <td key={d} className={tableCellClass}>
                                 {b.dailyUsage[d]?.rice > 0 ? b.dailyUsage[d]?.rice : ''}
                             </td>
                         ))}
-                        <td className="border border-gray-400 font-bold bg-yellow-50 align-middle" style={{height: '24px', verticalAlign: 'middle'}}>{getTotalRice(b).toFixed(1)}</td>
+                        <td className={`${tableCellClass} font-bold bg-yellow-50 text-yellow-900`}>{getTotalRice(b).toFixed(1)}</td>
                     </tr>
                 ))}
             </tbody>
@@ -316,61 +344,61 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       </div>
 
       {/* 6. Daily Meal Sheet */}
-      <div style={{ display: 'none' }} ref={dailyMealRef} className="bg-white p-6 w-[1600px] mx-auto">
+      <div style={{ display: 'none' }} ref={dailyMealRef} className="bg-white p-8 w-[1600px] mx-auto">
         <Header title="দৈনিক মিলের হিসাব (বর্ডার ভিত্তিক)" />
-        <table className="w-full border-collapse text-[11px] border border-gray-400">
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-gray-200">
-                    <th className="border border-gray-400 p-2 w-8 align-middle">ক্রম</th>
-                    <th className="border border-gray-400 p-2 text-left px-2 w-32 align-middle">বর্ডার নাম</th>
-                    {days.map(d => <th key={d} className="border border-gray-400 p-1 w-6 text-center align-middle">{d}</th>)}
-                    <th className="border border-gray-400 p-2 w-12 bg-blue-100 align-middle">মোট</th>
+                <tr className="bg-slate-800 text-white">
+                    <th className={`${tableHeaderClass} w-12`}>ক্রম</th>
+                    <th className={`${tableHeaderClass} text-left pl-4 w-48`}>বর্ডার নাম</th>
+                    {days.map(d => <th key={d} className={`${tableHeaderClass} w-10 p-1`}>{d}</th>)}
+                    <th className={`${tableHeaderClass} w-20 bg-blue-700`}>মোট</th>
                 </tr>
             </thead>
             <tbody>
                 {borders.map((b, idx) => (
-                    <tr key={b.id} className="text-center hover:bg-slate-50">
-                        <td className="border border-gray-400 p-1 align-middle" style={{height: '24px', verticalAlign: 'middle'}}>{idx + 1}</td>
-                        <td className="border border-gray-400 font-bold text-left px-2 truncate align-middle" style={{height: '24px', verticalAlign: 'middle'}}>{b.name}</td>
+                    <tr key={b.id} className="hover:bg-slate-50">
+                        <td className={tableCellClass}>{idx + 1}</td>
+                        <td className={`${tableCellClass} text-left pl-4 font-bold`}>{b.name}</td>
                         {days.map(d => (
-                            <td key={d} className="border border-gray-400 p-0 text-blue-900 font-bold align-middle" style={{height: '24px', verticalAlign: 'middle'}}>
+                            <td key={d} className={`${tableCellClass} text-blue-900 font-bold`}>
                                 {b.dailyUsage[d]?.meals > 0 ? b.dailyUsage[d]?.meals : ''}
                             </td>
                         ))}
-                        <td className="border border-gray-400 font-bold bg-blue-50 align-middle" style={{height: '24px', verticalAlign: 'middle'}}>{getTotalMeals(b)}</td>
+                        <td className={`${tableCellClass} font-bold bg-blue-50 text-blue-900`}>{getTotalMeals(b)}</td>
                     </tr>
                 ))}
             </tbody>
         </table>
       </div>
 
-       {/* 7. Monthly Rice Sheet (Portrait) */}
-       <div style={{ display: 'none' }} ref={monthlyRiceRef} className="bg-white p-8 w-[1000px] mx-auto">
+       {/* 7. Monthly Rice Sheet */}
+       <div style={{ display: 'none' }} ref={monthlyRiceRef} className="bg-white p-10 w-[1100px] mx-auto">
         <Header title="মাসিক চালের হিসাব" />
-        <table className="w-full border-collapse text-sm border border-gray-800">
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-slate-800 text-white">
-                    <th className="border border-gray-600 p-2 align-middle">ক্রম</th>
-                    <th className="border border-gray-600 p-2 text-left align-middle">বর্ডার নাম</th>
-                    <th className="border border-gray-600 p-2 bg-green-700 align-middle">চাল জমা (পট)</th>
-                    <th className="border border-gray-600 p-2 bg-red-700 align-middle">চাল খাওয়া (পট)</th>
-                    <th className="border border-gray-600 p-2 bg-blue-700 align-middle">ম্যানেজার পাবে (শর্ট)</th>
-                    <th className="border border-gray-600 p-2 bg-emerald-700 align-middle">ম্যানেজার দিবে (উদ্বৃত্ত)</th>
+                <tr>
+                    <th className={`${tableHeaderClass} w-16`}>ক্রমিক</th>
+                    <th className={`${tableHeaderClass} text-left pl-6`}>বর্ডার নাম</th>
+                    <th className={`${tableHeaderClass} bg-green-700`}>চাল জমা (পট)</th>
+                    <th className={`${tableHeaderClass} bg-red-700`}>চাল খাওয়া (পট)</th>
+                    <th className={`${tableHeaderClass} bg-blue-700`}>ম্যানেজার পাবে</th>
+                    <th className={`${tableHeaderClass} bg-emerald-700`}>ম্যানেজার দিবে</th>
                 </tr>
             </thead>
             <tbody>
                 {borders.map((b, idx) => {
                     const stats = calculateBorderStats(b);
                     return (
-                        <tr key={b.id} className="text-center hover:bg-gray-50">
-                            <td className="border border-gray-600 p-2 align-middle">{idx + 1}</td>
-                            <td className="border border-gray-600 p-2 text-left font-bold align-middle">{b.name}</td>
-                            <td className="border border-gray-600 p-2 font-mono bg-green-50 text-base align-middle">{stats.totalRiceDeposit.toFixed(2)}</td>
-                            <td className="border border-gray-600 p-2 font-mono bg-red-50 text-base align-middle">{stats.riceEaten.toFixed(2)}</td>
-                            <td className="border border-gray-600 p-2 font-bold font-mono text-red-600 align-middle">
+                        <tr key={b.id} className="hover:bg-slate-50">
+                            <td className={tableCellClass}>{idx + 1}</td>
+                            <td className={`${tableCellClass} text-left pl-6 font-bold`}>{b.name}</td>
+                            <td className={`${tableCellClass} font-mono bg-green-50 font-bold`}>{stats.totalRiceDeposit.toFixed(2)}</td>
+                            <td className={`${tableCellClass} font-mono bg-red-50 font-bold`}>{stats.riceEaten.toFixed(2)}</td>
+                            <td className={`${tableCellClass} font-bold text-red-600`}>
                                 {stats.riceBalance < 0 ? Math.abs(stats.riceBalance).toFixed(2) : '-'}
                             </td>
-                            <td className="border border-gray-600 p-2 font-bold font-mono text-green-600 align-middle">
+                            <td className={`${tableCellClass} font-bold text-green-600`}>
                                 {stats.riceBalance >= 0 ? stats.riceBalance.toFixed(2) : '-'}
                             </td>
                         </tr>
@@ -380,43 +408,41 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
         </table>
       </div>
 
-       {/* 8. Monthly Financial Sheet (Landscape) */}
-       <div style={{ display: 'none' }} ref={monthlyCostRef} className="bg-white p-8 w-[1400px] mx-auto">
+       {/* 8. Monthly Financial Sheet */}
+       <div style={{ display: 'none' }} ref={monthlyCostRef} className="bg-white p-10 w-[1500px] mx-auto">
         <Header title="মাসিক মিল ও টাকার হিসাব" />
-        <div className="text-center mb-4"><span className="bg-gray-100 px-4 py-1 rounded">মিল রেট: {manager.mealRate.toFixed(2)} টাকা</span></div>
-        <table className="w-full border-collapse text-sm border border-gray-800">
+        <div className="text-center mb-6"><span className="bg-blue-50 text-blue-900 border-2 border-blue-200 px-6 py-2 rounded-full font-black text-xl shadow-sm">মিল রেট: {manager.mealRate.toFixed(2)} টাকা</span></div>
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-slate-900 text-white text-xs">
-                    <th className="border border-gray-600 p-2 w-10 align-middle">ক্রম</th>
-                    <th className="border border-gray-600 p-2 text-left align-middle">বর্ডার নাম</th>
-                    <th className="border border-gray-600 p-2 bg-emerald-700 align-middle">টাকা জমা</th>
-                    <th className="border border-gray-600 p-2 align-middle">মোট মিল</th>
-                    <th className="border border-gray-600 p-2 align-middle">মিল খরচ</th>
-                    <th className="border border-gray-600 p-2 align-middle">অতিরিক্ত খরচ (নিজ+গেস্ট)</th>
-                    <th className="border border-gray-600 p-2 bg-rose-700 align-middle">মোট খরচ</th>
-                    <th className="border border-gray-600 p-2 bg-blue-900 align-middle">ম্যানেজার পাবে (ডিউ)</th>
-                    <th className="border border-gray-600 p-2 bg-green-900 align-middle">ম্যানেজার দিবে (ফেরত)</th>
+                <tr>
+                    <th className={`${tableHeaderClass} w-16`}>ক্রম</th>
+                    <th className={`${tableHeaderClass} text-left pl-4`}>বর্ডার নাম</th>
+                    <th className={`${tableHeaderClass} bg-emerald-700`}>টাকা জমা</th>
+                    <th className={tableHeaderClass}>মোট মিল</th>
+                    <th className={tableHeaderClass}>মিল খরচ</th>
+                    <th className={tableHeaderClass}>অতিরিক্ত খরচ</th>
+                    <th className={`${tableHeaderClass} bg-rose-700`}>মোট খরচ</th>
+                    <th className={`${tableHeaderClass} bg-blue-900`}>ম্যানেজার পাবে</th>
+                    <th className={`${tableHeaderClass} bg-green-900`}>ম্যানেজার দিবে</th>
                 </tr>
             </thead>
             <tbody>
                 {borders.map((b, idx) => {
                     const stats = calculateBorderStats(b);
-                    // Total Extra = Personal + Guest (Shared extra is excluded)
                     const totalExtraDisplay = b.extraCost + b.guestCost;
-                    
                     return (
-                        <tr key={b.id} className="text-center hover:bg-gray-50 text-gray-900">
-                            <td className="border border-gray-600 p-2 align-middle">{idx + 1}</td>
-                            <td className="border border-gray-600 p-2 text-left font-bold text-base align-middle">{b.name}</td>
-                            <td className="border border-gray-600 p-2 font-mono bg-emerald-50 text-base font-bold align-middle">{stats.totalMoneyDeposit.toFixed(0)}</td>
-                            <td className="border border-gray-600 p-2 font-mono align-middle">{stats.mealsEaten}</td>
-                            <td className="border border-gray-600 p-2 font-mono align-middle">{stats.mealCost.toFixed(0)}</td>
-                            <td className="border border-gray-600 p-2 text-red-600 font-mono font-semibold align-middle">{totalExtraDisplay.toFixed(0)}</td>
-                            <td className="border border-gray-600 p-2 font-bold bg-rose-50 font-mono text-base align-middle">{stats.totalCost.toFixed(0)}</td>
-                            <td className="border border-gray-600 p-2 font-bold bg-blue-50 font-mono text-base text-red-600 align-middle">
+                        <tr key={b.id} className="hover:bg-slate-50">
+                            <td className={tableCellClass}>{idx + 1}</td>
+                            <td className={`${tableCellClass} text-left pl-4 font-bold text-lg`}>{b.name}</td>
+                            <td className={`${tableCellClass} font-mono bg-emerald-50 font-bold text-lg`}>{stats.totalMoneyDeposit.toFixed(0)}</td>
+                            <td className={`${tableCellClass} font-mono`}>{stats.mealsEaten}</td>
+                            <td className={`${tableCellClass} font-mono`}>{stats.mealCost.toFixed(0)}</td>
+                            <td className={`${tableCellClass} text-red-600 font-mono font-semibold`}>{totalExtraDisplay.toFixed(0)}</td>
+                            <td className={`${tableCellClass} font-bold bg-rose-50 font-mono text-lg`}>{stats.totalCost.toFixed(0)}</td>
+                            <td className={`${tableCellClass} font-bold bg-blue-50 font-mono text-lg text-red-600`}>
                                 {stats.moneyBalance < 0 ? Math.abs(stats.moneyBalance).toFixed(0) : '-'}
                             </td>
-                            <td className="border border-gray-600 p-2 font-bold bg-green-50 font-mono text-base text-green-600 align-middle">
+                            <td className={`${tableCellClass} font-bold bg-green-50 font-mono text-lg text-green-600`}>
                                 {stats.moneyBalance >= 0 ? stats.moneyBalance.toFixed(0) : '-'}
                             </td>
                         </tr>
@@ -424,37 +450,37 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 })}
             </tbody>
         </table>
-        <div className="mt-12 flex justify-between px-20">
+        <div className="mt-20 flex justify-between px-32">
             <div className="text-center">
-                <p className="border-t border-black pt-1 w-40 font-semibold">হিসাব রক্ষক</p>
+                <div className="w-48 border-t-2 border-slate-800 pt-2 font-bold text-lg">হিসাব রক্ষক</div>
             </div>
             <div className="text-center">
-                <p className="border-t border-black pt-1 w-40 font-semibold">ম্যানেজার স্বাক্ষর</p>
+                <div className="w-48 border-t-2 border-slate-800 pt-2 font-bold text-lg">ম্যানেজার স্বাক্ষর</div>
             </div>
         </div>
       </div>
       
       {/* 9. Bazaar Schedule Report */}
-      <div style={{ display: 'none' }} ref={bazaarScheduleRef} className="bg-white p-8 w-[1000px] mx-auto">
-        <Header title="বাজার শিডিউল (লিস্ট)" />
-        <table className="w-full border-collapse text-sm border border-gray-800 text-center">
+      <div style={{ display: 'none' }} ref={bazaarScheduleRef} className="bg-white p-10 w-[1100px] mx-auto">
+        <Header title="বাজার লিস্ট (শিডিউল)" />
+        <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
-                <tr className="bg-slate-800 text-white">
-                    <th className="border border-gray-600 p-3 align-middle">তারিখ</th>
-                    <th className="border border-gray-600 p-3 align-middle">বার</th>
-                    <th className="border border-gray-600 p-3 align-middle">বাজারকারী টিম</th>
-                    <th className="border border-gray-600 p-3 align-middle">মন্তব্য / সিগনেচার</th>
+                <tr>
+                    <th className={tableHeaderClass}>বাজার এর তারিখ</th>
+                    <th className={tableHeaderClass}>বার</th>
+                    <th className={`${tableHeaderClass} text-left pl-6`}>বাজারকারী এর নাম</th>
+                    <th className={tableHeaderClass}>মন্তব্য বা সিগনেচার</th>
                 </tr>
             </thead>
             <tbody>
                 {sortedBazaarSchedule.length === 0 ? (
-                    <tr><td colSpan={4} className="p-4">কোন শিডিউল নেই</td></tr>
+                    <tr><td colSpan={4} className={`${tableCellClass} p-10 text-slate-400 italic`}>কোন শিডিউল নেই</td></tr>
                 ) : (
                     sortedBazaarSchedule.map((shift: BazaarShift) => (
-                        <tr key={shift.date} className="hover:bg-gray-50">
-                            <td className="border border-gray-600 p-3 font-bold text-lg align-middle">{shift.date}</td>
-                            <td className="border border-gray-600 p-3 align-middle">{getDayName(shift.date)}</td>
-                            <td className="border border-gray-600 p-3 font-bold text-lg align-middle">
+                        <tr key={shift.date} className="hover:bg-slate-50">
+                            <td className={`${tableCellClass} font-bold text-xl`}>{shift.date}</td>
+                            <td className={tableCellClass}>{getDayName(shift.date)}</td>
+                            <td className={`${tableCellClass} text-left pl-6 font-bold text-lg`}>
                                 {shift.shoppers && shift.shoppers.length > 0 ? (
                                     shift.shoppers.map((s, i) => (
                                         <span key={s.id}>
@@ -463,10 +489,10 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                                         </span>
                                     ))
                                 ) : (
-                                    <span className="text-gray-300">-- ফাঁকা --</span>
+                                    <span className="text-slate-300">-- ফাঁকা --</span>
                                 )}
                             </td>
-                            <td className="border border-gray-600 p-3 align-middle"></td>
+                            <td className={`${tableCellClass} w-48`}></td>
                         </tr>
                     ))
                 )}
