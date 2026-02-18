@@ -12,6 +12,7 @@ import * as dbService from './services/firebaseService';
 import Layout from './components/Layout';
 import Reports from './components/Reports';
 import IftaarManagement from './components/IftaarManagement';
+import RamadanSchedule from './components/RamadanSchedule';
 import { FACEBOOK_LINK, DEVELOPER_NAME } from './constants';
 
 // --- DEVELOPER MODAL ---
@@ -1835,9 +1836,10 @@ const App: React.FC = () => {
                              </div>
                          )}
 
-                         {activeBorderTab === 'overview' && (
-                             <div className="space-y-6">
-                                  {/* Action Buttons for Border */}
+{activeBorderTab === 'overview' && (
+	                             <div className="space-y-6">
+	                                  <RamadanSchedule />
+	                                  {/* Action Buttons for Border */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                       <button onClick={() => setShowBorderDailyMealReport(true)} className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
                                           <Calendar size={24} /> দৈনিক মিল আপডেট
@@ -2150,11 +2152,12 @@ const App: React.FC = () => {
 
                             {/* Main Content */}
                             <div className="flex-1 min-w-0">
-                                {activeTab === 'dashboard' && (
-                                    <div className="space-y-6 animate-fade-in">
-                                        <ManagerOverview manager={manager} borders={borders} expenses={expenses} />
-                                    </div>
-                                )}
+{activeTab === 'dashboard' && (
+	                                    <div className="space-y-6 animate-fade-in">
+	                                        <RamadanSchedule />
+	                                        <ManagerOverview manager={manager} borders={borders} expenses={expenses} />
+	                                    </div>
+	                                )}
                                 {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} /></div>}
                                 {activeTab === 'schedule' && <div className="animate-fade-in"><BazaarSchedulePage manager={manager} borders={borders} isManager={true} currentUser={undefined} onUpdate={(m) => setManager(m)} /></div>}
                                 {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} manager={manager} onUpdateManager={(data: any) => {
