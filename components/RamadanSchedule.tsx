@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { Moon, Sun, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 interface RamadanDay {
   ramadan: number;
@@ -43,6 +44,8 @@ const RAMADAN_DATA: RamadanDay[] = [
   { ramadan: 30, date: "২০ মার্চ", sehri: "৪:৪৯", fajr: "৪:৫৩", iftaar: "৬:১৫", fullDate: new Date(2026, 2, 20) },
 ];
 
+const EID_DATE = new Date(2026, 2, 21); // March 21, 2026
+
 const toBengaliDigits = (num: number | string) => {
   const bengaliDigits: { [key: string]: string } = {
     '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'
@@ -52,24 +55,58 @@ const toBengaliDigits = (num: number | string) => {
 
 const RamadanSchedule: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isRamadan, setIsRamadan] = useState<boolean>(false);
+  const [isEid, setIsEid] = useState<boolean>(false);
 
   useEffect(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const index = RAMADAN_DATA.findIndex(day => {
-      const d = new Date(day.fullDate);
-      d.setHours(0, 0, 0, 0);
-      return d.getTime() === today.getTime();
-    });
+    // Check for Eid
+    const eidDay = new Date(EID_DATE);
+    eidDay.setHours(0, 0, 0, 0);
+    if (today.getTime() === eidDay.getTime()) {
+      setIsEid(true);
+      triggerConfetti();
+      return;
+    }
 
-    if (index !== -1) {
-      setCurrentIndex(index);
-    } else {
-      // If not in Ramadan, show 1st Ramadan or closest
-      setCurrentIndex(0);
+    // Check for Ramadan
+    const firstDay = new Date(RAMADAN_DATA[0].fullDate);
+    firstDay.setHours(0, 0, 0, 0);
+    const lastDay = new Date(RAMADAN_DATA[RAMADAN_DATA.length - 1].fullDate);
+    lastDay.setHours(0, 0, 0, 0);
+
+    if (today >= firstDay && today <= lastDay) {
+      setIsRamadan(true);
+      const index = RAMADAN_DATA.findIndex(day => {
+        const d = new Date(day.fullDate);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime();
+      });
+      if (index !== -1) setCurrentIndex(index);
     }
   }, []);
+
+  const triggerConfetti = () => {
+    const duration = 15 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  };
 
   const handlePrev = () => {
     setCurrentIndex(prev => (prev > 0 ? prev - 1 : RAMADAN_DATA.length - 1));
@@ -78,6 +115,24 @@ const RamadanSchedule: React.FC = () => {
   const handleNext = () => {
     setCurrentIndex(prev => (prev < RAMADAN_DATA.length - 1 ? prev + 1 : 0));
   };
+
+  if (isEid) {
+    return (
+      <div className="bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 rounded-2xl p-8 shadow-2xl text-white text-center relative overflow-hidden mb-6 animate-fade-in">
+        <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+          <div className="absolute top-10 left-10 animate-bounce"><PartyPopper size={40} /></div>
+          <div className="absolute bottom-10 right-10 animate-bounce delay-700"><PartyPopper size={40} /></div>
+        </div>
+        <h1 className="text-3xl md:text-5xl font-extrabold mb-4 font-baloo animate-pulse">ঈদ মোবারক!</h1>
+        <div className="bg-white/20 backdrop-blur-md py-4 px-6 rounded-2xl border border-white/30 inline-block mb-4">
+          <p className="text-xl md:text-2xl font-bold">পবিত্র ঈদ-উল-ফিতরের শুভেচ্ছা - শরিফুল</p>
+        </div>
+        <p className="text-sm opacity-80">আল্লাহ আপনার সকল নেক আমল কবুল করুন।</p>
+      </div>
+    );
+  }
+
+  if (!isRamadan) return null;
 
   const currentDay = RAMADAN_DATA[currentIndex];
 
@@ -89,12 +144,23 @@ const RamadanSchedule: React.FC = () => {
       </div>
       
       <div className="relative z-10">
+        {/* Marquee Section */}
+        <div className="bg-black/20 backdrop-blur-sm py-2 px-4 rounded-lg mb-6 overflow-hidden border border-white/10">
+          <div className="whitespace-nowrap animate-marquee flex items-center gap-4">
+            <span className="font-bold text-yellow-300">পবিত্র মাহে রমজান এর শুভেচ্ছা - শরিফুল</span>
+            <span className="opacity-50">•</span>
+            <span className="font-bold text-yellow-300">পবিত্র মাহে রমজান এর শুভেচ্ছা - শরিফুল</span>
+            <span className="opacity-50">•</span>
+            <span className="font-bold text-yellow-300">পবিত্র মাহে রমজান এর শুভেচ্ছা - শরিফুল</span>
+          </div>
+        </div>
+
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
             <CalendarIcon size={18} />
             <span className="text-sm font-bold">{currentDay.date}</span>
           </div>
-          <div className="bg-yellow-400 text-emerald-900 px-4 py-1.5 rounded-full font-bold shadow-lg animate-pulse">
+          <div className="bg-yellow-400 text-emerald-900 px-4 py-1.5 rounded-full font-bold shadow-lg">
             {toBengaliDigits(currentDay.ramadan)} তম রোজা
           </div>
         </div>
@@ -143,6 +209,16 @@ const RamadanSchedule: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+          animation: marquee 15s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };
