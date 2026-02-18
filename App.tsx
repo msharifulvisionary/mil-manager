@@ -1519,6 +1519,8 @@ const App: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'|'schedule'|'iftaar'>('dashboard');
   const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'|'iftaar'|'reports'|'system'>('overview');
+	  const [showBorderDailyMealReport, setShowBorderDailyMealReport] = useState(false);
+	  const [showBorderDailyRiceReport, setShowBorderDailyRiceReport] = useState(false);
   
   const [editingBorder, setEditingBorder] = useState<Border | null>(null);
   const [profileEdit, setProfileEdit] = useState(false);
@@ -1835,6 +1837,91 @@ const App: React.FC = () => {
 
                          {activeBorderTab === 'overview' && (
                              <div className="space-y-6">
+                                  {/* Action Buttons for Border */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <button onClick={() => setShowBorderDailyMealReport(true)} className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
+                                          <Calendar size={24} /> দৈনিক মিল আপডেট
+                                      </button>
+                                      <button onClick={() => setShowBorderDailyRiceReport(true)} className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
+                                          <Utensils size={24} /> দৈনিক চাল আপডেট
+                                      </button>
+                                  </div>
+
+                                  {/* Daily Meal Report View for Border */}
+                                  {showBorderDailyMealReport && (
+                                      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in">
+                                          <div className="flex justify-between items-center mb-4 border-b pb-2">
+                                              <h2 className="text-xl font-bold text-slate-800 dark:text-white">দৈনিক মিল আপডেট (১-{MONTHS.find((_, i) => MONTHS[i] === managerInfoForBorder.month) ? new Date(managerInfoForBorder.year, MONTHS.indexOf(managerInfoForBorder.month) + 1, 0).getDate() : 31} তারিখ)</h2>
+                                              <button onClick={() => setShowBorderDailyMealReport(false)} className="bg-slate-100 text-slate-600 px-3 py-1 rounded hover:bg-slate-200">বন্ধ করুন</button>
+                                          </div>
+                                          <div className="overflow-x-auto">
+                                              <table className="w-full text-center text-sm border-collapse">
+                                                  <thead className="bg-slate-800 text-white">
+                                                      <tr>
+                                                          <th className="p-2 border border-slate-600">বর্ডার নাম</th>
+                                                          {Array.from({ length: new Date(managerInfoForBorder.year, MONTHS.indexOf(managerInfoForBorder.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                                              <th key={d} className="p-1 border border-slate-600 text-[10px] min-w-[25px]">{d}</th>
+                                                          ))}
+                                                          <th className="p-2 border border-slate-600 bg-blue-700">মোট</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                      {borders.map(b => (
+                                                          <tr key={b.id} className="border-b hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700">
+                                                              <td className="p-2 font-semibold text-left border dark:border-slate-600 sticky left-0 bg-white dark:bg-slate-800 z-10">{b.name}</td>
+                                                              {Array.from({ length: new Date(managerInfoForBorder.year, MONTHS.indexOf(managerInfoForBorder.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                                                  <td key={d} className="p-1 border dark:border-slate-600 font-mono text-[11px]">
+                                                                      {b.dailyUsage[d]?.meals || '-'}
+                                                                  </td>
+                                                              ))}
+                                                              <td className="p-2 font-bold border dark:border-slate-600 bg-blue-50 dark:bg-blue-900/20">
+                                                                  {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}
+                                                              </td>
+                                                          </tr>
+                                                      ))}
+                                                  </tbody>
+                                              </table>
+                                          </div>
+                                      </div>
+                                  )}
+
+                                  {/* Daily Rice Report View for Border */}
+                                  {showBorderDailyRiceReport && (
+                                      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in">
+                                          <div className="flex justify-between items-center mb-4 border-b pb-2">
+                                              <h2 className="text-xl font-bold text-slate-800 dark:text-white">দৈনিক চাল আপডেট (১-{MONTHS.find((_, i) => MONTHS[i] === managerInfoForBorder.month) ? new Date(managerInfoForBorder.year, MONTHS.indexOf(managerInfoForBorder.month) + 1, 0).getDate() : 31} তারিখ)</h2>
+                                              <button onClick={() => setShowBorderDailyRiceReport(false)} className="bg-slate-100 text-slate-600 px-3 py-1 rounded hover:bg-slate-200">বন্ধ করুন</button>
+                                          </div>
+                                          <div className="overflow-x-auto">
+                                              <table className="w-full text-center text-sm border-collapse">
+                                                  <thead className="bg-slate-800 text-white">
+                                                      <tr>
+                                                          <th className="p-2 border border-slate-600">বর্ডার নাম</th>
+                                                          {Array.from({ length: new Date(managerInfoForBorder.year, MONTHS.indexOf(managerInfoForBorder.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                                              <th key={d} className="p-1 border border-slate-600 text-[10px] min-w-[25px]">{d}</th>
+                                                          ))}
+                                                          <th className="p-2 border border-slate-600 bg-orange-700">মোট</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                      {borders.map(b => (
+                                                          <tr key={b.id} className="border-b hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700">
+                                                              <td className="p-2 font-semibold text-left border dark:border-slate-600 sticky left-0 bg-white dark:bg-slate-800 z-10">{b.name}</td>
+                                                              {Array.from({ length: new Date(managerInfoForBorder.year, MONTHS.indexOf(managerInfoForBorder.month) + 1, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                                                  <td key={d} className="p-1 border dark:border-slate-600 font-mono text-[11px]">
+                                                                      {b.dailyUsage[d]?.rice || '-'}
+                                                                  </td>
+                                                              ))}
+                                                              <td className="p-2 font-bold border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/20">
+                                                                  {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0).toFixed(1)}
+                                                              </td>
+                                                          </tr>
+                                                      ))}
+                                                  </tbody>
+                                              </table>
+                                          </div>
+                                      </div>
+                                  )}
                                   {/* Manager Info Card for Border */}
                                   <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-blue-100 dark:border-slate-700 flex items-center gap-4">
                                       <div className="bg-blue-100 p-3 rounded-full text-blue-600"><UserCircle size={24}/></div>
