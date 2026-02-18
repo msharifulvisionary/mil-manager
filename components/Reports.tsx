@@ -29,18 +29,22 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
     
     // Ensure it's visible and has proper layout for capture
     element.style.display = 'block';
-    element.style.position = 'absolute';
-    element.style.left = '-9999px';
+    element.style.position = 'fixed';
+    element.style.left = '0';
     element.style.top = '0';
+    element.style.zIndex = '-9999';
+    element.style.backgroundColor = '#ffffff';
     
     try {
       const canvas = await html2canvas(element, { 
-          scale: 3, // Higher scale for HD
+          scale: 3, 
           useCORS: true, 
           backgroundColor: '#ffffff',
           logging: false,
           windowWidth: element.scrollWidth,
-          windowHeight: element.scrollHeight
+          windowHeight: element.scrollHeight,
+          y: 0, // Ensure capture starts from the very top
+          scrollY: 0
       });
       const imgData = canvas.toDataURL('image/png', 1.0);
       
@@ -60,20 +64,19 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = pdf.internal.pageSize.getHeight();
           
-          // Calculate dimensions to fit A4 while maintaining aspect ratio
           const imgProps = pdf.getImageProperties(imgData);
           const ratio = imgProps.width / imgProps.height;
           
-          let renderWidth = pdfWidth - 20; // 10mm margin each side
+          let renderWidth = pdfWidth - 10; // 5mm margin each side
           let renderHeight = renderWidth / ratio;
           
-          if (renderHeight > pdfHeight - 20) {
-            renderHeight = pdfHeight - 20;
+          if (renderHeight > pdfHeight - 10) {
+            renderHeight = pdfHeight - 10;
             renderWidth = renderHeight * ratio;
           }
           
           const x = (pdfWidth - renderWidth) / 2;
-          const y = 10; // Top margin
+          const y = 5; // Small top margin
           
           pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
           pdf.save(`${filename}.pdf`);
@@ -99,13 +102,12 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
     const riceEaten = getTotalRice(b);
     
     const mealCost = Math.round(mealsEaten * manager.mealRate);
-    const sharedExtraCost = borders.length > 0 ? (totalExtraBazaar / borders.length) : 0;
     const totalCost = mealCost + b.extraCost + b.guestCost; 
     
     const moneyBalance = totalMoneyDeposit - totalCost; 
     const riceBalance = totalRiceDeposit - riceEaten;
 
-    return { totalMoneyDeposit, totalRiceDeposit, mealsEaten, riceEaten, mealCost, sharedExtraCost, totalCost, moneyBalance, riceBalance };
+    return { totalMoneyDeposit, totalRiceDeposit, mealsEaten, riceEaten, mealCost, totalCost, moneyBalance, riceBalance };
   };
 
   const getSystemDailyTotals = () => {
@@ -146,21 +148,21 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
   );
 
   const Header = ({ title }: { title: string }) => (
-    <div className="text-center mb-6 border-b-4 border-double border-slate-400 pb-4">
-        <h1 className="text-4xl font-black uppercase text-blue-900 mb-2">{manager.messName}</h1>
-        <div className="flex justify-center items-center gap-6 text-base font-bold text-slate-700 mb-3">
-            <span className="bg-slate-100 px-3 py-1 rounded shadow-sm">ম্যানেজার: {manager.name}</span>
-            <span className="bg-slate-100 px-3 py-1 rounded shadow-sm">মোবাইল: {manager.mobile}</span>
-            <span className="bg-slate-100 px-3 py-1 rounded shadow-sm">মাস: {manager.month} {manager.year}</span>
+    <div className="text-center mb-8 pt-4 border-b-4 border-double border-slate-400 pb-6">
+        <h1 className="text-5xl font-black uppercase text-blue-900 mb-4 leading-tight">{manager.messName}</h1>
+        <div className="flex justify-center items-center gap-8 text-lg font-bold text-slate-700 mb-6">
+            <span className="bg-slate-100 px-4 py-2 rounded shadow-sm border border-slate-200">ম্যানেজার: {manager.name}</span>
+            <span className="bg-slate-100 px-4 py-2 rounded shadow-sm border border-slate-200">মোবাইল: {manager.mobile}</span>
+            <span className="bg-slate-100 px-4 py-2 rounded shadow-sm border border-slate-200">মাস: {manager.month} {manager.year}</span>
         </div>
-        <div className="inline-block bg-blue-900 text-white px-8 py-2 rounded-full shadow-md">
-            <h2 className="text-2xl font-bold">{title}</h2>
+        <div className="inline-block bg-blue-900 text-white px-12 py-3 rounded-lg shadow-lg">
+            <h2 className="text-3xl font-bold tracking-wide">{title}</h2>
         </div>
     </div>
   );
 
-  const tableHeaderClass = "bg-slate-800 text-white border border-slate-600 p-3 text-center font-bold align-middle";
-  const tableCellClass = "border border-slate-300 p-2 text-center align-middle text-slate-800";
+  const tableHeaderClass = "bg-slate-800 text-white border-2 border-slate-600 p-4 text-center font-bold align-middle text-lg";
+  const tableCellClass = "border-2 border-slate-300 p-3 text-center align-middle text-slate-800 font-medium";
 
   return (
     <div className="space-y-6">
@@ -181,7 +183,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       {/* --- HIDDEN PRINT AREAS --- */}
       
       {/* 1. System Daily Report */}
-      <div style={{ display: 'none' }} ref={systemDailyRef} className="bg-white p-10 w-[1400px] mx-auto">
+      <div style={{ display: 'none' }} ref={systemDailyRef} className="bg-white p-12 w-[1400px] mx-auto">
         <Header title="সিস্টেম ডেইলি এন্ট্রি (বাবুর্চি হিসাব)" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
@@ -223,22 +225,22 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 </tr>
             </tbody>
         </table>
-        <div className="mt-8 p-4 bg-slate-50 border-2 border-slate-200 rounded-lg grid grid-cols-4 gap-4 text-center font-bold">
-            <div className="p-2 border-r border-slate-300">গত মাসের জমা চাল: <span className="text-blue-700">{manager.prevRiceBalance || 0}</span></div>
-            <div className="p-2 border-r border-slate-300">মোট জমা চাল: <span className="text-green-700">{(manager.prevRiceBalance || 0) + borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0)}</span></div>
-            <div className="p-2 border-r border-slate-300">মোট খাওয়া চাল: <span className="text-red-700">{sysTotals.tRice.toFixed(1)}</span></div>
-            <div className="p-2">অবশিষ্ট চাল: <span className="text-purple-700">{((manager.prevRiceBalance || 0) + borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) - sysTotals.tRice).toFixed(1)}</span></div>
+        <div className="mt-10 p-6 bg-slate-50 border-2 border-slate-300 rounded-xl grid grid-cols-4 gap-6 text-center font-bold text-lg">
+            <div className="p-3 border-r-2 border-slate-200">গত মাসের জমা চাল: <span className="text-blue-700">{manager.prevRiceBalance || 0}</span></div>
+            <div className="p-3 border-r-2 border-slate-200">মোট জমা চাল: <span className="text-green-700">{(manager.prevRiceBalance || 0) + borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0)}</span></div>
+            <div className="p-3 border-r-2 border-slate-200">মোট খাওয়া চাল: <span className="text-red-700">{sysTotals.tRice.toFixed(1)}</span></div>
+            <div className="p-3">অবশিষ্ট চাল: <span className="text-purple-700">{((manager.prevRiceBalance || 0) + borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) - sysTotals.tRice).toFixed(1)}</span></div>
         </div>
       </div>
 
       {/* 2. Border List Report */}
-      <div style={{ display: 'none' }} ref={borderListRef} className="bg-white p-10 w-[1000px] mx-auto">
+      <div style={{ display: 'none' }} ref={borderListRef} className="bg-white p-12 w-[1000px] mx-auto">
         <Header title="বর্ডার তালিকা ও তথ্য" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr>
-                    <th className={`${tableHeaderClass} w-20`}>ক্রমিক নং</th>
-                    <th className={`${tableHeaderClass} text-left pl-6`}>বর্ডার নাম</th>
+                    <th className={`${tableHeaderClass} w-24`}>ক্রমিক নং</th>
+                    <th className={`${tableHeaderClass} text-left pl-8`}>বর্ডার নাম</th>
                     <th className={tableHeaderClass}>মোবাইল নাম্বার</th>
                     <th className={tableHeaderClass}>রক্তের গ্রুপ</th>
                 </tr>
@@ -247,7 +249,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 {borders.map((b, idx) => (
                     <tr key={b.id} className="hover:bg-slate-50">
                         <td className={tableCellClass}>{idx + 1}</td>
-                        <td className={`${tableCellClass} text-left pl-6 font-bold`}>{b.name}</td>
+                        <td className={`${tableCellClass} text-left pl-8 font-bold text-lg`}>{b.name}</td>
                         <td className={`${tableCellClass} font-mono`}>{b.mobile || '-'}</td>
                         <td className={`${tableCellClass} text-red-600 font-bold`}>{b.bloodGroup || '-'}</td>
                     </tr>
@@ -257,15 +259,15 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       </div>
 
       {/* 3. General Market List Report */}
-      <div style={{ display: 'none' }} ref={generalMarketRef} className="bg-white p-10 w-[1000px] mx-auto">
+      <div style={{ display: 'none' }} ref={generalMarketRef} className="bg-white p-12 w-[1000px] mx-auto">
         <Header title="সাধারণ বাজার তালিকা" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr>
-                    <th className={`${tableHeaderClass} w-20`}>ক্রমিক</th>
+                    <th className={`${tableHeaderClass} w-24`}>ক্রমিক</th>
                     <th className={tableHeaderClass}>বাজার করার তারিখ</th>
-                    <th className={`${tableHeaderClass} text-left pl-6`}>বাজারকারীর নাম</th>
-                    <th className={`${tableHeaderClass} text-right pr-6`}>বাজারের টাকা</th>
+                    <th className={`${tableHeaderClass} text-left pl-8`}>বাজারকারীর নাম</th>
+                    <th className={`${tableHeaderClass} text-right pr-8`}>বাজারের টাকা</th>
                 </tr>
             </thead>
             <tbody>
@@ -273,28 +275,28 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     <tr key={e.id} className="hover:bg-slate-50">
                         <td className={tableCellClass}>{idx + 1}</td>
                         <td className={tableCellClass}>{e.date}</td>
-                        <td className={`${tableCellClass} text-left pl-6 font-semibold`}>{e.shopper}</td>
-                        <td className={`${tableCellClass} text-right pr-6 font-bold`}>{e.amount}</td>
+                        <td className={`${tableCellClass} text-left pl-8 font-semibold`}>{e.shopper}</td>
+                        <td className={`${tableCellClass} text-right pr-8 font-bold`}>{e.amount}</td>
                     </tr>
                 ))}
                 <tr className="bg-blue-50 font-bold">
-                    <td colSpan={3} className={`${tableCellClass} text-right pr-6 text-xl`}>মোট সাধারণ বাজার:</td>
-                    <td className={`${tableCellClass} text-right pr-6 text-xl text-blue-800`}>{expenses.filter(e => e.type === 'market').reduce((a,b)=>a+b.amount,0)}</td>
+                    <td colSpan={3} className={`${tableCellClass} text-right pr-8 text-2xl`}>মোট সাধারণ বাজার:</td>
+                    <td className={`${tableCellClass} text-right pr-8 text-2xl text-blue-800`}>{expenses.filter(e => e.type === 'market').reduce((a,b)=>a+b.amount,0)}</td>
                 </tr>
             </tbody>
         </table>
       </div>
 
       {/* 4. Extra Market List Report */}
-      <div style={{ display: 'none' }} ref={extraMarketRef} className="bg-white p-10 w-[1000px] mx-auto">
+      <div style={{ display: 'none' }} ref={extraMarketRef} className="bg-white p-12 w-[1000px] mx-auto">
         <Header title="অতিরিক্ত বাজার তালিকা" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr>
-                    <th className={`${tableHeaderClass} w-20`}>ক্রমিক</th>
+                    <th className={`${tableHeaderClass} w-24`}>ক্রমিক</th>
                     <th className={tableHeaderClass}>বাজার করার তারিখ</th>
-                    <th className={`${tableHeaderClass} text-left pl-6`}>অতিরিক্ত বাজার এর নাম</th>
-                    <th className={`${tableHeaderClass} text-right pr-6`}>বাজারের টাকা</th>
+                    <th className={`${tableHeaderClass} text-left pl-8`}>অতিরিক্ত বাজার এর নাম</th>
+                    <th className={`${tableHeaderClass} text-right pr-8`}>বাজারের টাকা</th>
                 </tr>
             </thead>
             <tbody>
@@ -302,28 +304,28 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     <tr key={e.id} className="hover:bg-slate-50">
                         <td className={tableCellClass}>{idx + 1}</td>
                         <td className={tableCellClass}>{e.date}</td>
-                        <td className={`${tableCellClass} text-left pl-6 font-semibold`}>{e.shopper}</td>
-                        <td className={`${tableCellClass} text-right pr-6 font-bold`}>{e.amount}</td>
+                        <td className={`${tableCellClass} text-left pl-8 font-semibold`}>{e.shopper}</td>
+                        <td className={`${tableCellClass} text-right pr-8 font-bold`}>{e.amount}</td>
                     </tr>
                 ))}
                 <tr className="bg-red-50 font-bold">
-                    <td colSpan={3} className={`${tableCellClass} text-right pr-6 text-xl`}>মোট অতিরিক্ত বাজার:</td>
-                    <td className={`${tableCellClass} text-right pr-6 text-xl text-red-800`}>{expenses.filter(e => e.type === 'extra').reduce((a,b)=>a+b.amount,0)}</td>
+                    <td colSpan={3} className={`${tableCellClass} text-right pr-8 text-2xl`}>মোট অতিরিক্ত বাজার:</td>
+                    <td className={`${tableCellClass} text-right pr-8 text-2xl text-red-800`}>{expenses.filter(e => e.type === 'extra').reduce((a,b)=>a+b.amount,0)}</td>
                 </tr>
             </tbody>
         </table>
       </div>
 
       {/* 5. Daily Rice Sheet */}
-      <div style={{ display: 'none' }} ref={dailyRiceRef} className="bg-white p-8 w-[1600px] mx-auto">
+      <div style={{ display: 'none' }} ref={dailyRiceRef} className="bg-white p-10 w-[1600px] mx-auto">
         <Header title="দৈনিক চালের হিসাব (বর্ডার ভিত্তিক)" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr className="bg-slate-800 text-white">
-                    <th className={`${tableHeaderClass} w-12`}>ক্রম</th>
-                    <th className={`${tableHeaderClass} text-left pl-4 w-48`}>বর্ডার নাম</th>
-                    {days.map(d => <th key={d} className={`${tableHeaderClass} w-10 p-1`}>{d}</th>)}
-                    <th className={`${tableHeaderClass} w-20 bg-yellow-700`}>মোট</th>
+                    <th className={`${tableHeaderClass} w-16`}>ক্রম</th>
+                    <th className={`${tableHeaderClass} text-left pl-4 w-56`}>বর্ডার নাম</th>
+                    {days.map(d => <th key={d} className={`${tableHeaderClass} w-12 p-1`}>{d}</th>)}
+                    <th className={`${tableHeaderClass} w-24 bg-yellow-700`}>মোট</th>
                 </tr>
             </thead>
             <tbody>
@@ -344,15 +346,15 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       </div>
 
       {/* 6. Daily Meal Sheet */}
-      <div style={{ display: 'none' }} ref={dailyMealRef} className="bg-white p-8 w-[1600px] mx-auto">
+      <div style={{ display: 'none' }} ref={dailyMealRef} className="bg-white p-10 w-[1600px] mx-auto">
         <Header title="দৈনিক মিলের হিসাব (বর্ডার ভিত্তিক)" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr className="bg-slate-800 text-white">
-                    <th className={`${tableHeaderClass} w-12`}>ক্রম</th>
-                    <th className={`${tableHeaderClass} text-left pl-4 w-48`}>বর্ডার নাম</th>
-                    {days.map(d => <th key={d} className={`${tableHeaderClass} w-10 p-1`}>{d}</th>)}
-                    <th className={`${tableHeaderClass} w-20 bg-blue-700`}>মোট</th>
+                    <th className={`${tableHeaderClass} w-16`}>ক্রম</th>
+                    <th className={`${tableHeaderClass} text-left pl-4 w-56`}>বর্ডার নাম</th>
+                    {days.map(d => <th key={d} className={`${tableHeaderClass} w-12 p-1`}>{d}</th>)}
+                    <th className={`${tableHeaderClass} w-24 bg-blue-700`}>মোট</th>
                 </tr>
             </thead>
             <tbody>
@@ -373,13 +375,13 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       </div>
 
        {/* 7. Monthly Rice Sheet */}
-       <div style={{ display: 'none' }} ref={monthlyRiceRef} className="bg-white p-10 w-[1100px] mx-auto">
+       <div style={{ display: 'none' }} ref={monthlyRiceRef} className="bg-white p-12 w-[1100px] mx-auto">
         <Header title="মাসিক চালের হিসাব" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr>
-                    <th className={`${tableHeaderClass} w-16`}>ক্রমিক</th>
-                    <th className={`${tableHeaderClass} text-left pl-6`}>বর্ডার নাম</th>
+                    <th className={`${tableHeaderClass} w-20`}>ক্রমিক</th>
+                    <th className={`${tableHeaderClass} text-left pl-8`}>বর্ডার নাম</th>
                     <th className={`${tableHeaderClass} bg-green-700`}>চাল জমা (পট)</th>
                     <th className={`${tableHeaderClass} bg-red-700`}>চাল খাওয়া (পট)</th>
                     <th className={`${tableHeaderClass} bg-blue-700`}>ম্যানেজার পাবে</th>
@@ -392,13 +394,13 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     return (
                         <tr key={b.id} className="hover:bg-slate-50">
                             <td className={tableCellClass}>{idx + 1}</td>
-                            <td className={`${tableCellClass} text-left pl-6 font-bold`}>{b.name}</td>
-                            <td className={`${tableCellClass} font-mono bg-green-50 font-bold`}>{stats.totalRiceDeposit.toFixed(2)}</td>
-                            <td className={`${tableCellClass} font-mono bg-red-50 font-bold`}>{stats.riceEaten.toFixed(2)}</td>
-                            <td className={`${tableCellClass} font-bold text-red-600`}>
+                            <td className={`${tableCellClass} text-left pl-8 font-bold text-lg`}>{b.name}</td>
+                            <td className={`${tableCellClass} font-mono bg-green-50 font-bold text-lg`}>{stats.totalRiceDeposit.toFixed(2)}</td>
+                            <td className={`${tableCellClass} font-mono bg-red-50 font-bold text-lg`}>{stats.riceEaten.toFixed(2)}</td>
+                            <td className={`${tableCellClass} font-bold text-red-600 text-lg`}>
                                 {stats.riceBalance < 0 ? Math.abs(stats.riceBalance).toFixed(2) : '-'}
                             </td>
-                            <td className={`${tableCellClass} font-bold text-green-600`}>
+                            <td className={`${tableCellClass} font-bold text-green-600 text-lg`}>
                                 {stats.riceBalance >= 0 ? stats.riceBalance.toFixed(2) : '-'}
                             </td>
                         </tr>
@@ -409,14 +411,14 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
       </div>
 
        {/* 8. Monthly Financial Sheet */}
-       <div style={{ display: 'none' }} ref={monthlyCostRef} className="bg-white p-10 w-[1500px] mx-auto">
+       <div style={{ display: 'none' }} ref={monthlyCostRef} className="bg-white p-12 w-[1500px] mx-auto">
         <Header title="মাসিক মিল ও টাকার হিসাব" />
-        <div className="text-center mb-6"><span className="bg-blue-50 text-blue-900 border-2 border-blue-200 px-6 py-2 rounded-full font-black text-xl shadow-sm">মিল রেট: {manager.mealRate.toFixed(2)} টাকা</span></div>
+        <div className="text-center mb-8"><span className="bg-blue-50 text-blue-900 border-2 border-blue-200 px-8 py-3 rounded-full font-black text-2xl shadow-sm">মিল রেট: {manager.mealRate.toFixed(2)} টাকা</span></div>
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr>
-                    <th className={`${tableHeaderClass} w-16`}>ক্রম</th>
-                    <th className={`${tableHeaderClass} text-left pl-4`}>বর্ডার নাম</th>
+                    <th className={`${tableHeaderClass} w-20`}>ক্রম</th>
+                    <th className={`${tableHeaderClass} text-left pl-6`}>বর্ডার নাম</th>
                     <th className={`${tableHeaderClass} bg-emerald-700`}>টাকা জমা</th>
                     <th className={tableHeaderClass}>মোট মিল</th>
                     <th className={tableHeaderClass}>মিল খরচ</th>
@@ -433,16 +435,16 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     return (
                         <tr key={b.id} className="hover:bg-slate-50">
                             <td className={tableCellClass}>{idx + 1}</td>
-                            <td className={`${tableCellClass} text-left pl-4 font-bold text-lg`}>{b.name}</td>
-                            <td className={`${tableCellClass} font-mono bg-emerald-50 font-bold text-lg`}>{stats.totalMoneyDeposit.toFixed(0)}</td>
-                            <td className={`${tableCellClass} font-mono`}>{stats.mealsEaten}</td>
-                            <td className={`${tableCellClass} font-mono`}>{stats.mealCost.toFixed(0)}</td>
-                            <td className={`${tableCellClass} text-red-600 font-mono font-semibold`}>{totalExtraDisplay.toFixed(0)}</td>
-                            <td className={`${tableCellClass} font-bold bg-rose-50 font-mono text-lg`}>{stats.totalCost.toFixed(0)}</td>
-                            <td className={`${tableCellClass} font-bold bg-blue-50 font-mono text-lg text-red-600`}>
+                            <td className={`${tableCellClass} text-left pl-6 font-bold text-xl`}>{b.name}</td>
+                            <td className={`${tableCellClass} font-mono bg-emerald-50 font-bold text-xl`}>{stats.totalMoneyDeposit.toFixed(0)}</td>
+                            <td className={`${tableCellClass} font-mono text-lg`}>{stats.mealsEaten}</td>
+                            <td className={`${tableCellClass} font-mono text-lg`}>{stats.mealCost.toFixed(0)}</td>
+                            <td className={`${tableCellClass} text-red-600 font-mono font-bold text-lg`}>{totalExtraDisplay.toFixed(0)}</td>
+                            <td className={`${tableCellClass} font-bold bg-rose-50 font-mono text-xl`}>{stats.totalCost.toFixed(0)}</td>
+                            <td className={`${tableCellClass} font-bold bg-blue-50 font-mono text-xl text-red-600`}>
                                 {stats.moneyBalance < 0 ? Math.abs(stats.moneyBalance).toFixed(0) : '-'}
                             </td>
-                            <td className={`${tableCellClass} font-bold bg-green-50 font-mono text-lg text-green-600`}>
+                            <td className={`${tableCellClass} font-bold bg-green-50 font-mono text-xl text-green-600`}>
                                 {stats.moneyBalance >= 0 ? stats.moneyBalance.toFixed(0) : '-'}
                             </td>
                         </tr>
@@ -450,37 +452,37 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 })}
             </tbody>
         </table>
-        <div className="mt-20 flex justify-between px-32">
+        <div className="mt-24 flex justify-between px-40">
             <div className="text-center">
-                <div className="w-48 border-t-2 border-slate-800 pt-2 font-bold text-lg">হিসাব রক্ষক</div>
+                <div className="w-56 border-t-4 border-slate-800 pt-3 font-black text-xl">হিসাব রক্ষক</div>
             </div>
             <div className="text-center">
-                <div className="w-48 border-t-2 border-slate-800 pt-2 font-bold text-lg">ম্যানেজার স্বাক্ষর</div>
+                <div className="w-56 border-t-4 border-slate-800 pt-3 font-black text-xl">ম্যানেজার স্বাক্ষর</div>
             </div>
         </div>
       </div>
       
       {/* 9. Bazaar Schedule Report */}
-      <div style={{ display: 'none' }} ref={bazaarScheduleRef} className="bg-white p-10 w-[1100px] mx-auto">
+      <div style={{ display: 'none' }} ref={bazaarScheduleRef} className="bg-white p-12 w-[1100px] mx-auto">
         <Header title="বাজার লিস্ট (শিডিউল)" />
         <table className="w-full border-collapse border-2 border-slate-800">
             <thead>
                 <tr>
                     <th className={tableHeaderClass}>বাজার এর তারিখ</th>
                     <th className={tableHeaderClass}>বার</th>
-                    <th className={`${tableHeaderClass} text-left pl-6`}>বাজারকারী এর নাম</th>
+                    <th className={`${tableHeaderClass} text-left pl-8`}>বাজারকারী এর নাম</th>
                     <th className={tableHeaderClass}>মন্তব্য বা সিগনেচার</th>
                 </tr>
             </thead>
             <tbody>
                 {sortedBazaarSchedule.length === 0 ? (
-                    <tr><td colSpan={4} className={`${tableCellClass} p-10 text-slate-400 italic`}>কোন শিডিউল নেই</td></tr>
+                    <tr><td colSpan={4} className={`${tableCellClass} p-16 text-slate-400 italic text-xl`}>কোন শিডিউল নেই</td></tr>
                 ) : (
                     sortedBazaarSchedule.map((shift: BazaarShift) => (
                         <tr key={shift.date} className="hover:bg-slate-50">
-                            <td className={`${tableCellClass} font-bold text-xl`}>{shift.date}</td>
-                            <td className={tableCellClass}>{getDayName(shift.date)}</td>
-                            <td className={`${tableCellClass} text-left pl-6 font-bold text-lg`}>
+                            <td className={`${tableCellClass} font-black text-2xl`}>{shift.date}</td>
+                            <td className={`${tableCellClass} text-xl`}>{getDayName(shift.date)}</td>
+                            <td className={`${tableCellClass} text-left pl-8 font-bold text-xl`}>
                                 {shift.shoppers && shift.shoppers.length > 0 ? (
                                     shift.shoppers.map((s, i) => (
                                         <span key={s.id}>
@@ -492,7 +494,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                                     <span className="text-slate-300">-- ফাঁকা --</span>
                                 )}
                             </td>
-                            <td className={`${tableCellClass} w-48`}></td>
+                            <td className={`${tableCellClass} w-56`}></td>
                         </tr>
                     ))
                 )}
