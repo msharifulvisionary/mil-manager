@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { Moon, Sun, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Heart, Star } from 'lucide-react';
 
 interface RamadanDay {
   ramadan: number;
@@ -52,11 +52,19 @@ const toBengaliDigits = (num: number | string) => {
 
 const RamadanSchedule: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isVisible, setIsVisible] = useState<boolean>(true);
 
   useEffect(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Auto-hide logic: Hide if after 30th Ramadan (March 20, 2026)
+    const lastRamadanDate = RAMADAN_DATA[RAMADAN_DATA.length - 1].fullDate;
+    if (today > lastRamadanDate) {
+      setIsVisible(false);
+      return;
+    }
+
     const index = RAMADAN_DATA.findIndex(day => {
       const d = new Date(day.fullDate);
       d.setHours(0, 0, 0, 0);
@@ -66,10 +74,11 @@ const RamadanSchedule: React.FC = () => {
     if (index !== -1) {
       setCurrentIndex(index);
     } else {
-      // If not in Ramadan, show 1st Ramadan or closest
       setCurrentIndex(0);
     }
   }, []);
+
+  if (!isVisible) return null;
 
   const handlePrev = () => {
     setCurrentIndex(prev => (prev > 0 ? prev - 1 : RAMADAN_DATA.length - 1));
@@ -82,65 +91,119 @@ const RamadanSchedule: React.FC = () => {
   const currentDay = RAMADAN_DATA[currentIndex];
 
   return (
-    <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-6 shadow-xl text-white relative overflow-hidden mb-6">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-20px] right-[-20px] opacity-10">
-        <Moon size={150} />
+    <div className="space-y-4 mb-6">
+      {/* Train Style Marquee Section */}
+      <div className="bg-emerald-800 text-white py-2 rounded-xl overflow-hidden shadow-lg border-2 border-emerald-600 relative">
+        <div className="flex whitespace-nowrap animate-marquee">
+          <div className="flex items-center gap-4 px-4">
+             <span className="flex items-center gap-2 text-sm font-bold">
+               <Star size={16} className="text-yellow-400 fill-yellow-400" />
+               পবিত্র মাহে রমজান এর শুভেচ্ছা-শরিফুল
+               <Star size={16} className="text-yellow-400 fill-yellow-400" />
+             </span>
+             <span className="flex items-center gap-2 text-sm font-bold">
+               <Star size={16} className="text-yellow-400 fill-yellow-400" />
+               পবিত্র মাহে রমজান এর শুভেচ্ছা-শরিফুল
+               <Star size={16} className="text-yellow-400 fill-yellow-400" />
+             </span>
+             <span className="flex items-center gap-2 text-sm font-bold">
+               <Star size={16} className="text-yellow-400 fill-yellow-400" />
+               পবিত্র মাহে রমজান এর শুভেচ্ছা-শরিফুল
+               <Star size={16} className="text-yellow-400 fill-yellow-400" />
+             </span>
+          </div>
+        </div>
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-33.33%); }
+          }
+          .animate-marquee {
+            animation: marquee 10s linear infinite;
+          }
+        `}</style>
       </div>
-      
-      <div className="relative z-10">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
-            <CalendarIcon size={18} />
-            <span className="text-sm font-bold">{currentDay.date}</span>
+
+      <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-6 shadow-xl text-white relative overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-[-20px] right-[-20px] opacity-10">
+          <Moon size={150} />
+        </div>
+        
+        <div className="relative z-10">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
+              <CalendarIcon size={18} />
+              <span className="text-sm font-bold">{currentDay.date}</span>
+            </div>
+            <div className="bg-yellow-400 text-emerald-900 px-4 py-1.5 rounded-full font-bold shadow-lg animate-pulse">
+              {toBengaliDigits(currentDay.ramadan)} তম রোজা
+            </div>
           </div>
-          <div className="bg-yellow-400 text-emerald-900 px-4 py-1.5 rounded-full font-bold shadow-lg animate-pulse">
-            {toBengaliDigits(currentDay.ramadan)} তম রোজা
+
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
+              <div className="flex flex-col items-center gap-2">
+                <Moon className="text-yellow-200" size={24} />
+                <span className="text-xs font-medium opacity-80">সেহরির শেষ</span>
+                <span className="text-xl font-bold font-baloo">{toBengaliDigits(currentDay.sehri)}</span>
+              </div>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
+              <div className="flex flex-col items-center gap-2">
+                <Sun className="text-orange-300" size={24} />
+                <span className="text-xs font-medium opacity-80">ফজরের আযান</span>
+                <span className="text-xl font-bold font-baloo">{toBengaliDigits(currentDay.fajr)}</span>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
+              <div className="flex flex-col items-center gap-2">
+                <Clock className="text-sky-300" size={24} />
+                <span className="text-xs font-medium opacity-80">ইফতারের সময়</span>
+                <span className="text-xl font-bold font-baloo">{toBengaliDigits(currentDay.iftaar)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center items-center gap-8 mt-6">
+            <button 
+              onClick={handlePrev}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all border border-white/30"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <div className="text-xs font-bold tracking-widest uppercase opacity-70">
+              রমজান সময়সূচী ২০২৬
+            </div>
+            <button 
+              onClick={handleNext}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all border border-white/30"
+            >
+              <ChevronRight size={24} />
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
-            <div className="flex flex-col items-center gap-2">
-              <Moon className="text-yellow-200" size={24} />
-              <span className="text-xs font-medium opacity-80">সেহরির শেষ</span>
-              <span className="text-xl font-bold font-baloo">{toBengaliDigits(currentDay.sehri)}</span>
-            </div>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
-            <div className="flex flex-col items-center gap-2">
-              <Sun className="text-orange-300" size={24} />
-              <span className="text-xs font-medium opacity-80">ফজরের আযান</span>
-              <span className="text-xl font-bold font-baloo">{toBengaliDigits(currentDay.fajr)}</span>
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
-            <div className="flex flex-col items-center gap-2">
-              <Clock className="text-sky-300" size={24} />
-              <span className="text-xs font-medium opacity-80">ইফতারের সময়</span>
-              <span className="text-xl font-bold font-baloo">{toBengaliDigits(currentDay.iftaar)}</span>
-            </div>
-          </div>
+      {/* Duas Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-md border-l-4 border-emerald-500">
+          <h3 className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-2 mb-2">
+            <Heart size={18} className="fill-emerald-500" /> রোজার নিয়ত
+          </h3>
+          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium">
+            নাওয়াইতু আন্ আছুমা গাদাম মিন শাহরি রামাদ্বানাল মুবারাকি ফারদ্বাকাল্লাকা ইয়া আল্লাহু ফাতাক্বাব্বাল মিন্নি ইন্নাকা আন্তাস সামীউ&apos;ল আ&apos;লীম।
+          </p>
         </div>
-
-        <div className="flex justify-center items-center gap-8 mt-6">
-          <button 
-            onClick={handlePrev}
-            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all border border-white/30"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <div className="text-xs font-bold tracking-widest uppercase opacity-70">
-            রমজান সময়সূচী ২০২৬
-          </div>
-          <button 
-            onClick={handleNext}
-            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all border border-white/30"
-          >
-            <ChevronRight size={24} />
-          </button>
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-md border-l-4 border-orange-500">
+          <h3 className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-2 mb-2">
+            <Sun size={18} className="fill-orange-500" /> ইফতারের দোয়া
+          </h3>
+          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium">
+            আল্লাহুম্মা লাকা সুমতু ওয়া তাওয়াক্কালতু আলারিজকিকা ওয়া আফতারতু বিরহমাতিকা ইয়া আরহামার রাহিমিন।
+          </p>
         </div>
       </div>
     </div>
