@@ -4,7 +4,7 @@ import {
   Users, FileText, ShoppingCart, Settings, LogOut, 
   Trash2, PlusCircle, Edit2, Save, X, Activity, DollarSign, Calendar, ChevronRight,
   Copy, UserCircle, Phone, Droplet, LayoutDashboard, Utensils, Eye, EyeOff, List, ArrowRight, ShieldCheck, ClipboardList,
-  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown
+  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown, Star
 } from 'lucide-react';
 
 import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper, RiceConfig } from './types';
@@ -14,6 +14,130 @@ import Reports from './components/Reports';
 import IftaarManagement from './components/IftaarManagement';
 import RamadanSchedule from './components/RamadanSchedule';
 import { FACEBOOK_LINK, DEVELOPER_NAME } from './constants';
+
+// --- RAMADAN & EID GREETINGS ---
+const RamadanGreeting = () => {
+    const [show, setShow] = React.useState(false);
+    
+    React.useEffect(() => {
+        const today = new Date();
+        const startRamadan = new Date(2026, 1, 19); // Feb 19, 2026
+        const endRamadan = new Date(2026, 2, 20); // March 20, 2026
+        
+        if (today >= startRamadan && today <= endRamadan) {
+            setShow(true);
+            if ((window as any).confetti) {
+                (window as any).confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#10b981', '#fbbf24', '#ffffff']
+                });
+            }
+        }
+    }, []);
+
+    if (!show) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-gradient-to-br from-emerald-600 to-teal-800 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative border-4 border-emerald-400/30 text-center p-8 text-white">
+                <button onClick={() => setShow(false)} className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
+                    <X size={20} />
+                </button>
+                
+                <div className="mb-6 relative">
+                    <div className="w-24 h-24 bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                        <Moon size={48} className="text-yellow-400 fill-yellow-400" />
+                    </div>
+                    <div className="absolute -top-2 right-1/4 animate-bounce">
+                        <Star size={20} className="text-yellow-200 fill-yellow-200" />
+                    </div>
+                </div>
+
+                <h2 className="text-3xl font-bold font-baloo mb-2">রমজান মোবারক!</h2>
+                <p className="text-emerald-100 text-lg mb-6">পবিত্র মাহে রমজানের শুভেচ্ছা - শরিফুল</p>
+                
+                <div className="space-y-3">
+                    <div className="bg-white/10 py-3 px-4 rounded-xl border border-white/10 text-sm font-medium">
+                        আল্লাহ আমাদের সকল রোজা ও ইবাদত কবুল করুন।
+                    </div>
+                </div>
+
+                <button onClick={() => setShow(false)} className="mt-8 w-full bg-yellow-400 hover:bg-yellow-500 text-emerald-900 py-4 rounded-2xl font-bold text-lg shadow-lg transition-transform active:scale-95">
+                    ধন্যবাদ
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const EidGreeting = () => {
+    const [show, setShow] = React.useState(false);
+    
+    React.useEffect(() => {
+        const today = new Date();
+        const eidDay = new Date(2026, 2, 21); // March 21, 2026
+        
+        if (today.getFullYear() === eidDay.getFullYear() && 
+            today.getMonth() === eidDay.getMonth() && 
+            today.getDate() === eidDay.getDate()) {
+            setShow(true);
+            
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 300 };
+
+            const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+            const interval: any = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                const particleCount = 50 * (timeLeft / duration);
+                if ((window as any).confetti) {
+                    (window as any).confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                    (window as any).confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+                }
+            }, 250);
+        }
+    }, []);
+
+    if (!show) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[200] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(14,165,233,0.3)] relative text-center p-10 border border-slate-200 dark:border-slate-800">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                
+                <button onClick={() => setShow(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <X size={28} />
+                </button>
+                
+                <div className="mb-8">
+                    <div className="w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                        <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping"></div>
+                        <Moon size={64} className="text-primary" />
+                    </div>
+                </div>
+
+                <h2 className="text-4xl md:text-5xl font-black font-baloo mb-4 text-slate-800 dark:text-white">ঈদ মোবারক!</h2>
+                <div className="h-1 w-20 bg-primary mx-auto mb-6 rounded-full"></div>
+                
+                <p className="text-xl md:text-2xl font-bold text-primary mb-8">পবিত্র ঈদ-উল-ফিতরের শুভেচ্ছা - শরিফুল</p>
+                
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 mb-8">
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                        "ঈদ নিয়ে আসুক আপনার জীবনে অনাবিল আনন্দ, সুখ ও সমৃদ্ধি।"
+                    </p>
+                </div>
+
+                <button onClick={() => setShow(false)} className="w-full bg-slate-900 dark:bg-primary text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                    ঈদ মোবারক
+                </button>
+            </div>
+        </div>
+    );
+};
 
 // --- DEVELOPER MODAL ---
 const DeveloperModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
