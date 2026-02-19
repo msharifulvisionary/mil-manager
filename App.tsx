@@ -1755,6 +1755,8 @@ const App: React.FC = () => {
                         }
                         onDeveloperClick={() => setShowDevModal(true)}
                     >
+                        <RamadanGreeting />
+                        <EidGreeting />
                          <div className="flex bg-white dark:bg-slate-800 p-1 rounded mb-6 border dark:border-slate-700 overflow-x-auto sticky top-20 z-20 shadow-sm">
 {['overview','meals','market','schedule','iftaar','reports','system','profile'].map(v => (
 		                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
@@ -2121,6 +2123,8 @@ const App: React.FC = () => {
                         }
                         onDeveloperClick={() => setShowDevModal(true)}
                     >
+                        <RamadanGreeting />
+                        <EidGreeting />
                         <div className="flex flex-col lg:flex-row gap-6">
                             {/* Sidebar / Tabs (Desktop) & Mobile Nav */}
                             <div className="lg:w-64 flex-shrink-0">
