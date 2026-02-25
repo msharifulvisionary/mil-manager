@@ -1362,7 +1362,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                         <label className="text-sm text-slate-600 dark:text-slate-300 mb-1 block">খরচের ধরণ</label>
                         <select className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-700 dark:text-white" value={form.type} onChange={e => setForm({...form, type: e.target.value as any})}>
                             <option value="market">বাজার</option>
-                            <option value="extra"> বাজার</option>
+                            <option value="extra"> অতিরিক্ত বাজার</option>
                         </select>
                     </div>
                     <div>
@@ -1397,7 +1397,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                     <div className="flex gap-2">
                         <button onClick={() => setFilterType('all')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:text-slate-300'}`}>সব</button>
                         <button onClick={() => setFilterType('market')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'market' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 dark:bg-slate-700 dark:text-blue-400'}`}>বাজার</button>
-                        <button onClick={() => setFilterType('extra')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'extra' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 dark:bg-slate-700 dark:text-red-400'}`}></button>
+                        <button onClick={() => setFilterType('extra')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'extra' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 dark:bg-slate-700 dark:text-red-400'}`}>অতিরিক্ত বাজার</button>
                     </div>
                 </div>
                 <div className="overflow-y-auto flex-1 pr-2">
