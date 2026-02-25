@@ -7,7 +7,7 @@ import {
   Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown, Star
 } from 'lucide-react';
 
-import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper, RiceConfig } from './types';
+import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper, RiceConfig, ExtraRice } from './types';
 import * as dbService from './services/firebaseService';
 import Layout from './components/Layout';
 import Reports from './components/Reports';
@@ -579,12 +579,17 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
 };
 
 // New: System Daily Entry Component (Updated)
-const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdate: (m: Manager) => void }) => {
+const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, onUpdateExtraRice, onDeleteExtraRice }: { manager: Manager, onUpdate: (m: Manager) => void, extraRice?: ExtraRice[], onAddExtraRice?: (data: Omit<ExtraRice, 'id'>) => void, onUpdateExtraRice?: (id: string, data: Partial<ExtraRice>) => void, onDeleteExtraRice?: (id: string) => void }) => {
     // ... (No changes here) ...
     const days = Array.from({length: 31}, (_, i) => i + 1);
     const [localData, setLocalData] = useState(manager.systemDaily || {});
     const [riceConfig, setRiceConfig] = useState<RiceConfig>(manager.riceConfig || { morningDiff: -2, lunchDiff: 0, dinnerDiff: 0 });
     const [prevRice, setPrevRice] = useState<number>(manager.prevRiceBalance || 0);
+    const [localExtraRice, setLocalExtraRice] = useState<ExtraRice[]>(extraRice || []);
+
+    useEffect(() => {
+        setLocalExtraRice(extraRice || []);
+    }, [extraRice]);
     
     // Auto-save logic
     const handleChange = (day: number, shift: 'morning'|'lunch'|'dinner', field: 'meal'|'rice', value: number) => {
@@ -636,6 +641,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
     };
 
     return (
+        <div className="space-y-6">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 p-4 overflow-hidden">
             <div className="flex flex-col xl:flex-row justify-between items-center mb-4 gap-4">
                 <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white"><ClipboardList/> দৈনিক মিল ও চাল হিসাব</h2>
@@ -694,17 +700,20 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
                     </tbody>
                 </table>
             </div>
+
+        </div>
         </div>
     )
 }
 
 // 1. Manager Overview Stats Component
-const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, borders: Border[], expenses: Expense[] }) => {
+const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: Manager, borders: Border[], expenses: Expense[], extraRice?: ExtraRice[] }) => {
     // ... (No changes here, keeping existing code) ...
     const totalMoney = borders.reduce((acc, b) => acc + b.deposits.reduce((s, d) => s + d.amount, 0), 0);
     const totalMeals = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0), 0);
     const totalRiceDeposited = borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0);
     const totalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0);
+    const totalExtraRice = extraRice?.reduce((sum, er) => sum + er.amount, 0) || 0;
     
     // System Totals
     let systemMeals = 0;
@@ -730,8 +739,8 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
     const extraCost = expenses.filter(e => e.type === 'extra').reduce((acc, e) => acc + e.amount, 0);
     const totalCost = marketCost + extraCost;
     const currentCashBalance = totalMoney - totalCost;
-    // Updated Rice Balance Logic: Total Deposit - Total Consumed + Previous Month Balance
-    const currentRiceBalance = totalRiceDeposited - totalRiceConsumed + (manager.prevRiceBalance || 0);
+    // Updated Rice Balance Logic: Total Deposit - Total Consumed + Previous Month Balance - Extra Rice Used
+    const currentRiceBalance = totalRiceDeposited - totalRiceConsumed + (manager.prevRiceBalance || 0) - totalExtraRice;
     
     // Calc Meal Rate
     const calcMealRate = totalMeals > 0 ? (marketCost / totalMeals) : 0;
@@ -898,7 +907,7 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                      <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
                      <p className="text-3xl font-bold mt-1 font-baloo">{currentRiceBalance.toFixed(1)} পট</p>
-                     <p className="text-[10px] mt-1 opacity-80">জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}</p>
+                     <p className="text-[10px] mt-1 opacity-80">জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed} | অতিরিক্ত: {totalExtraRice.toFixed(1)}</p>
                      <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
                  </div>
                  <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
@@ -1642,6 +1651,7 @@ const App: React.FC = () => {
   
   const [borders, setBorders] = useState<Border[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [extraRice, setExtraRice] = useState<ExtraRice[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'|'schedule'|'iftaar'>('dashboard');
   const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'|'iftaar'|'reports'|'system'>('overview');
 	  const [showBorderDailyMealReport, setShowBorderDailyMealReport] = useState(false);
@@ -1707,14 +1717,16 @@ const App: React.FC = () => {
             localStorage.setItem('messManager', JSON.stringify(freshManager));
         }
 
-        const [b, e] = await Promise.all([
+        const [b, e, er] = await Promise.all([
             dbService.getBorders(manager.username),
-            dbService.getExpenses(manager.username)
+            dbService.getExpenses(manager.username),
+            dbService.getExtraRice(manager.username)
         ]);
         // Sort borders based on order if exists
         const sortedB = b.sort((a,b) => (a.order || 0) - (b.order || 0));
         setBorders(sortedB);
         setExpenses(e);
+        setExtraRice(er);
       } catch(err) { console.error(err); }
   };
 
@@ -1736,6 +1748,8 @@ const App: React.FC = () => {
       setExpenses(exp);
       const allBorders = await dbService.getBorders(border.managerId);
       setBorders(allBorders);
+      const er = await dbService.getExtraRice(border.managerId);
+      setExtraRice(er);
   };
 
   // CRUD Operations
@@ -1824,12 +1838,40 @@ const App: React.FC = () => {
       } catch(e) { alert("Error deleting expense"); }
   };
 
+  const handleAddExtraRice = async (extraRiceData: Omit<ExtraRice, 'id'>) => {
+      if(!manager) return;
+      try {
+          const newER = await dbService.addExtraRice({ ...extraRiceData, managerId: manager.username });
+          setExtraRice(prev => [...prev, newER as ExtraRice]);
+          alert("অতিরিক্ত চাল যোগ হয়েছে!");
+      } catch(e) { alert("Error adding extra rice"); }
+  };
+
+  const handleUpdateExtraRice = async (id: string, data: Partial<ExtraRice>) => {
+      try {
+          await dbService.updateExtraRice(id, data);
+          setExtraRice(prev => prev.map(er => er.id === id ? { ...er, ...data } : er));
+          alert("আপডেট হয়েছে!");
+      } catch(e) { alert("Error updating extra rice"); }
+  };
+
+  const handleDeleteExtraRice = async (id: string) => {
+      try {
+          if(window.confirm('সত্যিই কি মুছে ফেলতে চান?')) {
+              await dbService.deleteExtraRice(id);
+              setExtraRice(prev => prev.filter(er => er.id !== id));
+              alert("মুছে ফেলা হয়েছে!");
+          }
+      } catch(e) { alert("Error deleting extra rice"); }
+  };
+
   // Logouts
   const handleLogout = () => {
       setManager(null);
       localStorage.removeItem('messManager');
       setBorders([]);
       setExpenses([]);
+      setExtraRice([]);
       setHasStarted(true); // Go to login
   };
 
@@ -1838,6 +1880,7 @@ const App: React.FC = () => {
       setManagerInfoForBorder(null);
       setBorders([]);
       setExpenses([]);
+      setExtraRice([]);
   };
 
   // Calc Meal Rate (Total Market Cost / Total Meals)
@@ -2015,7 +2058,7 @@ const App: React.FC = () => {
 
                                   {/* Daily Rice Report View for Border */}
                                   {showBorderDailyRiceReport && (
-                                      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in">
+                                      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in space-y-6">
                                           <div className="flex justify-between items-center mb-4 border-b pb-2">
                                               <h2 className="text-xl font-bold text-slate-800 dark:text-white">দৈনিক চাল আপডেট (১-{MONTHS.find((_, i) => MONTHS[i] === managerInfoForBorder.month) ? new Date(managerInfoForBorder.year, MONTHS.indexOf(managerInfoForBorder.month) + 1, 0).getDate() : 31} তারিখ)</h2>
                                               <button onClick={() => setShowBorderDailyRiceReport(false)} className="bg-slate-100 text-slate-600 px-3 py-1 rounded hover:bg-slate-200">বন্ধ করুন</button>
@@ -2048,6 +2091,37 @@ const App: React.FC = () => {
                                                   </tbody>
                                               </table>
                                           </div>
+                                          
+                                          {/* Extra Rice Details */}
+                                          {extraRice && extraRice.length > 0 && (
+                                            <div className="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700">
+                                              <h3 className="text-lg font-bold mb-4 text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/> অতিরিক্ত চাল খরচের বিস্তারিত</h3>
+                                              <div className="overflow-x-auto">
+                                                <table className="w-full text-sm border-collapse">
+                                                  <thead className="bg-orange-700 text-white">
+                                                    <tr>
+                                                      <th className="p-2 border border-orange-600 text-left">তারিখ</th>
+                                                      <th className="p-2 border border-orange-600 text-left">বিবরণ</th>
+                                                      <th className="p-2 border border-orange-600 text-center">পরিমাণ (পট)</th>
+                                                    </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    {extraRice.map(er => (
+                                                      <tr key={er.id} className="border-b dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-700">
+                                                        <td className="p-2 border border-orange-100 dark:border-slate-700 font-baloo dark:text-white">{er.date}</td>
+                                                        <td className="p-2 border border-orange-100 dark:border-slate-700 dark:text-white">{er.description}</td>
+                                                        <td className="p-2 border border-orange-100 dark:border-slate-700 text-center font-bold text-orange-700 dark:text-orange-400">{er.amount.toFixed(1)}</td>
+                                                      </tr>
+                                                    ))}
+                                                    <tr className="bg-orange-100 dark:bg-orange-900/30 font-bold">
+                                                      <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট অতিরিক্ত চাল:</td>
+                                                      <td className="p-2 border border-orange-600 text-center text-orange-700 dark:text-orange-400">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</td>
+                                                    </tr>
+                                                  </tbody>
+                                                </table>
+                                              </div>
+                                            </div>
+                                          )}
                                       </div>
                                   )}
                                   {/* Manager Info Card for Border */}
@@ -2062,6 +2136,14 @@ const App: React.FC = () => {
                                           </div>
                                       </div>
                                   </div>
+
+                                  {/* Extra Rice Summary Card for Border */}
+                                  {extraRice && extraRice.length > 0 && (
+                                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-200 dark:border-orange-800">
+                                      <h3 className="font-bold text-orange-800 dark:text-orange-300 mb-2 flex items-center gap-2"><Droplet size={18}/> অতিরিক্ত চাল খরচের সারাংশ</h3>
+                                      <p className="text-sm text-orange-700 dark:text-orange-400">মোট অতিরিক্ত চাল: <span className="font-bold text-lg">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</span></p>
+                                    </div>
+                                  )}
 
                                   {/* Stats Grid for Border View */}
                                   {(() => {
@@ -2283,7 +2365,7 @@ const App: React.FC = () => {
 {activeTab === 'dashboard' && (
 	                                    <div className="space-y-6 animate-fade-in">
 	                                        <RamadanSchedule />
-	                                        <ManagerOverview manager={manager} borders={borders} expenses={expenses} />
+	                                        <ManagerOverview manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} />
 	                                    </div>
 	                                )}
                                 {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} /></div>}
@@ -2293,13 +2375,13 @@ const App: React.FC = () => {
                                     setManager(updated);
                                     dbService.updateManager(manager.username, data);
                                 }} /></div>}
-                                    {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => {
-                                        setManager(m);
-                                        localStorage.setItem('messManager', JSON.stringify(m));
-                                    }} /></div>}
+                                {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => {
+                                    setManager(m);
+                                    localStorage.setItem('messManager', JSON.stringify(m));
+                                }} extraRice={extraRice} onAddExtraRice={handleAddExtraRice} onUpdateExtraRice={handleUpdateExtraRice} onDeleteExtraRice={handleDeleteExtraRice} /></div>}
                                 {activeTab === 'market' && <div className="animate-fade-in"><MarketView expenses={expenses} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onUpdate={handleUpdateExpense} /></div>}
                                 {activeTab === 'iftaar' && <div className="animate-fade-in"><IftaarManagement manager={manager} isManager={true} onBack={() => setActiveTab('dashboard')} /></div>}
-                                {activeTab === 'reports' && <div className="animate-fade-in"><Reports manager={manager} borders={borders} expenses={expenses} /></div>}
+                                {activeTab === 'reports' && <div className="animate-fade-in"><Reports manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} /></div>}
                                 {activeTab === 'settings' && (
                                     <div className="animate-fade-in bg-white dark:bg-slate-800 p-8 rounded-xl shadow border border-slate-200 dark:border-slate-700 max-w-xl mx-auto">
                                         <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 pb-4 border-b dark:border-slate-700 dark:text-white"><Settings className="text-slate-700 dark:text-slate-200"/> সিস্টেম সেটিংস</h2>
