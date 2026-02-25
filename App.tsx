@@ -610,7 +610,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
         setRiceConfig({ ...riceConfig, [field]: parseFloat(val) || 0 });
     }
 
-    const handleSaveExtraRice = () => {
+    const handleSaveExtraRice = async () => {
         if(!extraRiceForm.amount || !extraRiceForm.date) return;
         let newExpenses = [...extraRiceExpenses];
         if(isEditingExtraRice && editingExtraRiceId) {
@@ -619,14 +619,35 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
             newExpenses.push({ id: Date.now().toString(), date: extraRiceForm.date, amount: extraRiceForm.amount, description: extraRiceForm.description });
         }
         setExtraRiceExpenses(newExpenses);
-        setExtraRiceForm({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
-        setIsEditingExtraRice(false);
-        setEditingExtraRiceId(null);
+        
+        // Save to database immediately as requested
+        try {
+            await dbService.updateManager(manager.username, { extraRiceExpenses: newExpenses });
+            const updatedManager = { ...manager, extraRiceExpenses: newExpenses };
+            onUpdate(updatedManager);
+            localStorage.setItem('messManager', JSON.stringify(updatedManager));
+            
+            setExtraRiceForm({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
+            setIsEditingExtraRice(false);
+            setEditingExtraRiceId(null);
+            alert("অতিরিক্ত চালের হিসাব সংরক্ষিত হয়েছে!");
+        } catch(e) {
+            alert("সেভ করতে সমস্যা হয়েছে!");
+        }
     };
 
-    const handleDeleteExtraRice = (id: string) => {
+    const handleDeleteExtraRice = async (id: string) => {
         if(window.confirm('সত্যিই কি মুছে ফেলতে চান?')) {
-            setExtraRiceExpenses(prev => prev.filter(e => e.id !== id));
+            const newExpenses = extraRiceExpenses.filter(e => e.id !== id);
+            setExtraRiceExpenses(newExpenses);
+            try {
+                await dbService.updateManager(manager.username, { extraRiceExpenses: newExpenses });
+                const updatedManager = { ...manager, extraRiceExpenses: newExpenses };
+                onUpdate(updatedManager);
+                localStorage.setItem('messManager', JSON.stringify(updatedManager));
+            } catch(e) {
+                alert("ডিলিট করতে সমস্যা হয়েছে!");
+            }
         }
     };
 
@@ -789,12 +810,14 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
 
     const todayStats = manager.systemDaily?.[viewDay] || { morning: {meal:0, rice:0}, lunch: {meal:0, rice:0}, dinner: {meal:0, rice:0} };
 
-    if(manager.systemDaily) {
-        Object.values(manager.systemDaily).forEach(d => {
-            systemMeals += (d.morning?.meal||0) + (d.lunch?.meal||0) + (d.dinner?.meal||0);
-            systemRice += (d.morning?.rice||0) + (d.lunch?.rice||0) + (d.dinner?.rice||0);
-        });
-    }
+	    if(manager.systemDaily) {
+	        Object.values(manager.systemDaily).forEach(d => {
+	            systemMeals += (d.morning?.meal||0) + (d.lunch?.meal||0) + (d.dinner?.meal||0);
+	            systemRice += (d.morning?.rice||0) + (d.lunch?.rice||0) + (d.dinner?.rice||0);
+	        });
+	    }
+        // Add extra rice to system total for dashboard
+        systemRice += manager.extraRiceExpenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
 
     const marketCost = expenses.filter(e => e.type === 'market').reduce((acc, e) => acc + e.amount, 0);
     const extraCost = expenses.filter(e => e.type === 'extra').reduce((acc, e) => acc + e.amount, 0);
@@ -1477,7 +1500,7 @@ const BorderDetailModal = ({
     const deleteRice = (id: string) => { if(window.confirm("নিশ্চিত?")) onUpdateRice(border.riceDeposits.filter((d:any) => d.id !== id)); };
     const editRice = (d: RiceDeposit) => { setRiceForm({ amount: d.amount, date: d.date, type: d.type, id: d.id }); setIsEditingRice(true); };
 
-    const handleSaveExtraRice = () => {
+    const handleSaveExtraRice = async () => {
         if(!extraRiceForm.amount || !extraRiceForm.date) return;
         let newExpenses = [...extraRiceExpenses];
         if(isEditingExtraRice && editingExtraRiceId) {
@@ -1486,21 +1509,27 @@ const BorderDetailModal = ({
             newExpenses.push({ id: Date.now().toString(), date: extraRiceForm.date, amount: extraRiceForm.amount, description: extraRiceForm.description });
         }
         setExtraRiceExpenses(newExpenses);
-        // Update border with new extra rice expenses
-        const updatedBorder = { ...border, extraRiceExpenses: newExpenses };
-        // Calculate total rice for display
-        const totalExtraRice = newExpenses.reduce((sum, e) => sum + e.amount, 0);
-        // Automatically add to border's total rice consumption
-        const updatedRiceDeposits = border.riceDeposits.map((d: RiceDeposit) => d);
-        setExtraRiceForm({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
-        setIsEditingExtraRice(false);
-        setEditingExtraRiceId(null);
+        
+        try {
+            await onUpdateBorder(border.id, { extraRiceExpenses: newExpenses });
+            setExtraRiceForm({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
+            setIsEditingExtraRice(false);
+            setEditingExtraRiceId(null);
+            alert("বর্ডারের অতিরিক্ত চালের হিসাব সংরক্ষিত হয়েছে!");
+        } catch(e) {
+            alert("সেভ করতে সমস্যা হয়েছে!");
+        }
     };
 
-    const handleDeleteExtraRice = (id: string) => {
+    const handleDeleteExtraRice = async (id: string) => {
         if(window.confirm('সত্যিই কি মুছে ফেলতে চান?')) {
             const newExpenses = extraRiceExpenses.filter(e => e.id !== id);
             setExtraRiceExpenses(newExpenses);
+            try {
+                await onUpdateBorder(border.id, { extraRiceExpenses: newExpenses });
+            } catch(e) {
+                alert("ডিলিট করতে সমস্যা হয়েছে!");
+            }
         }
     };
 
@@ -1575,18 +1604,38 @@ const BorderDetailModal = ({
                                         <input type="number" value={border.extraCost} onChange={e => onUpdateExtra(parseFloat(e.target.value))} className="w-full p-2 border rounded font-bold text-red-600 bg-red-50 dark:bg-slate-700 font-baloo" />
                                     </div>
                                  </div>
-                                 <div>
-                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">অতিরিক্ত চাল খরচ (পট)</label>
-                                    <div className="flex gap-2">
-                                        <input type="number" step="0.1" placeholder="চাল পট" value={extraRiceForm.amount || ''} onChange={e => setExtraRiceForm({...extraRiceForm, amount: parseFloat(e.target.value)||0})} className="flex-1 p-2 border rounded font-bold text-orange-600 bg-orange-50 dark:bg-slate-700 font-baloo" />
-                                        <button onClick={handleSaveExtraRice} className="bg-orange-600 text-white px-3 rounded font-bold hover:bg-orange-700">যোগ</button>
-                                    </div>
-                                    {extraRiceExpenses.length > 0 && (
-                                        <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                                            <strong>মোট অতিরিক্ত চাল:</strong> {extraRiceExpenses.reduce((sum, e) => sum + e.amount, 0)} পট
-                                        </div>
-                                    )}
-                                 </div>
+	                                 <div>
+	                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">অতিরিক্ত চাল খরচ (পট)</label>
+	                                    <div className="flex gap-2">
+                                            <input type="date" value={extraRiceForm.date} onChange={e => setExtraRiceForm({...extraRiceForm, date: e.target.value})} className="w-1/3 p-2 border rounded text-xs dark:bg-slate-700 dark:text-white" />
+	                                        <input type="number" step="0.1" placeholder="চাল পট" value={extraRiceForm.amount || ''} onChange={e => setExtraRiceForm({...extraRiceForm, amount: parseFloat(e.target.value)||0})} className="flex-1 p-2 border rounded font-bold text-orange-600 bg-orange-50 dark:bg-slate-700 font-baloo" />
+	                                        <button onClick={handleSaveExtraRice} className="bg-orange-600 text-white px-3 rounded font-bold hover:bg-orange-700">{isEditingExtraRice ? 'আপডেট' : 'যোগ'}</button>
+	                                    </div>
+	                                    {extraRiceExpenses.length > 0 && (
+	                                        <div className="mt-2 space-y-1">
+                                                <div className="text-xs text-slate-600 dark:text-slate-400 flex justify-between items-center bg-orange-50 dark:bg-slate-900/50 p-1 px-2 rounded">
+	                                                <strong>মোট অতিরিক্ত চাল:</strong> 
+                                                    <span className="font-bold text-orange-600">{extraRiceExpenses.reduce((sum, e) => sum + e.amount, 0)} পট</span>
+                                                </div>
+                                                <div className="max-h-32 overflow-y-auto border rounded dark:border-slate-700">
+                                                    <table className="w-full text-[10px]">
+                                                        <tbody className="divide-y dark:divide-slate-700">
+                                                            {extraRiceExpenses.map(exp => (
+                                                                <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                                                                    <td className="p-1 dark:text-slate-300">{exp.date}</td>
+                                                                    <td className="p-1 font-bold text-orange-600">{exp.amount}</td>
+                                                                    <td className="p-1 text-right flex justify-end gap-1">
+                                                                        <button onClick={() => handleEditExtraRice(exp)} className="text-blue-500"><Edit2 size={10}/></button>
+                                                                        <button onClick={() => handleDeleteExtraRice(exp.id)} className="text-red-500"><Trash2 size={10}/></button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+	                                        </div>
+	                                    )}
+	                                 </div>
                              </div>
                         </div>
                     </div>
@@ -2182,55 +2231,61 @@ const App: React.FC = () => {
                                       </div>
                                   </div>
 
-                                  {/* Stats Grid for Border View */}
-                                  {(() => {
-                                      // Calculate breakdown for Border View
-                                      const bTotalMeals: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.meals) || 0), 0);
-                                      const bMealRate: number = managerInfoForBorder.mealRate;
-                                      
-                                      // Updated: Round meal cost
-                                      const bMealCost: number = Math.round(bTotalMeals * bMealRate);
-                                      
-                                      const bTotalExtraBazaar: number = expenses.filter(e => e.type === 'extra').reduce((sum, e) => sum + e.amount, 0);
-                                      const bSharedExtra: number = borders.length > 0 ? bTotalExtraBazaar / borders.length : 0;
-                                      
-                                      // Updated: Exclude shared extra from total cost calculation
-                                      const bTotalCost: number = bMealCost + (borderView.extraCost||0) + (borderView.guestCost||0);
-                                      
-                                      const bTotalDeposit: number = borderView.deposits.reduce((a: number,b: Deposit) => a + Number(b.amount), 0);
-                                      const bBalance: number = bTotalDeposit - bTotalCost;
+	                                  {/* Stats Grid for Border View */}
+	                                  {(() => {
+	                                      // Calculate breakdown for Border View
+                                          const rawTotalMeals: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.meals) || 0), 0);
+                                          const fixedMealCount = managerInfoForBorder.fixedMealCount || 0;
+	                                      const bTotalMeals: number = Math.max(rawTotalMeals, fixedMealCount);
+	                                      const bMealRate: number = managerInfoForBorder.mealRate;
+	                                      
+	                                      // Updated: Round meal cost
+	                                      const bMealCost: number = Math.round(bTotalMeals * bMealRate);
+	                                      
+	                                      const bTotalExtraBazaar: number = expenses.filter(e => e.type === 'extra').reduce((sum, e) => sum + e.amount, 0);
+	                                      const bSharedExtra: number = borders.length > 0 ? bTotalExtraBazaar / borders.length : 0;
+	                                      
+	                                      // Updated: Exclude shared extra from total cost calculation
+	                                      const bTotalCost: number = bMealCost + (borderView.extraCost||0) + (borderView.guestCost||0);
+	                                      
+	                                      const bTotalDeposit: number = borderView.deposits.reduce((a: number,b: Deposit) => a + Number(b.amount), 0);
+	                                      const bBalance: number = bTotalDeposit - bTotalCost;
 
-                                      return (
-                                        <>
-                                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                              <div className="bg-emerald-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                                  <h3 className="text-emerald-100 text-xs">মোট জমা টাকা</h3>
-                                                  <p className="text-2xl font-bold font-baloo">{bTotalDeposit} ৳</p>
-                                                  <DollarSign className="absolute bottom-2 right-2 opacity-20"/>
-                                              </div>
-                                              <div className="bg-orange-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                                  <h3 className="text-orange-100 text-xs">মোট জমা চাল</h3>
-                                                  <p className="text-2xl font-bold font-baloo">{borderView.riceDeposits.reduce((a: number,b: RiceDeposit) => a + (Number(b.amount)||0), 0)} পট</p>
-                                                  <Utensils className="absolute bottom-2 right-2 opacity-20"/>
-                                              </div>
-                                              <div className={`p-4 rounded-xl shadow-lg text-white relative overflow-hidden ${bBalance < 0 ? 'bg-red-600' : 'bg-blue-600'}`}>
-                                                  <h3 className="text-white/80 text-xs">বর্তমান ব্যালেন্স</h3>
-                                                  <p className="text-2xl font-bold font-baloo mt-1">{bBalance.toFixed(0)} ৳</p>
-                                                  <p className="text-[10px] bg-white/20 inline-block px-1 rounded mt-1">মিল রেট: {bMealRate} ৳</p>
-                                              </div>
-                                              <div className="bg-yellow-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                                  <h3 className="text-yellow-100 text-xs">চাল খাওয়া</h3>
-                                                  <p className="text-2xl font-bold font-baloo">{(Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.rice) || 0), 0)).toFixed(1)} পট</p>
-                                              </div>
-                                          </div>
+                                          const bExtraRiceFromManager = managerInfoForBorder.extraRiceExpenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+                                          const bExtraRiceFromBorder = borderView.extraRiceExpenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+                                          const bTotalRiceConsumed = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.rice) || 0), 0) + bExtraRiceFromBorder;
+
+	                                      return (
+	                                        <>
+	                                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+	                                              <div className="bg-emerald-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+	                                                  <h3 className="text-emerald-100 text-xs">মোট জমা টাকা</h3>
+	                                                  <p className="text-2xl font-bold font-baloo">{bTotalDeposit} ৳</p>
+	                                                  <DollarSign className="absolute bottom-2 right-2 opacity-20"/>
+	                                              </div>
+	                                              <div className="bg-orange-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+	                                                  <h3 className="text-orange-100 text-xs">মোট জমা চাল</h3>
+	                                                  <p className="text-2xl font-bold font-baloo">{borderView.riceDeposits.reduce((a: number,b: RiceDeposit) => a + (Number(b.amount)||0), 0)} পট</p>
+	                                                  <Utensils className="absolute bottom-2 right-2 opacity-20"/>
+	                                              </div>
+	                                              <div className={`p-4 rounded-xl shadow-lg text-white relative overflow-hidden ${bBalance < 0 ? 'bg-red-600' : 'bg-blue-600'}`}>
+	                                                  <h3 className="text-white/80 text-xs">বর্তমান ব্যালেন্স</h3>
+	                                                  <p className="text-2xl font-bold font-baloo mt-1">{bBalance.toFixed(0)} ৳</p>
+	                                                  <p className="text-[10px] bg-white/20 inline-block px-1 rounded mt-1">মিল রেট: {bMealRate} ৳</p>
+	                                              </div>
+	                                              <div className="bg-yellow-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+	                                                  <h3 className="text-yellow-100 text-xs">চাল খাওয়া</h3>
+	                                                  <p className="text-2xl font-bold font-baloo">{bTotalRiceConsumed.toFixed(1)} পট</p>
+	                                              </div>
+	                                          </div>
 
                                           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border border-slate-200 dark:border-slate-700">
                                               <h3 className="font-bold border-b dark:border-slate-700 pb-3 mb-4 text-slate-800 dark:text-white">খরচের বিস্তারিত</h3>
                                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-                                                  <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">মিল সংখ্যা</p>
-                                                      <p className="font-bold font-baloo dark:text-white">{bTotalMeals}</p>
-                                                  </div>
+	                                                  <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded relative">
+	                                                      <p className="text-xs text-slate-500 dark:text-slate-400">মিল সংখ্যা</p>
+	                                                      <p className="font-bold font-baloo dark:text-white">{bTotalMeals} {fixedMealCount > 0 && <span className="text-[10px] bg-purple-100 text-purple-600 px-1 rounded ml-1">ফিক্সড: {fixedMealCount}</span>}</p>
+	                                                  </div>
                                                   <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded">
                                                       <p className="text-xs text-slate-500 dark:text-slate-400">মিল রেট</p>
                                                       <p className="font-bold font-baloo text-orange-600 dark:text-orange-400">{bMealRate} ৳</p>
@@ -2248,10 +2303,10 @@ const App: React.FC = () => {
                                                       <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত (নিজ)</p>
                                                       <p className="font-bold font-baloo text-red-600 dark:text-red-400">{borderView.extraCost} ৳</p>
                                                   </div>
-                                                  <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded opacity-70" title="এই খরচ আপনার ব্যালেন্স থেকে কাটা হচ্ছে না">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">বাজার এক্সট্রা (ভাগ)</p>
-                                                      <p className="font-bold font-baloo text-orange-600 dark:text-orange-400">{bSharedExtra.toFixed(0)} ৳</p>
-                                                  </div>
+	                                                  <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded">
+	                                                      <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত চাল</p>
+	                                                      <p className="font-bold font-baloo text-orange-600 dark:text-orange-400">{bExtraRiceFromBorder.toFixed(1)} পট</p>
+	                                                  </div>
                                               </div>
                                               <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded text-center">
                                                   <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
@@ -2491,18 +2546,27 @@ const App: React.FC = () => {
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-2">ফিক্সড মিল সংখ্যা</label>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-2xl font-bold text-purple-600">M</span>
-                                                    <input type="number" step="1" className="flex-1 border-2 border-purple-100 dark:border-slate-600 p-3 rounded-lg text-lg font-bold text-slate-700 dark:text-white dark:bg-slate-700 focus:border-purple-500 outline-none transition-colors" 
-                                                        value={manager.fixedMealCount || ''} 
-                                                        onChange={e => setManager({...manager, fixedMealCount: parseInt(e.target.value) || 0})}
-                                                        onBlur={() => dbService.updateManager(manager.username, { fixedMealCount: manager.fixedMealCount || 0 })}
-                                                    />
-                                                </div>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">যে বর্ডারের মোট মিল এই সংখ্যার কম থাকবে, তাদের মিল এই সংখ্যা দেখাবে। বেশি থাকলে আসল সংখ্যা দেখাবে।</p>
-                                            </div>
+	                                            <div>
+	                                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-2">ফিক্সড মিল সংখ্যা</label>
+	                                                <div className="flex items-center gap-2">
+	                                                    <span className="text-2xl font-bold text-purple-600">M</span>
+	                                                    <input type="number" step="1" className="flex-1 border-2 border-purple-100 dark:border-slate-600 p-3 rounded-lg text-lg font-bold text-slate-700 dark:text-white dark:bg-slate-700 focus:border-purple-500 outline-none transition-colors" 
+	                                                        value={manager.fixedMealCount || ''} 
+	                                                        onChange={e => setManager({...manager, fixedMealCount: parseInt(e.target.value) || 0})}
+	                                                    />
+                                                        <button onClick={() => {
+                                                            dbService.updateManager(manager.username, { fixedMealCount: manager.fixedMealCount || 0 });
+                                                            alert("ফিক্সড মিল সেভ হয়েছে!");
+                                                        }} className="bg-purple-600 text-white px-4 py-3 rounded-lg font-bold"><Save size={20}/></button>
+                                                        <button onClick={() => {
+                                                            if(window.confirm("ফিক্সড মিল ডিলিট করতে চান?")) {
+                                                                setManager({...manager, fixedMealCount: 0});
+                                                                dbService.updateManager(manager.username, { fixedMealCount: 0 });
+                                                            }
+                                                        }} className="bg-red-500 text-white px-4 py-3 rounded-lg font-bold"><Trash2 size={20}/></button>
+	                                                </div>
+	                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">যে বর্ডারের মোট মিল এই সংখ্যার কম থাকবে, তাদের মিল এই সংখ্যা দেখাবে। বেশি থাকলে আসল সংখ্যা দেখাবে।</p>
+	                                            </div>
 
                                             <div className="pt-8 mt-8 border-t border-slate-100 dark:border-slate-700">
                                                 <button onClick={async () => {
