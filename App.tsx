@@ -2003,7 +2003,7 @@ const App: React.FC = () => {
                          <div className="flex bg-white dark:bg-slate-800 p-1 rounded mb-6 border dark:border-slate-700 overflow-x-auto sticky top-20 z-20 shadow-sm">
 {['overview','meals','market','schedule','iftaar','reports','system','profile'].map(v => (
                                                  <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
-                                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : v === 'iftaar' ? 'ইফতার হিসাব' : v === 'reports' ? 'রিপোর্ট' : v === 'system' ? 'ডেইলি আপডেট' : 'প্রোফাইল'}
+                                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার হিসাব' : v === 'schedule' ? 'বাজার লিস্ট' : v === 'iftaar' ? 'ইফতার হিসাব' : v === 'reports' ? 'রিপোর্ট' : v === 'system' ? 'ডেইলি আপডেট' : 'প্রোফাইল'}
                                                  </button>
                                              ))}
                          </div>
@@ -2297,16 +2297,13 @@ const App: React.FC = () => {
                                                       <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত চাল</p>
                                                       <p className="font-bold font-baloo text-orange-600 dark:text-orange-400">{borderExtraRice.toFixed(1)} পট</p>
                                                   </div>
-                                                  <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded opacity-70" title="এই খরচ আপনার ব্যালেন্স থেকে কাটা হচ্ছে না">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">বাজার এক্সট্রা (ভাগ)</p>
-                                                      <p className="font-bold font-baloo text-orange-600 dark:text-orange-400">{bSharedExtra.toFixed(0)} ৳</p>
-                                                  </div>
+                                                  
                                               </div>
                                               <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded text-center">
                                                   <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
                                                       মোট খরচ = {bMealCost.toFixed(0)} (মিল) + {borderView.guestCost} (গেস্ট) + {borderView.extraCost} (নিজ) = <span className="text-red-600 dark:text-red-400 text-lg">{bTotalCost.toFixed(0)} ৳</span>
                                                   </p>
-                                                  <p className="text-xs text-slate-400 mt-1 italic">* বাজার এক্সট্রা (ভাগ) বর্তমান ব্যালেন্স থেকে বাদ দেওয়া হয়নি।</p>
+                                                  
                                               </div>
                                           </div>
                                         </>
