@@ -68,18 +68,8 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
 
   // --- Calculation Helpers ---
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const getTotalMeals = (b: Border) => {
-    const actualMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
-    if (manager.fixedMealCount && manager.fixedMealCount > 0) {
-      return actualMeals < manager.fixedMealCount ? manager.fixedMealCount : actualMeals;
-    }
-    return actualMeals;
-  };
-  const getTotalRice = (b: Border) => {
-    const dailyRice = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
-    const extraRice = b.extraRiceExpenses ? b.extraRiceExpenses.reduce((sum, e) => sum + e.amount, 0) : 0;
-    return dailyRice + extraRice;
-  };
+  const getTotalMeals = (b: Border) => Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+  const getTotalRice = (b: Border) => Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
   const totalExtraBazaar = expenses.filter(e => e.type === 'extra').reduce((sum, e) => sum + e.amount, 0);
   
   const calculateBorderStats = (b: Border) => {
@@ -87,9 +77,6 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
     const totalRiceDeposit = b.riceDeposits.reduce((sum, d) => sum + (d.amount || 0), 0);
     const mealsEaten = getTotalMeals(b);
     const riceEaten = getTotalRice(b);
-    
-    // Extra rice for this border
-    const borderExtraRice = b.extraRiceExpenses ? b.extraRiceExpenses.reduce((sum, e) => sum + e.amount, 0) : 0;
     
     // Updated Logic: Round Meal Cost and Exclude Shared Extra
     const mealCost = Math.round(mealsEaten * manager.mealRate);
@@ -99,7 +86,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
     const moneyBalance = totalMoneyDeposit - totalCost; 
     const riceBalance = totalRiceDeposit - riceEaten;
 
-    return { totalMoneyDeposit, totalRiceDeposit, mealsEaten, riceEaten, mealCost, sharedExtraCost, totalCost, moneyBalance, riceBalance, borderExtraRice };
+    return { totalMoneyDeposit, totalRiceDeposit, mealsEaten, riceEaten, mealCost, sharedExtraCost, totalCost, moneyBalance, riceBalance };
   };
 
   // Calculate System Daily Totals
@@ -111,8 +98,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
             tRice += (day.morning?.rice||0) + (day.lunch?.rice||0) + (day.dinner?.rice||0);
         });
     }
-    const extraRice = manager.extraRiceExpenses ? manager.extraRiceExpenses.reduce((sum, e) => sum + e.amount, 0) : 0;
-    return { tMeals, tRice: tRice + extraRice, extraRice };
+    return { tMeals, tRice };
   }
   const sysTotals = getSystemDailyTotals();
 
@@ -367,8 +353,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     <th className="border border-gray-600 p-2">ক্রম</th>
                     <th className="border border-gray-600 p-2 text-left">বর্ডার নাম</th>
                     <th className="border border-gray-600 p-2 bg-green-700">চাল জমা (পট)</th>
-                    <th className="border border-gray-600 p-2 bg-orange-700">অতিরিক্ত চাল (পট)</th>
-                    <th className="border border-gray-600 p-2 bg-red-700">মোট খাওয়া (পট)</th>
+                    <th className="border border-gray-600 p-2 bg-red-700">চাল খাওয়া (পট)</th>
                     <th className="border border-gray-600 p-2 bg-blue-700">ম্যানেজার পাবে (শর্ট)</th>
                     <th className="border border-gray-600 p-2 bg-emerald-700">ম্যানেজার দিবে (উদ্বৃত্ত)</th>
                 </tr>
@@ -381,7 +366,6 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                             <td className="border border-gray-600 p-2">{idx + 1}</td>
                             <td className="border border-gray-600 p-2 text-left font-bold">{b.name}</td>
                             <td className="border border-gray-600 p-2 font-mono bg-green-50 text-base">{stats.totalRiceDeposit.toFixed(2)}</td>
-                            <td className="border border-gray-600 p-2 font-mono bg-orange-50 text-base">{stats.borderExtraRice.toFixed(2)}</td>
                             <td className="border border-gray-600 p-2 font-mono bg-red-50 text-base">{stats.riceEaten.toFixed(2)}</td>
                             <td className="border border-gray-600 p-2 font-bold font-mono text-red-600">
                                 {stats.riceBalance < 0 ? Math.abs(stats.riceBalance).toFixed(2) : '-'}
@@ -394,29 +378,6 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                 })}
             </tbody>
         </table>
-        
-        {/* Rice Summary Footer */}
-        <div className="mt-6 p-4 bg-slate-50 border border-slate-300 rounded-lg">
-            <h4 className="font-bold text-lg mb-2 border-b pb-1">সামারি রিপোর্ট (চাল)</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="p-2 bg-white border rounded shadow-sm">
-                    <p className="text-gray-500">গত মাসের অবশিষ্ট:</p>
-                    <p className="text-xl font-bold text-blue-700">{(manager.prevRiceBalance || 0).toFixed(2)} পট</p>
-                </div>
-                <div className="p-2 bg-white border rounded shadow-sm">
-                    <p className="text-gray-500">মোট অতিরিক্ত খরচ:</p>
-                    <p className="text-xl font-bold text-orange-700">{sysTotals.extraRice.toFixed(2)} পট</p>
-                </div>
-                <div className="p-2 bg-white border rounded shadow-sm">
-                    <p className="text-gray-500">বর্তমানে অবশিষ্ট:</p>
-                    <p className="text-xl font-bold text-green-700">
-                        {(borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) - 
-                          borders.reduce((acc, b) => acc + calculateBorderStats(b).riceEaten, 0) + 
-                          (manager.prevRiceBalance || 0)).toFixed(2)} পট
-                    </p>
-                </div>
-            </div>
-        </div>
       </div>
 
        {/* 8. Monthly Financial Sheet (Landscape) */}
