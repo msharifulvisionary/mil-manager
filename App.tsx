@@ -782,7 +782,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
     const totalMoney = borders.reduce((acc, b) => acc + b.deposits.reduce((s, d) => s + d.amount, 0), 0);
     const totalMeals = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0), 0);
     const totalRiceDeposited = borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0);
-    const totalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0);
+    const totalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0) + (b.additionalRicePots || 0) + (manager.globalAdditionalRicePots || 0), 0);
     const totalExtraRice = extraRice?.reduce((sum, er) => sum + er.amount, 0) || 0;
     
     // System Totals
@@ -923,7 +923,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                                         </td>
                                     ))}
                                     <td className="p-2 font-bold border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/20">
-                                        {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0).toFixed(1)}
+                                        {(Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0) + (b.additionalRicePots || 0) + (manager.globalAdditionalRicePots || 0)).toFixed(1)}
                                     </td>
                                 </tr>
                             ))}
@@ -1438,7 +1438,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
 
 // 5. BorderDetailModal
 const BorderDetailModal = ({ 
-    border, onClose, onUpdateDeposits, onUpdateRice, onUpdateExtra, onUpdateGuest, onDeleteBorder 
+    border, onClose, onUpdateDeposits, onUpdateRice, onUpdateExtra, onUpdateGuest, onUpdateAdditionalRicePots, onDeleteBorder 
 }: any) => {
     // ... (Existing code kept same) ...
     const [moneyForm, setMoneyForm] = useState<{amount: number, date: string, id?: string}>({amount: 0, date: new Date().toISOString().split('T')[0]});
@@ -1545,6 +1545,12 @@ const BorderDetailModal = ({
                                     <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1"> খরচ</label>
                                     <div className="flex gap-2">
                                         <input type="number" value={border.extraCost} onChange={e => onUpdateExtra(parseFloat(e.target.value))} className="w-full p-2 border rounded font-bold text-red-600 bg-red-50 dark:bg-slate-700 font-baloo" />
+                                    </div>
+                                 </div>
+                                 <div>
+                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">অতিরিক্ত চাল খরচ (পট)</label>
+                                    <div className="flex gap-2">
+                                        <input type="number" step="0.1" value={border.additionalRicePots || 0} onChange={e => onUpdateAdditionalRicePots(parseFloat(e.target.value))} className="w-full p-2 border rounded font-bold text-orange-600 bg-orange-50 dark:bg-slate-700 font-baloo" />
                                     </div>
                                  </div>
                              </div>
@@ -2194,7 +2200,7 @@ const App: React.FC = () => {
                                                                   </td>
                                                               ))}
                                                               <td className="p-2 font-bold border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/20">
-                                                                  {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0).toFixed(1)}
+                                                                  {(Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0) + (b.additionalRicePots || 0) + (managerInfoForBorder.globalAdditionalRicePots || 0)).toFixed(1)}
                                                               </td>
                                                           </tr>
                                                       ))}
@@ -2221,6 +2227,10 @@ const App: React.FC = () => {
                                   {(() => {
                                       // Calculate breakdown for Border View
                                       const bTotalMeals: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.meals) || 0), 0);
+                                      const bDailyRice: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.rice) || 0), 0);
+                                      const borderExtraRice: number = borderView.additionalRicePots || 0;
+                                      const globalExtraRice: number = managerInfoForBorder.globalAdditionalRicePots || 0;
+                                      const bTotalRice: number = bDailyRice + borderExtraRice + globalExtraRice;
                                       const bMealRate: number = managerInfoForBorder.mealRate;
                                       
                                       // Updated: Round meal cost
@@ -2255,7 +2265,7 @@ const App: React.FC = () => {
                                               </div>
                                               <div className="bg-yellow-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
                                                   <h3 className="text-yellow-100 text-xs">চাল খাওয়া</h3>
-                                                  <p className="text-2xl font-bold font-baloo">{(Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.rice) || 0), 0)).toFixed(1)} পট</p>
+                                                  <p className="text-2xl font-bold font-baloo">{bTotalRice.toFixed(1)} পট</p>
                                               </div>
                                           </div>
 
@@ -2282,6 +2292,10 @@ const App: React.FC = () => {
                                                   <div className="p-3 bg-red-50 dark:bg-slate-700 rounded">
                                                       <p className="text-xs text-slate-500 dark:text-slate-400"> (নিজ)</p>
                                                       <p className="font-bold font-baloo text-red-600 dark:text-red-400">{borderView.extraCost} ৳</p>
+                                                  </div>
+                                                  <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded">
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত চাল</p>
+                                                      <p className="font-bold font-baloo text-orange-600 dark:text-orange-400">{borderExtraRice.toFixed(1)} পট</p>
                                                   </div>
                                                   <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded opacity-70" title="এই খরচ আপনার ব্যালেন্স থেকে কাটা হচ্ছে না">
                                                       <p className="text-xs text-slate-500 dark:text-slate-400">বাজার এক্সট্রা (ভাগ)</p>
@@ -2525,6 +2539,21 @@ const App: React.FC = () => {
                                                     </select>
                                                 </div>
                                             </div>
+                                            
+                                            <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-2">সকল বর্ডারের জন্য অতিরিক্ত চাল খরচ (পট)</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input type="number" step="0.1" className="flex-1 border-2 border-orange-100 dark:border-slate-600 p-3 rounded-lg text-lg font-bold text-slate-700 dark:text-white dark:bg-slate-700 focus:border-orange-500 outline-none transition-colors" 
+                                                        value={manager.globalAdditionalRicePots || 0} 
+                                                        onChange={e => {
+                                                            const val = parseFloat(e.target.value) || 0;
+                                                            setManager({...manager, globalAdditionalRicePots: val});
+                                                            dbService.updateManager(manager.username, { globalAdditionalRicePots: val });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">এখান থেকে অতিরিক্ত চালের পট যোগ করলে তা স্বয়ংক্রিয়ভাবে সকল বর্ডারের মোট চালের সাথে যোগ হবে।</p>
+                                            </div>
 
                                             <div className="pt-8 mt-8 border-t border-slate-100 dark:border-slate-700">
                                                 <button onClick={async () => {
@@ -2551,6 +2580,7 @@ const App: React.FC = () => {
                                 onUpdateRice={(riceDeposits: RiceDeposit[]) => handleUpdateBorder(editingBorder.id, { riceDeposits })}
                                 onUpdateExtra={(extraCost: number) => handleUpdateBorder(editingBorder.id, { extraCost })}
                                 onUpdateGuest={(guestCost: number) => handleUpdateBorder(editingBorder.id, { guestCost })}
+                                onUpdateAdditionalRicePots={(additionalRicePots: number) => handleUpdateBorder(editingBorder.id, { additionalRicePots })}
                                 onDeleteBorder={handleDeleteBorder}
                             />
                         )}
