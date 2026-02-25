@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Border, Manager, Expense, SystemDailyEntry, MONTHS, BazaarShift } from '../types';
+import { Border, Manager, Expense, SystemDailyEntry, MONTHS, BazaarShift, ExtraRice } from '../types';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Download, Image as ImageIcon } from 'lucide-react';
@@ -8,9 +8,10 @@ interface ReportsProps {
   manager: Manager;
   borders: Border[];
   expenses: Expense[];
+  extraRice?: ExtraRice[];
 }
 
-const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
+const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice }) => {
   const dailyRiceRef = useRef<HTMLDivElement>(null);
   const dailyMealRef = useRef<HTMLDivElement>(null);
   const monthlyRiceRef = useRef<HTMLDivElement>(null);
