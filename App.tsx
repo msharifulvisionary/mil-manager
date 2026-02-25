@@ -705,6 +705,7 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
     const totalMeals = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0), 0);
     const totalRiceDeposited = borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0);
     const totalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0);
+    const totalExtraRice = (manager.extraRiceEntries || []).reduce((sum, e) => sum + e.amount, 0);
     
     // System Totals
     let systemMeals = 0;
@@ -730,8 +731,8 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
     const extraCost = expenses.filter(e => e.type === 'extra').reduce((acc, e) => acc + e.amount, 0);
     const totalCost = marketCost + extraCost;
     const currentCashBalance = totalMoney - totalCost;
-    // Updated Rice Balance Logic: Total Deposit - Total Consumed + Previous Month Balance
-    const currentRiceBalance = totalRiceDeposited - totalRiceConsumed + (manager.prevRiceBalance || 0);
+    // Updated Rice Balance Logic: Total Deposit - Total Consumed - Extra Rice + Previous Month Balance
+    const currentRiceBalance = totalRiceDeposited - totalRiceConsumed - totalExtraRice + (manager.prevRiceBalance || 0);
     
     // Calc Meal Rate
     const calcMealRate = totalMeals > 0 ? (marketCost / totalMeals) : 0;
@@ -898,7 +899,7 @@ const ManagerOverview = ({ manager, borders, expenses }: { manager: Manager, bor
                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                      <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
                      <p className="text-3xl font-bold mt-1 font-baloo">{currentRiceBalance.toFixed(1)} পট</p>
-                     <p className="text-[10px] mt-1 opacity-80">জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}</p>
+                     <p className="text-[10px] mt-1 opacity-80">জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed} | অতিরিক্ত: {totalExtraRice} | গত মাস: {manager.prevRiceBalance || 0}</p>
                      <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
                  </div>
                  <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
@@ -2103,6 +2104,10 @@ const App: React.FC = () => {
                                                   <h3 className="text-yellow-100 text-xs">চাল খাওয়া</h3>
                                                   <p className="text-2xl font-bold font-baloo">{(Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.rice) || 0), 0)).toFixed(1)} পট</p>
                                               </div>
+                                              <div className="bg-orange-700 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+                                                  <h3 className="text-orange-100 text-xs">গত মাসের অবশিষ্ট চাল</h3>
+                                                  <p className="text-2xl font-bold font-baloo">{(managerInfoForBorder?.prevRiceBalance || 0).toFixed(1)} পট</p>
+                                              </div>
                                           </div>
 
                                           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border border-slate-200 dark:border-slate-700">
@@ -2144,6 +2149,37 @@ const App: React.FC = () => {
                                         </>
                                       );
                                   })()}
+
+                                  {/* Extra Rice History */}
+                                  <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border border-slate-200 dark:border-slate-700 mb-6">
+                                      <h3 className="font-bold border-b dark:border-slate-700 pb-3 mb-4 text-orange-600 dark:text-orange-400 flex justify-between items-center">
+                                          <span>অতিরিক্ত চালের হিসাব</span>
+                                          <span className="text-xs bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded">মোট: {(managerInfoForBorder?.extraRiceEntries || []).reduce((sum, e) => sum + e.amount, 0).toFixed(1)} পট</span>
+                                      </h3>
+                                      <div className="max-h-60 overflow-y-auto">
+                                          <table className="w-full text-sm text-left">
+                                              <thead className="bg-slate-50 dark:bg-slate-700 text-xs">
+                                                  <tr>
+                                                      <th className="p-2 dark:text-slate-300">তারিখ</th>
+                                                      <th className="p-2 dark:text-slate-300">বিবরণ</th>
+                                                      <th className="p-2 text-right dark:text-slate-300">পরিমাণ</th>
+                                                  </tr>
+                                              </thead>
+                                              <tbody className="divide-y dark:divide-slate-700">
+                                                  {(managerInfoForBorder?.extraRiceEntries || []).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(entry => (
+                                                      <tr key={entry.id} className="dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                                          <td className="p-2 font-baloo text-xs">{entry.date}</td>
+                                                          <td className="p-2 text-xs">{entry.description}</td>
+                                                          <td className="p-2 text-right font-bold text-orange-600 dark:text-orange-400 font-baloo">{entry.amount} পট</td>
+                                                      </tr>
+                                                  ))}
+                                                  {(managerInfoForBorder?.extraRiceEntries || []).length === 0 && (
+                                                      <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-xs">কোন অতিরিক্ত চালের হিসাব নেই।</td></tr>
+                                                  )}
+                                              </tbody>
+                                          </table>
+                                      </div>
+                                  </div>
 
                                   {/* Transaction History Tables */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
