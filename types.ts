@@ -66,6 +66,14 @@ export interface RiceConfig {
   dinnerDiff: number;
 }
 
+export interface ExtraRice {
+  id: string;
+  date: string; // ISO date string YYYY-MM-DD
+  description: string;
+  amount: number; // in pots
+  managerId: string;
+}
+
 export interface AutoRiceRule {
   meal: number;
   rice: number;
@@ -98,6 +106,7 @@ export interface Manager {
   autoRiceEnabled?: boolean;
   autoRiceRules?: AutoRiceRule[];
   iftaarConfig?: IftaarConfig;
+  extraRice?: ExtraRice[]; // New: Extra rice usage
 }
 
 export interface IftaarConfig {
