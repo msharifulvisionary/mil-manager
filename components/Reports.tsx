@@ -382,7 +382,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
 
         {/* Rice Summary Section */}
         <div className="mt-8 border-2 border-gray-800 p-4 w-1/2 ml-auto bg-gray-50">
-            <h3 className="font-bold text-lg mb-3 border-b border-gray-400 pb-2">সার্বভৌমিক চালের সারাংশ</h3>
+            <h3 className="font-bold text-lg mb-3 border-b border-gray-400 pb-2">চালের সারাংশ</h3>
             <div className="flex justify-between mb-1">
                 <span>গত মাসের অবশিষ্ট চাল:</span>
                 <span className="font-bold font-mono">{(manager.prevRiceBalance || 0).toFixed(2)} পট</span>
