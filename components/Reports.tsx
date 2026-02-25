@@ -113,8 +113,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
   };
   const sortedBazaarSchedule = manager.bazaarSchedule ? (Object.values(manager.bazaarSchedule) as BazaarShift[]).sort((a,b) => a.date - b.date) : [];
 
-	  const totalExtraRice = (manager.extraRiceEntries || []).reduce((sum, e) => sum + e.amount, 0);
-	  const ReportCard = ({ title, desc, onPdf, onImg }: any) => (
+  const ReportCard = ({ title, desc, onPdf, onImg }: any) => (
       <div className="bg-white p-5 rounded-lg shadow-md border-t-4 border-primary hover:shadow-lg transition-all group">
           <h3 className="text-lg font-bold mb-1 text-slate-800 group-hover:text-primary transition-colors">{title}</h3>
           <p className="text-sm text-slate-500 mb-4">{desc}</p>
@@ -355,64 +354,31 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses }) => {
                     <th className="border border-gray-600 p-2 text-left">বর্ডার নাম</th>
                     <th className="border border-gray-600 p-2 bg-green-700">চাল জমা (পট)</th>
                     <th className="border border-gray-600 p-2 bg-red-700">চাল খাওয়া (পট)</th>
-	                    <th className="border border-gray-600 p-2 bg-blue-700">ম্যানেজার পাবে (শর্ট)</th>
-	                    <th className="border border-gray-600 p-2 bg-emerald-700">ম্যানেজার দিবে (উদ্বৃত্ত)</th>
-	                </tr>
-	            </thead>
-	            <tbody>
-	                {/* Previous Month Balance Row */}
-	                <tr className="bg-yellow-50 font-bold text-center">
-	                    <td className="border border-gray-600 p-2">-</td>
-	                    <td className="border border-gray-600 p-2 text-left">গত মাসের অবশিষ্ট চাল</td>
-	                    <td className="border border-gray-600 p-2 font-mono text-base">{(manager.prevRiceBalance || 0).toFixed(2)}</td>
-	                    <td className="border border-gray-600 p-2">-</td>
-	                    <td className="border border-gray-600 p-2">-</td>
-	                    <td className="border border-gray-600 p-2">-</td>
-	                </tr>
-	                {borders.map((b, idx) => {
-	                    const stats = calculateBorderStats(b);
-	                    return (
-	                        <tr key={b.id} className="text-center hover:bg-gray-50">
-	                            <td className="border border-gray-600 p-2">{idx + 1}</td>
-	                            <td className="border border-gray-600 p-2 text-left font-bold">{b.name}</td>
-	                            <td className="border border-gray-600 p-2 font-mono bg-green-50 text-base">{stats.totalRiceDeposit.toFixed(2)}</td>
-	                            <td className="border border-gray-600 p-2 font-mono bg-red-50 text-base">{stats.riceEaten.toFixed(2)}</td>
-	                            <td className="border border-gray-600 p-2 font-bold font-mono text-red-600">
-	                                {stats.riceBalance < 0 ? Math.abs(stats.riceBalance).toFixed(2) : '-'}
-	                            </td>
-	                            <td className="border border-gray-600 p-2 font-bold font-mono text-green-600">
-	                                {stats.riceBalance >= 0 ? stats.riceBalance.toFixed(2) : '-'}
-	                            </td>
-	                        </tr>
-	                    );
-	                })}
-	                {/* Extra Rice Rows */}
-	                {(manager.extraRiceEntries || []).map((entry, idx) => (
-	                    <tr key={entry.id} className="bg-orange-50 text-center">
-	                        <td className="border border-gray-600 p-2">Ex</td>
-	                        <td className="border border-gray-600 p-2 text-left font-medium">অতিরিক্ত: {entry.description} ({entry.date})</td>
-	                        <td className="border border-gray-600 p-2">-</td>
-	                        <td className="border border-gray-600 p-2 font-mono text-base">{entry.amount.toFixed(2)}</td>
-	                        <td className="border border-gray-600 p-2">-</td>
-	                        <td className="border border-gray-600 p-2">-</td>
-	                    </tr>
-	                ))}
-	            </tbody>
-	            <tfoot>
-	                <tr className="bg-slate-100 font-bold text-center">
-	                    <td colSpan={2} className="border border-gray-600 p-2 text-right">সর্বমোট হিসাব:</td>
-	                    <td className="border border-gray-600 p-2 bg-green-100">{(borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) + (manager.prevRiceBalance || 0)).toFixed(2)}</td>
-	                    <td className="border border-gray-600 p-2 bg-red-100">{(borders.reduce((sum, b) => sum + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0) + totalExtraRice).toFixed(2)}</td>
-	                    <td colSpan={2} className="border border-gray-600 p-2 bg-blue-100">
-	                        অবশিষ্ট চাল: {(
-	                            (borders.reduce((sum, b) => sum + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) + (manager.prevRiceBalance || 0)) - 
-	                            (borders.reduce((sum, b) => sum + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0) + totalExtraRice)
-	                        ).toFixed(2)} পট
-	                    </td>
-	                </tr>
-	            </tfoot>
-	        </table>
-	      </div>
+                    <th className="border border-gray-600 p-2 bg-blue-700">ম্যানেজার পাবে (শর্ট)</th>
+                    <th className="border border-gray-600 p-2 bg-emerald-700">ম্যানেজার দিবে (উদ্বৃত্ত)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {borders.map((b, idx) => {
+                    const stats = calculateBorderStats(b);
+                    return (
+                        <tr key={b.id} className="text-center hover:bg-gray-50">
+                            <td className="border border-gray-600 p-2">{idx + 1}</td>
+                            <td className="border border-gray-600 p-2 text-left font-bold">{b.name}</td>
+                            <td className="border border-gray-600 p-2 font-mono bg-green-50 text-base">{stats.totalRiceDeposit.toFixed(2)}</td>
+                            <td className="border border-gray-600 p-2 font-mono bg-red-50 text-base">{stats.riceEaten.toFixed(2)}</td>
+                            <td className="border border-gray-600 p-2 font-bold font-mono text-red-600">
+                                {stats.riceBalance < 0 ? Math.abs(stats.riceBalance).toFixed(2) : '-'}
+                            </td>
+                            <td className="border border-gray-600 p-2 font-bold font-mono text-green-600">
+                                {stats.riceBalance >= 0 ? stats.riceBalance.toFixed(2) : '-'}
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+      </div>
 
        {/* 8. Monthly Financial Sheet (Landscape) */}
        <div style={{ display: 'none' }} ref={monthlyCostRef} className="bg-white p-8 w-[1400px] mx-auto">
