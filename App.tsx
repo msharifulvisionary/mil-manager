@@ -994,7 +994,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                             <p className="text-xl font-bold text-slate-800 dark:text-white font-baloo">{marketCost} ৳</p>
                         </div>
                         <div>
-                            <p className="text-xs text-red-500"> বাজার</p>
+                            <p className="text-xs text-red-500">অতিরিক্ত বাজার</p>
                             <p className="text-xl font-bold text-red-600 font-baloo">{extraCost} ৳</p>
                         </div>
                         <div>
@@ -1361,7 +1361,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                     <div>
                         <label className="text-sm text-slate-600 dark:text-slate-300 mb-1 block">খরচের ধরণ</label>
                         <select className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-700 dark:text-white" value={form.type} onChange={e => setForm({...form, type: e.target.value as any})}>
-                            <option value="market">বাজার</option>
+                            <option value="market">সাধারণ বাজার</option>
                             <option value="extra"> অতিরিক্ত বাজার</option>
                         </select>
                     </div>
@@ -1396,7 +1396,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                     <h3 className="font-bold text-lg text-slate-800 dark:text-white">খরচের তালিকা</h3>
                     <div className="flex gap-2">
                         <button onClick={() => setFilterType('all')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:text-slate-300'}`}>সব</button>
-                        <button onClick={() => setFilterType('market')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'market' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 dark:bg-slate-700 dark:text-blue-400'}`}>বাজার</button>
+                        <button onClick={() => setFilterType('market')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'market' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 dark:bg-slate-700 dark:text-blue-400'}`}>সাধারণ বাজার</button>
                         <button onClick={() => setFilterType('extra')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'extra' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 dark:bg-slate-700 dark:text-red-400'}`}>অতিরিক্ত বাজার</button>
                     </div>
                 </div>
@@ -2362,7 +2362,7 @@ const App: React.FC = () => {
                                               {expenses.map(e => (
                                                   <tr key={e.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-300 ${e.type === 'extra' ? 'bg-red-50 dark:bg-red-900/20' : ''}`}>
                                                       <td className="p-3 font-baloo">{e.date}</td>
-                                                      <td className="p-3">{e.shopper} {e.type === 'extra' && <span className="text-[10px] bg-red-200 dark:bg-red-800 px-1 rounded"> বাজার :</span>}</td>
+                                                      <td className="p-3">{e.shopper} {e.type === 'extra' && <span className="text-[10px] bg-red-200 dark:bg-red-800 px-1 rounded">অতিরিক্ত বাজার :</span>}</td>
                                                       <td className="p-3 text-right font-bold font-baloo">{e.amount}</td>
                                                   </tr>
                                               ))}
