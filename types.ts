@@ -71,13 +71,6 @@ export interface AutoRiceRule {
   rice: number;
 }
 
-export interface ExtraRice {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-}
-
 export interface Manager {
   username: string; // ID
   password: string; 
@@ -97,7 +90,6 @@ export interface Manager {
   systemDaily?: SystemDaily; 
   riceConfig?: RiceConfig; // New: Config for auto rice calc
   prevRiceBalance?: number; // New: Previous month rice balance
-  extraRiceEntries?: ExtraRice[]; // New: Extra rice entries
   
   // New: Bazaar Schedule
   bazaarSchedule?: { [day: number]: BazaarShift };
