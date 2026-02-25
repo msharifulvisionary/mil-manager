@@ -57,6 +57,7 @@ export interface Border {
   dailyUsage: DailyUsage;
   extraCost: number; // Personal Extra / Fine
   guestCost: number; // New: Guest Meal Cost
+  additionalRicePots?: number; // New: Additional Rice Expense
   order?: number; // New: For shuffling/sorting
 }
 
@@ -107,6 +108,7 @@ export interface Manager {
   autoRiceRules?: AutoRiceRule[];
   iftaarConfig?: IftaarConfig;
   extraRice?: ExtraRice[]; // New: Extra rice usage
+  globalAdditionalRicePots?: number; // New: Global Additional Rice Expense
 }
 
 export interface IftaarConfig {
