@@ -70,7 +70,12 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
   // --- Calculation Helpers ---
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const getTotalMeals = (b: Border) => Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
-  const getTotalRice = (b: Border) => Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
+  const getTotalRice = (b: Border) => {
+    const dailyRice = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
+    const borderExtra = b.additionalRicePots || 0;
+    const globalExtra = manager.globalAdditionalRicePots || 0;
+    return dailyRice + borderExtra + globalExtra;
+  };
   const totalExtraBazaar = expenses.filter(e => e.type === 'extra').reduce((sum, e) => sum + e.amount, 0);
   
   const calculateBorderStats = (b: Border) => {
@@ -393,7 +398,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
             </div>
             <div className="flex justify-between mb-1 text-red-700">
                 <span>বর্ডারদের মোট খাওয়া:</span>
-                <span className="font-bold font-mono">-{borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0).toFixed(2)} পট</span>
+                <span className="font-bold font-mono">-{borders.reduce((acc, b) => acc + getTotalRice(b), 0).toFixed(2)} পট</span>
             </div>
             <div className="flex justify-between mb-2 text-red-700">
                 <span>অতিরিক্ত চাল খরচ:</span>
@@ -405,7 +410,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                     {(
                         (manager.prevRiceBalance || 0) + 
                         borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) - 
-                        borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0) - 
+                        borders.reduce((acc, b) => acc + getTotalRice(b), 0) - 
                         (extraRice?.reduce((sum, e) => sum + e.amount, 0) || 0)
                     ).toFixed(2)} পট
                 </span>
