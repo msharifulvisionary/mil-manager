@@ -703,7 +703,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
 
             {/* Extra Rice Section */}
             <div className="mt-8 border-t dark:border-slate-700 pt-6">
-                <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white mb-4"><ClipboardList size={18}/>  চাল খরচ</h3>
+                <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white mb-4"><ClipboardList size={18}/>অতিরিক্ত চাল খরচ</h3>
                 
                 <div className="flex flex-wrap gap-3 mb-4 items-end bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
                     <div>
@@ -712,7 +712,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                     </div>
                     <div className="flex-1 min-w-[200px]">
                         <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">বিবরণ</label>
-                        <input type="text" id="extraRiceDesc" placeholder="যেমন: মেহমানের জন্য" className="p-2 border rounded w-full dark:bg-slate-800 text-sm" />
+                        <input type="text" id="extraRiceDesc" placeholder="" className="p-2 border rounded w-full dark:bg-slate-800 text-sm" />
                     </div>
                     <div>
                         <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">পরিমাণ (পট)</label>
@@ -762,7 +762,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                                 ))
                             )}
                             <tr className="bg-orange-50 dark:bg-orange-900/20 font-bold">
-                                <td colSpan={2} className="p-2 text-right text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">মোট  চাল = </td>
+                                <td colSpan={2} className="p-2 text-right text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">মোট অতিরিক্ত চাল = </td>
                                 <td className="p-2 text-center text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">{localExtraRice.reduce((sum, e) => sum + e.amount, 0).toFixed(1)}</td>
                                 <td></td>
                             </tr>
@@ -977,7 +977,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                      <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
                      <p className="text-3xl font-bold mt-1 font-baloo">{currentRiceBalance.toFixed(1)} পট</p>
-                     <p className="text-[10px] mt-1 opacity-80 leading-tight">নতুন জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}<br/>গত মাসের অবশিষ্ট: {manager.prevRiceBalance || 0} |  খরচ: {totalExtraRice.toFixed(1)}</p>
+                     <p className="text-[10px] mt-1 opacity-80 leading-tight">নতুন জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}<br/>গত মাসের অবশিষ্ট: {manager.prevRiceBalance || 0} | অতিরিক্ত খরচ: {totalExtraRice.toFixed(1)}</p>
                      <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
                  </div>
                  <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
@@ -2075,7 +2075,7 @@ const App: React.FC = () => {
                                      {/* Rice Summary & Extra Rice Details for Border in Daily Update */}
                                      <div className="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700">
                                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
-                                             <h3 className="text-lg font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/>  চাল ও অবশিষ্ট চাল এর বিস্তারিত</h3>
+                                             <h3 className="text-lg font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/> অতিরিক্ত  চাল ও অবশিষ্ট চাল এর বিস্তারিত</h3>
                                              <div className="bg-amber-100 dark:bg-amber-900/30 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800">
                                                  <span className="text-sm font-bold text-amber-800 dark:text-amber-200">গত মাসের মিলের অবশিষ্ট চাল: </span>
                                                  <span className="text-lg font-bold font-baloo text-orange-700 dark:text-orange-400">{(managerInfoForBorder.prevRiceBalance || 0).toFixed(1)} পট</span>
@@ -2101,7 +2101,7 @@ const App: React.FC = () => {
                                                      </tr>
                                                    ))}
                                                    <tr className="bg-orange-100 dark:bg-orange-900/30 font-bold">
-                                                     <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট  চাল:</td>
+                                                     <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট অতিরিক্ত চাল:</td>
                                                      <td className="p-2 border border-orange-600 text-center text-orange-700 dark:text-orange-400">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</td>
                                                    </tr>
                                                  </tbody>
