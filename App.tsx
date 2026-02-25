@@ -703,7 +703,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
 
             {/* Extra Rice Section */}
             <div className="mt-8 border-t dark:border-slate-700 pt-6">
-                <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white mb-4"><ClipboardList size={18}/> অতিরিক্ত চাল খরচ</h3>
+                <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white mb-4"><ClipboardList size={18}/>  চাল খরচ</h3>
                 
                 <div className="flex flex-wrap gap-3 mb-4 items-end bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
                     <div>
@@ -742,7 +742,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                         </thead>
                         <tbody>
                             {localExtraRice.length === 0 ? (
-                                <tr><td colSpan={4} className="p-4 text-center text-slate-500">কোনো অতিরিক্ত চালের হিসাব নেই</td></tr>
+                                <tr><td colSpan={4} className="p-4 text-center text-slate-500">কোনো  চালের হিসাব নেই</td></tr>
                             ) : (
                                 localExtraRice.map(er => (
                                     <tr key={er.id} className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
@@ -762,7 +762,7 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                                 ))
                             )}
                             <tr className="bg-orange-50 dark:bg-orange-900/20 font-bold">
-                                <td colSpan={2} className="p-2 text-right text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">মোট অতিরিক্ত চাল = </td>
+                                <td colSpan={2} className="p-2 text-right text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">মোট  চাল = </td>
                                 <td className="p-2 text-center text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">{localExtraRice.reduce((sum, e) => sum + e.amount, 0).toFixed(1)}</td>
                                 <td></td>
                             </tr>
@@ -977,7 +977,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                      <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
                      <p className="text-3xl font-bold mt-1 font-baloo">{currentRiceBalance.toFixed(1)} পট</p>
-                     <p className="text-[10px] mt-1 opacity-80 leading-tight">নতুন জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}<br/>গত মাসের অবশিষ্ট: {manager.prevRiceBalance || 0} | অতিরিক্ত খরচ: {totalExtraRice.toFixed(1)}</p>
+                     <p className="text-[10px] mt-1 opacity-80 leading-tight">নতুন জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}<br/>গত মাসের অবশিষ্ট: {manager.prevRiceBalance || 0} |  খরচ: {totalExtraRice.toFixed(1)}</p>
                      <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
                  </div>
                  <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
@@ -994,7 +994,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                             <p className="text-xl font-bold text-slate-800 dark:text-white font-baloo">{marketCost} ৳</p>
                         </div>
                         <div>
-                            <p className="text-xs text-red-500">অতিরিক্ত বাজার</p>
+                            <p className="text-xs text-red-500"> বাজার</p>
                             <p className="text-xl font-bold text-red-600 font-baloo">{extraCost} ৳</p>
                         </div>
                         <div>
@@ -1362,7 +1362,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                         <label className="text-sm text-slate-600 dark:text-slate-300 mb-1 block">খরচের ধরণ</label>
                         <select className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-700 dark:text-white" value={form.type} onChange={e => setForm({...form, type: e.target.value as any})}>
                             <option value="market">বাজার</option>
-                            <option value="extra">অতিরিক্ত বাজার</option>
+                            <option value="extra"> বাজার</option>
                         </select>
                     </div>
                     <div>
@@ -1397,7 +1397,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                     <div className="flex gap-2">
                         <button onClick={() => setFilterType('all')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:text-slate-300'}`}>সব</button>
                         <button onClick={() => setFilterType('market')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'market' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 dark:bg-slate-700 dark:text-blue-400'}`}>বাজার</button>
-                        <button onClick={() => setFilterType('extra')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'extra' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 dark:bg-slate-700 dark:text-red-400'}`}>অতিরিক্ত</button>
+                        <button onClick={() => setFilterType('extra')} className={`px-3 py-1 text-xs rounded-full ${filterType === 'extra' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 dark:bg-slate-700 dark:text-red-400'}`}></button>
                     </div>
                 </div>
                 <div className="overflow-y-auto flex-1 pr-2">
@@ -1417,7 +1417,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                                     <td className="py-3 text-slate-600 dark:text-slate-300 font-baloo">{formatBengaliDate(e.date)}</td>
                                     <td className="py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${e.type === 'extra' ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}>
-                                            {e.type === 'extra' ? 'অতিরিক্ত' : 'বাজার'}
+                                            {e.type === 'extra' ? '' : 'বাজার'}
                                         </span>
                                     </td>
                                     <td className="py-3 font-medium dark:text-slate-200">{e.shopper}</td>
@@ -1533,7 +1533,7 @@ const BorderDetailModal = ({
 
                         {/* Extra Costs */}
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                             <h3 className="font-bold text-slate-700 dark:text-white mb-3">অতিরিক্ত খরচ সমূহ</h3>
+                             <h3 className="font-bold text-slate-700 dark:text-white mb-3"> খরচ সমূহ</h3>
                              <div className="space-y-3">
                                  <div>
                                     <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">গেস্ট মিল খরচ (শুধুমাত্র মিলের জন্য)</label>
@@ -1542,7 +1542,7 @@ const BorderDetailModal = ({
                                     </div>
                                  </div>
                                  <div>
-                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">অতিরিক্ত খরচ</label>
+                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1"> খরচ</label>
                                     <div className="flex gap-2">
                                         <input type="number" value={border.extraCost} onChange={e => onUpdateExtra(parseFloat(e.target.value))} className="w-full p-2 border rounded font-bold text-red-600 bg-red-50 dark:bg-slate-700 font-baloo" />
                                     </div>
@@ -1913,7 +1913,7 @@ const App: React.FC = () => {
       try {
           const newER = await dbService.addExtraRice({ ...extraRiceData, managerId: manager.username });
           setExtraRice(prev => [...prev, newER as ExtraRice]);
-          alert("অতিরিক্ত চাল যোগ হয়েছে!");
+          alert(" চাল যোগ হয়েছে!");
       } catch(e) { alert("Error adding extra rice"); }
   };
 
@@ -2075,7 +2075,7 @@ const App: React.FC = () => {
                                      {/* Rice Summary & Extra Rice Details for Border in Daily Update */}
                                      <div className="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700">
                                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
-                                             <h3 className="text-lg font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/> অতিরিক্ত চাল ও জের এর বিস্তারিত</h3>
+                                             <h3 className="text-lg font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/>  চাল ও অবশিষ্ট চাল এর বিস্তারিত</h3>
                                              <div className="bg-amber-100 dark:bg-amber-900/30 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800">
                                                  <span className="text-sm font-bold text-amber-800 dark:text-amber-200">গত মাসের মিলের অবশিষ্ট চাল: </span>
                                                  <span className="text-lg font-bold font-baloo text-orange-700 dark:text-orange-400">{(managerInfoForBorder.prevRiceBalance || 0).toFixed(1)} পট</span>
@@ -2101,14 +2101,14 @@ const App: React.FC = () => {
                                                      </tr>
                                                    ))}
                                                    <tr className="bg-orange-100 dark:bg-orange-900/30 font-bold">
-                                                     <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট অতিরিক্ত চাল:</td>
+                                                     <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট  চাল:</td>
                                                      <td className="p-2 border border-orange-600 text-center text-orange-700 dark:text-orange-400">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</td>
                                                    </tr>
                                                  </tbody>
                                                </table>
                                              </div>
                                          ) : (
-                                             <p className="text-sm text-slate-500 italic p-4 text-center bg-slate-50 dark:bg-slate-800/50 rounded border dark:border-slate-700">কোনো অতিরিক্ত চালের হিসাব নেই</p>
+                                             <p className="text-sm text-slate-500 italic p-4 text-center bg-slate-50 dark:bg-slate-800/50 rounded border dark:border-slate-700">কোনো  চালের হিসাব নেই</p>
                                          )}
                                      </div>
                                  </div>
@@ -2216,13 +2216,6 @@ const App: React.FC = () => {
                                       </div>
                                   </div>
 
-                                  {/* Extra Rice Summary Card for Border */}
-                                  {extraRice && extraRice.length > 0 && (
-                                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-200 dark:border-orange-800">
-                                      <h3 className="font-bold text-orange-800 dark:text-orange-300 mb-2 flex items-center gap-2"><Droplet size={18}/> অতিরিক্ত চাল খরচের সারাংশ</h3>
-                                      <p className="text-sm text-orange-700 dark:text-orange-400">মোট অতিরিক্ত চাল: <span className="font-bold text-lg">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</span></p>
-                                    </div>
-                                  )}
 
                                   {/* Stats Grid for Border View */}
                                   {(() => {
@@ -2287,7 +2280,7 @@ const App: React.FC = () => {
                                                       <p className="font-bold font-baloo text-purple-600 dark:text-purple-400">{borderView.guestCost} ৳</p>
                                                   </div>
                                                   <div className="p-3 bg-red-50 dark:bg-slate-700 rounded">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত (নিজ)</p>
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400"> (নিজ)</p>
                                                       <p className="font-bold font-baloo text-red-600 dark:text-red-400">{borderView.extraCost} ৳</p>
                                                   </div>
                                                   <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded opacity-70" title="এই খরচ আপনার ব্যালেন্স থেকে কাটা হচ্ছে না">
@@ -2355,7 +2348,7 @@ const App: React.FC = () => {
                                               {expenses.map(e => (
                                                   <tr key={e.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-300 ${e.type === 'extra' ? 'bg-red-50 dark:bg-red-900/20' : ''}`}>
                                                       <td className="p-3 font-baloo">{e.date}</td>
-                                                      <td className="p-3">{e.shopper} {e.type === 'extra' && <span className="text-[10px] bg-red-200 dark:bg-red-800 px-1 rounded">অতিরিক্ত বাজার :</span>}</td>
+                                                      <td className="p-3">{e.shopper} {e.type === 'extra' && <span className="text-[10px] bg-red-200 dark:bg-red-800 px-1 rounded"> বাজার :</span>}</td>
                                                       <td className="p-3 text-right font-bold font-baloo">{e.amount}</td>
                                                   </tr>
                                               ))}
