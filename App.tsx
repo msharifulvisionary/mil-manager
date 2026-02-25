@@ -2071,6 +2071,46 @@ const App: React.FC = () => {
                                              </tbody>
                                          </table>
                                      </div>
+                                     
+                                     {/* Rice Summary & Extra Rice Details for Border in Daily Update */}
+                                     <div className="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700">
+                                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+                                             <h3 className="text-lg font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/> অতিরিক্ত চাল ও জের এর বিস্তারিত</h3>
+                                             <div className="bg-amber-100 dark:bg-amber-900/30 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800">
+                                                 <span className="text-sm font-bold text-amber-800 dark:text-amber-200">গত মাসের মিলের অবশিষ্ট চাল: </span>
+                                                 <span className="text-lg font-bold font-baloo text-orange-700 dark:text-orange-400">{(managerInfoForBorder.prevRiceBalance || 0).toFixed(1)} পট</span>
+                                             </div>
+                                         </div>
+                                         
+                                         {extraRice && extraRice.length > 0 ? (
+                                             <div className="overflow-x-auto">
+                                               <table className="w-full text-sm border-collapse">
+                                                 <thead className="bg-orange-700 text-white">
+                                                   <tr>
+                                                     <th className="p-2 border border-orange-600 text-left">তারিখ</th>
+                                                     <th className="p-2 border border-orange-600 text-left">বিবরণ</th>
+                                                     <th className="p-2 border border-orange-600 text-center">পরিমাণ (পট)</th>
+                                                   </tr>
+                                                 </thead>
+                                                 <tbody>
+                                                   {extraRice.map(er => (
+                                                     <tr key={er.id} className="border-b dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-700">
+                                                       <td className="p-2 border border-orange-100 dark:border-slate-700 font-baloo dark:text-white">{er.date}</td>
+                                                       <td className="p-2 border border-orange-100 dark:border-slate-700 dark:text-white">{er.description}</td>
+                                                       <td className="p-2 border border-orange-100 dark:border-slate-700 text-center font-bold text-orange-700 dark:text-orange-400">{er.amount.toFixed(1)}</td>
+                                                     </tr>
+                                                   ))}
+                                                   <tr className="bg-orange-100 dark:bg-orange-900/30 font-bold">
+                                                     <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট অতিরিক্ত চাল:</td>
+                                                     <td className="p-2 border border-orange-600 text-center text-orange-700 dark:text-orange-400">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</td>
+                                                   </tr>
+                                                 </tbody>
+                                               </table>
+                                             </div>
+                                         ) : (
+                                             <p className="text-sm text-slate-500 italic p-4 text-center bg-slate-50 dark:bg-slate-800/50 rounded border dark:border-slate-700">কোনো অতিরিক্ত চালের হিসাব নেই</p>
+                                         )}
+                                     </div>
                                  </div>
                              </div>
                          )}
@@ -2160,46 +2200,6 @@ const App: React.FC = () => {
                                                       ))}
                                                   </tbody>
                                               </table>
-                                          </div>
-                                          
-                                          {/* Rice Summary & Extra Rice Details */}
-                                          <div className="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700">
-                                              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
-                                                  <h3 className="text-lg font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/> অতিরিক্ত চাল ও জের এর বিস্তারিত</h3>
-                                                  <div className="bg-amber-100 dark:bg-amber-900/30 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800">
-                                                      <span className="text-sm font-bold text-amber-800 dark:text-amber-200">গত মাসের অবশিষ্ট চাল (জের): </span>
-                                                      <span className="text-lg font-bold font-baloo text-orange-700 dark:text-orange-400">{(managerInfoForBorder.prevRiceBalance || 0).toFixed(1)} পট</span>
-                                                  </div>
-                                              </div>
-                                              
-                                              {extraRice && extraRice.length > 0 ? (
-                                                  <div className="overflow-x-auto">
-                                                    <table className="w-full text-sm border-collapse">
-                                                      <thead className="bg-orange-700 text-white">
-                                                        <tr>
-                                                          <th className="p-2 border border-orange-600 text-left">তারিখ</th>
-                                                          <th className="p-2 border border-orange-600 text-left">বিবরণ</th>
-                                                          <th className="p-2 border border-orange-600 text-center">পরিমাণ (পট)</th>
-                                                        </tr>
-                                                      </thead>
-                                                      <tbody>
-                                                        {extraRice.map(er => (
-                                                          <tr key={er.id} className="border-b dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-700">
-                                                            <td className="p-2 border border-orange-100 dark:border-slate-700 font-baloo dark:text-white">{er.date}</td>
-                                                            <td className="p-2 border border-orange-100 dark:border-slate-700 dark:text-white">{er.description}</td>
-                                                            <td className="p-2 border border-orange-100 dark:border-slate-700 text-center font-bold text-orange-700 dark:text-orange-400">{er.amount.toFixed(1)}</td>
-                                                          </tr>
-                                                        ))}
-                                                        <tr className="bg-orange-100 dark:bg-orange-900/30 font-bold">
-                                                          <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট অতিরিক্ত চাল:</td>
-                                                          <td className="p-2 border border-orange-600 text-center text-orange-700 dark:text-orange-400">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</td>
-                                                        </tr>
-                                                      </tbody>
-                                                    </table>
-                                                  </div>
-                                              ) : (
-                                                  <p className="text-sm text-slate-500 italic p-4 text-center bg-slate-50 dark:bg-slate-800/50 rounded border dark:border-slate-700">কোনো অতিরিক্ত চালের হিসাব নেই</p>
-                                              )}
                                           </div>
                                       </div>
                                   )}
