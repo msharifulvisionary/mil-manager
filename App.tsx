@@ -7,7 +7,7 @@ import {
   Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown, Star
 } from 'lucide-react';
 
-import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper, RiceConfig } from './types';
+import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper, RiceConfig, RiceExpense } from './types';
 import * as dbService from './services/firebaseService';
 import Layout from './components/Layout';
 import Reports from './components/Reports';
@@ -585,6 +585,10 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
     const [localData, setLocalData] = useState(manager.systemDaily || {});
     const [riceConfig, setRiceConfig] = useState<RiceConfig>(manager.riceConfig || { morningDiff: -2, lunchDiff: 0, dinnerDiff: 0 });
     const [prevRice, setPrevRice] = useState<number>(manager.prevRiceBalance || 0);
+    const [extraRiceExpenses, setExtraRiceExpenses] = useState<RiceExpense[]>(manager.extraRiceExpenses || []);
+    const [extraRiceForm, setExtraRiceForm] = useState<{date: string, amount: number, description: string}>({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
+    const [isEditingExtraRice, setIsEditingExtraRice] = useState(false);
+    const [editingExtraRiceId, setEditingExtraRiceId] = useState<string | null>(null);
     
     // Auto-save logic
     const handleChange = (day: number, shift: 'morning'|'lunch'|'dinner', field: 'meal'|'rice', value: number) => {
@@ -606,6 +610,32 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
         setRiceConfig({ ...riceConfig, [field]: parseFloat(val) || 0 });
     }
 
+    const handleSaveExtraRice = () => {
+        if(!extraRiceForm.amount || !extraRiceForm.date) return;
+        let newExpenses = [...extraRiceExpenses];
+        if(isEditingExtraRice && editingExtraRiceId) {
+            newExpenses = newExpenses.map(e => e.id === editingExtraRiceId ? { ...e, date: extraRiceForm.date, amount: extraRiceForm.amount, description: extraRiceForm.description } : e);
+        } else {
+            newExpenses.push({ id: Date.now().toString(), date: extraRiceForm.date, amount: extraRiceForm.amount, description: extraRiceForm.description });
+        }
+        setExtraRiceExpenses(newExpenses);
+        setExtraRiceForm({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
+        setIsEditingExtraRice(false);
+        setEditingExtraRiceId(null);
+    };
+
+    const handleDeleteExtraRice = (id: string) => {
+        if(window.confirm('সত্যিই কি মুছে ফেলতে চান?')) {
+            setExtraRiceExpenses(prev => prev.filter(e => e.id !== id));
+        }
+    };
+
+    const handleEditExtraRice = (expense: RiceExpense) => {
+        setExtraRiceForm({ date: expense.date, amount: expense.amount, description: expense.description });
+        setIsEditingExtraRice(true);
+        setEditingExtraRiceId(expense.id);
+    };
+
     const handleSave = async () => {
         try {
             const dataToSave = { ...localData };
@@ -614,13 +644,15 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
                 ...manager, 
                 systemDaily: dataToSave, 
                 riceConfig, 
-                prevRiceBalance: prevRice 
+                prevRiceBalance: prevRice,
+                extraRiceExpenses: extraRiceExpenses
             };
 
             await dbService.updateManager(manager.username, { 
                 systemDaily: dataToSave, 
                 riceConfig, 
-                prevRiceBalance: prevRice 
+                prevRiceBalance: prevRice,
+                extraRiceExpenses: extraRiceExpenses
             });
             
             // Critical: Update both state and localStorage
@@ -628,10 +660,10 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
             localStorage.setItem('messManager', JSON.stringify(updatedManager));
             
             setLocalData(dataToSave);
-            alert("সংরক্ষিত হয়েছে!");
+            alert("সংরক্ষিত হয়েছে!");
         } catch(e) { 
             console.error("Save error:", e);
-            alert("সেভ করতে সমস্যা হয়েছে!"); 
+            alert("সেভ করতে সমস্যা হয়েছে!"); 
         }
     };
 
@@ -693,6 +725,44 @@ const SystemDailyEntryPage = ({ manager, onUpdate }: { manager: Manager, onUpdat
                         })}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Extra Rice Expenses Section */}
+            <div className="mt-6 bg-orange-50 dark:bg-slate-700 rounded-xl border border-orange-200 dark:border-slate-600 p-4">
+                <h3 className="font-bold text-orange-800 dark:text-orange-300 mb-4 flex items-center gap-2"><Droplet size={18}/> অতিরিক্ত চাল খরচ</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                    <input type="date" value={extraRiceForm.date} onChange={e => setExtraRiceForm({...extraRiceForm, date: e.target.value})} className="border p-2 rounded dark:bg-slate-600 dark:text-white" />
+                    <input type="number" step="0.1" placeholder="চাল পট" value={extraRiceForm.amount || ''} onChange={e => setExtraRiceForm({...extraRiceForm, amount: parseFloat(e.target.value)||0})} className="border p-2 rounded dark:bg-slate-600 dark:text-white font-bold" />
+                    <input type="text" placeholder="বিবরণ (যেমন: অতিরিক্ত খাবার)" value={extraRiceForm.description} onChange={e => setExtraRiceForm({...extraRiceForm, description: e.target.value})} className="border p-2 rounded dark:bg-slate-600 dark:text-white" />
+                    <button onClick={handleSaveExtraRice} className="bg-orange-600 text-white px-4 rounded font-bold hover:bg-orange-700">{isEditingExtraRice ? 'আপডেট' : 'যোগ করুন'}</button>
+                </div>
+                {extraRiceExpenses.length > 0 && (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead className="bg-orange-100 dark:bg-slate-600 text-orange-800 dark:text-orange-300">
+                                <tr>
+                                    <th className="p-2 text-left">তারিখ</th>
+                                    <th className="p-2 text-center">চাল (পট)</th>
+                                    <th className="p-2 text-left">বিবরণ</th>
+                                    <th className="p-2 text-center">অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-orange-200 dark:divide-slate-600">
+                                {extraRiceExpenses.map(exp => (
+                                    <tr key={exp.id} className="hover:bg-orange-100/50 dark:hover:bg-slate-600/50">
+                                        <td className="p-2 dark:text-white">{exp.date}</td>
+                                        <td className="p-2 text-center font-bold text-orange-700 dark:text-orange-400">{exp.amount}</td>
+                                        <td className="p-2 dark:text-white">{exp.description}</td>
+                                        <td className="p-2 text-center flex justify-center gap-2">
+                                            <button onClick={() => handleEditExtraRice(exp)} className="text-blue-600 dark:text-blue-400 hover:text-blue-800"><Edit2 size={14}/></button>
+                                            <button onClick={() => handleDeleteExtraRice(exp.id)} className="text-red-600 dark:text-red-400 hover:text-red-800"><Trash2 size={14}/></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -1366,6 +1436,10 @@ const BorderDetailModal = ({
     const [riceForm, setRiceForm] = useState<{amount: number, date: string, type: 'deposit'|'previous_balance', id?: string}>({amount: 0, date: new Date().toISOString().split('T')[0], type: 'deposit'});
     const [isEditingMoney, setIsEditingMoney] = useState(false);
     const [isEditingRice, setIsEditingRice] = useState(false);
+    const [extraRiceExpenses, setExtraRiceExpenses] = useState<RiceExpense[]>(border.extraRiceExpenses || []);
+    const [extraRiceForm, setExtraRiceForm] = useState<{date: string, amount: number, description: string}>({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
+    const [isEditingExtraRice, setIsEditingExtraRice] = useState(false);
+    const [editingExtraRiceId, setEditingExtraRiceId] = useState<string | null>(null);
 
     if(!border) return null;
 
@@ -1403,8 +1477,41 @@ const BorderDetailModal = ({
     const deleteRice = (id: string) => { if(window.confirm("নিশ্চিত?")) onUpdateRice(border.riceDeposits.filter((d:any) => d.id !== id)); };
     const editRice = (d: RiceDeposit) => { setRiceForm({ amount: d.amount, date: d.date, type: d.type, id: d.id }); setIsEditingRice(true); };
 
+    const handleSaveExtraRice = () => {
+        if(!extraRiceForm.amount || !extraRiceForm.date) return;
+        let newExpenses = [...extraRiceExpenses];
+        if(isEditingExtraRice && editingExtraRiceId) {
+            newExpenses = newExpenses.map(e => e.id === editingExtraRiceId ? { ...e, date: extraRiceForm.date, amount: extraRiceForm.amount, description: extraRiceForm.description } : e);
+        } else {
+            newExpenses.push({ id: Date.now().toString(), date: extraRiceForm.date, amount: extraRiceForm.amount, description: extraRiceForm.description });
+        }
+        setExtraRiceExpenses(newExpenses);
+        // Update border with new extra rice expenses
+        const updatedBorder = { ...border, extraRiceExpenses: newExpenses };
+        // Calculate total rice for display
+        const totalExtraRice = newExpenses.reduce((sum, e) => sum + e.amount, 0);
+        // Automatically add to border's total rice consumption
+        const updatedRiceDeposits = border.riceDeposits.map((d: RiceDeposit) => d);
+        setExtraRiceForm({date: new Date().toISOString().split('T')[0], amount: 0, description: ''});
+        setIsEditingExtraRice(false);
+        setEditingExtraRiceId(null);
+    };
+
+    const handleDeleteExtraRice = (id: string) => {
+        if(window.confirm('সত্যিই কি মুছে ফেলতে চান?')) {
+            const newExpenses = extraRiceExpenses.filter(e => e.id !== id);
+            setExtraRiceExpenses(newExpenses);
+        }
+    };
+
+    const handleEditExtraRice = (expense: RiceExpense) => {
+        setExtraRiceForm({ date: expense.date, amount: expense.amount, description: expense.description });
+        setIsEditingExtraRice(true);
+        setEditingExtraRiceId(expense.id);
+    };
+
     const deleteThisBorder = () => {
-        if(window.confirm("সতর্কতা: এই বর্ডার এবং তার সকল তথ্য (জমা, মিল) ডিলিট হয়ে যাবে। আপনি কি নিশ্চিত?")) {
+        if(window.confirm("সতর্কতা: এই বর্ডার এবং তার সকল তথ্য (জমা, মিল) ডিলিট হয়ে যাবে। আপনি কি নিশ্চিত?")) {
             onDeleteBorder(border.id);
             onClose();
         }
@@ -1467,6 +1574,18 @@ const BorderDetailModal = ({
                                     <div className="flex gap-2">
                                         <input type="number" value={border.extraCost} onChange={e => onUpdateExtra(parseFloat(e.target.value))} className="w-full p-2 border rounded font-bold text-red-600 bg-red-50 dark:bg-slate-700 font-baloo" />
                                     </div>
+                                 </div>
+                                 <div>
+                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">অতিরিক্ত চাল খরচ (পট)</label>
+                                    <div className="flex gap-2">
+                                        <input type="number" step="0.1" placeholder="চাল পট" value={extraRiceForm.amount || ''} onChange={e => setExtraRiceForm({...extraRiceForm, amount: parseFloat(e.target.value)||0})} className="flex-1 p-2 border rounded font-bold text-orange-600 bg-orange-50 dark:bg-slate-700 font-baloo" />
+                                        <button onClick={handleSaveExtraRice} className="bg-orange-600 text-white px-3 rounded font-bold hover:bg-orange-700">যোগ</button>
+                                    </div>
+                                    {extraRiceExpenses.length > 0 && (
+                                        <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                                            <strong>মোট অতিরিক্ত চাল:</strong> {extraRiceExpenses.reduce((sum, e) => sum + e.amount, 0)} পট
+                                        </div>
+                                    )}
                                  </div>
                              </div>
                         </div>
@@ -2370,6 +2489,19 @@ const App: React.FC = () => {
                                                         {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                                                     </select>
                                                 </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-2">ফিক্সড মিল সংখ্যা</label>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-2xl font-bold text-purple-600">M</span>
+                                                    <input type="number" step="1" className="flex-1 border-2 border-purple-100 dark:border-slate-600 p-3 rounded-lg text-lg font-bold text-slate-700 dark:text-white dark:bg-slate-700 focus:border-purple-500 outline-none transition-colors" 
+                                                        value={manager.fixedMealCount || ''} 
+                                                        onChange={e => setManager({...manager, fixedMealCount: parseInt(e.target.value) || 0})}
+                                                        onBlur={() => dbService.updateManager(manager.username, { fixedMealCount: manager.fixedMealCount || 0 })}
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">যে বর্ডারের মোট মিল এই সংখ্যার কম থাকবে, তাদের মিল এই সংখ্যা দেখাবে। বেশি থাকলে আসল সংখ্যা দেখাবে।</p>
                                             </div>
 
                                             <div className="pt-8 mt-8 border-t border-slate-100 dark:border-slate-700">
