@@ -977,7 +977,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                      <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
                      <p className="text-3xl font-bold mt-1 font-baloo">{currentRiceBalance.toFixed(1)} পট</p>
-                     <p className="text-[10px] mt-1 opacity-80 leading-tight">নতুন জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}<br/>গত মাসের অবশিষ্ট: {manager.prevRiceBalance || 0} | অতিরিক্ত খরচ: {totalExtraRice.toFixed(1)}</p>
+                     <p className="text-[10px] mt-1 opacity-80 leading-tight">নতুন জমা: {totalRiceDeposited} |চাল খাওয়া: {totalRiceConsumed}<br/>গত মাসের অবশিষ্ট চাল: {manager.prevRiceBalance || 0} | অতিরিক্ত চাল খরচ: {totalExtraRice.toFixed(1)}</p>
                      <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
                  </div>
                  <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
@@ -1417,7 +1417,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                                     <td className="py-3 text-slate-600 dark:text-slate-300 font-baloo">{formatBengaliDate(e.date)}</td>
                                     <td className="py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${e.type === 'extra' ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}>
-                                            {e.type === 'extra' ? '' : 'বাজার'}
+                                            {e.type === 'extra' ? ' অতিরিক্ত বাজার' : 'সাধারণ বাজার'}
                                         </span>
                                     </td>
                                     <td className="py-3 font-medium dark:text-slate-200">{e.shopper}</td>
@@ -1542,7 +1542,7 @@ const BorderDetailModal = ({
                                     </div>
                                  </div>
                                  <div>
-                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1"> খরচ</label>
+                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">অতিরিক্ত খরচ</label>
                                     <div className="flex gap-2">
                                         <input type="number" value={border.extraCost} onChange={e => onUpdateExtra(parseFloat(e.target.value))} className="w-full p-2 border rounded font-bold text-red-600 bg-red-50 dark:bg-slate-700 font-baloo" />
                                     </div>
@@ -2290,7 +2290,7 @@ const App: React.FC = () => {
                                                       <p className="font-bold font-baloo text-purple-600 dark:text-purple-400">{borderView.guestCost} ৳</p>
                                                   </div>
                                                   <div className="p-3 bg-red-50 dark:bg-slate-700 rounded">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400"> (নিজ)</p>
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত খরচ</p>
                                                       <p className="font-bold font-baloo text-red-600 dark:text-red-400">{borderView.extraCost} ৳</p>
                                                   </div>
                                                   <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded">
@@ -2301,7 +2301,7 @@ const App: React.FC = () => {
                                               </div>
                                               <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded text-center">
                                                   <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                                                      মোট খরচ = {bMealCost.toFixed(0)} (মিল) + {borderView.guestCost} (গেস্ট) + {borderView.extraCost} (নিজ) = <span className="text-red-600 dark:text-red-400 text-lg">{bTotalCost.toFixed(0)} ৳</span>
+                                                      মোট খরচ = {bMealCost.toFixed(0)} (মিল) + {borderView.guestCost} (গেস্ট) + {borderView.extraCost} (অতিরিক্ত) = <span className="text-red-600 dark:text-red-400 text-lg">{bTotalCost.toFixed(0)} ৳</span>
                                                   </p>
                                                   
                                               </div>
