@@ -379,6 +379,38 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                 })}
             </tbody>
         </table>
+
+        {/* Rice Summary Section */}
+        <div className="mt-8 border-2 border-gray-800 p-4 w-1/2 ml-auto bg-gray-50">
+            <h3 className="font-bold text-lg mb-3 border-b border-gray-400 pb-2">সার্বভৌমিক চালের সারাংশ</h3>
+            <div className="flex justify-between mb-1">
+                <span>গত মাসের অবশিষ্ট চাল:</span>
+                <span className="font-bold font-mono">{(manager.prevRiceBalance || 0).toFixed(2)} পট</span>
+            </div>
+            <div className="flex justify-between mb-1">
+                <span>এই মাসের মোট জমা:</span>
+                <span className="font-bold font-mono">{borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0).toFixed(2)} পট</span>
+            </div>
+            <div className="flex justify-between mb-1 text-red-700">
+                <span>বর্ডারদের মোট খাওয়া:</span>
+                <span className="font-bold font-mono">-{borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0).toFixed(2)} পট</span>
+            </div>
+            <div className="flex justify-between mb-2 text-red-700">
+                <span>অতিরিক্ত চাল খরচ:</span>
+                <span className="font-bold font-mono">-{(extraRice?.reduce((sum, e) => sum + e.amount, 0) || 0).toFixed(2)} পট</span>
+            </div>
+            <div className="flex justify-between border-t border-gray-400 pt-2 text-green-800 text-lg">
+                <span className="font-bold">বর্তমানে অবশিষ্ট চাল:</span>
+                <span className="font-bold font-mono">
+                    {(
+                        (manager.prevRiceBalance || 0) + 
+                        borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) - 
+                        borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0), 0) - 
+                        (extraRice?.reduce((sum, e) => sum + e.amount, 0) || 0)
+                    ).toFixed(2)} পট
+                </span>
+            </div>
+        </div>
       </div>
 
        {/* 8. Monthly Financial Sheet (Landscape) */}
