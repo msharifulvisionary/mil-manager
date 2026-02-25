@@ -701,6 +701,76 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                 </table>
             </div>
 
+            {/* Extra Rice Section */}
+            <div className="mt-8 border-t dark:border-slate-700 pt-6">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white mb-4"><ClipboardList size={18}/> অতিরিক্ত চাল খরচ</h3>
+                
+                <div className="flex flex-wrap gap-3 mb-4 items-end bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                    <div>
+                        <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">তারিখ</label>
+                        <input type="date" id="extraRiceDate" className="p-2 border rounded dark:bg-slate-800 w-36 text-sm" defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">বিবরণ</label>
+                        <input type="text" id="extraRiceDesc" placeholder="যেমন: মেহমানের জন্য" className="p-2 border rounded w-full dark:bg-slate-800 text-sm" />
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">পরিমাণ (পট)</label>
+                        <input type="number" id="extraRiceAmount" step="0.1" placeholder="0" className="p-2 border rounded w-24 dark:bg-slate-800 text-sm" />
+                    </div>
+                    <button onClick={() => {
+                        const d = (document.getElementById('extraRiceDate') as HTMLInputElement).value;
+                        const desc = (document.getElementById('extraRiceDesc') as HTMLInputElement).value;
+                        const amt = parseFloat((document.getElementById('extraRiceAmount') as HTMLInputElement).value);
+                        if(d && desc && amt > 0 && onAddExtraRice) {
+                            onAddExtraRice({ date: d, description: desc, amount: amt, managerId: manager.username });
+                            (document.getElementById('extraRiceDesc') as HTMLInputElement).value = '';
+                            (document.getElementById('extraRiceAmount') as HTMLInputElement).value = '';
+                        } else alert('সব তথ্য সঠিকভাবে দিন');
+                    }} className="bg-orange-600 text-white px-4 py-2 rounded font-bold hover:bg-orange-700 text-sm h-[38px]">যোগ করুন</button>
+                </div>
+
+                <div className="overflow-x-auto border rounded-lg dark:border-slate-600">
+                    <table className="w-full text-sm text-left border-collapse">
+                        <thead className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                            <tr>
+                                <th className="p-2 border-b dark:border-slate-600 w-28">তারিখ</th>
+                                <th className="p-2 border-b dark:border-slate-600">বিবরণ</th>
+                                <th className="p-2 border-b dark:border-slate-600 text-center w-28">পরিমাণ (পট)</th>
+                                <th className="p-2 border-b dark:border-slate-600 text-center w-24">অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {localExtraRice.length === 0 ? (
+                                <tr><td colSpan={4} className="p-4 text-center text-slate-500">কোনো অতিরিক্ত চালের হিসাব নেই</td></tr>
+                            ) : (
+                                localExtraRice.map(er => (
+                                    <tr key={er.id} className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                        <td className="p-2 border-r dark:border-slate-700">{er.date}</td>
+                                        <td className="p-2 border-r dark:border-slate-700">{er.description}</td>
+                                        <td className="p-2 border-r dark:border-slate-700 text-center font-bold text-orange-600 dark:text-orange-400">{er.amount}</td>
+                                        <td className="p-2 text-center">
+                                            <button onClick={() => {
+                                                const newAmt = prompt('নতুন পরিমাণ (পট):', er.amount.toString());
+                                                if(newAmt && parseFloat(newAmt) > 0 && onUpdateExtraRice) onUpdateExtraRice(er.id, { amount: parseFloat(newAmt) });
+                                            }} className="text-blue-500 hover:text-blue-700 mx-1 p-1"><Edit2 size={16}/></button>
+                                            <button onClick={() => {
+                                                if(window.confirm('ডিলিট করতে চান?') && onDeleteExtraRice) onDeleteExtraRice(er.id);
+                                            }} className="text-red-500 hover:text-red-700 mx-1 p-1"><Trash2 size={16}/></button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                            <tr className="bg-orange-50 dark:bg-orange-900/20 font-bold">
+                                <td colSpan={2} className="p-2 text-right text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">মোট অতিরিক্ত চাল = </td>
+                                <td className="p-2 text-center text-orange-800 dark:text-orange-400 border-r dark:border-slate-700">{localExtraRice.reduce((sum, e) => sum + e.amount, 0).toFixed(1)}</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
         </div>
     )
@@ -907,7 +977,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                      <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
                      <p className="text-3xl font-bold mt-1 font-baloo">{currentRiceBalance.toFixed(1)} পট</p>
-                     <p className="text-[10px] mt-1 opacity-80">জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed} | অতিরিক্ত: {totalExtraRice.toFixed(1)}</p>
+                     <p className="text-[10px] mt-1 opacity-80 leading-tight">নতুন জমা: {totalRiceDeposited} | খাওয়া: {totalRiceConsumed}<br/>গত মাসের অবশিষ্ট: {manager.prevRiceBalance || 0} | অতিরিক্ত খরচ: {totalExtraRice.toFixed(1)}</p>
                      <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
                  </div>
                  <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
@@ -1654,8 +1724,8 @@ const App: React.FC = () => {
   const [extraRice, setExtraRice] = useState<ExtraRice[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard'|'daily'|'market'|'system'|'reports'|'settings'|'borders'|'schedule'|'iftaar'>('dashboard');
   const [activeBorderTab, setActiveBorderTab] = useState<'overview'|'meals'|'market'|'profile'|'schedule'|'iftaar'|'reports'|'system'>('overview');
-	  const [showBorderDailyMealReport, setShowBorderDailyMealReport] = useState(false);
-	  const [showBorderDailyRiceReport, setShowBorderDailyRiceReport] = useState(false);
+          const [showBorderDailyMealReport, setShowBorderDailyMealReport] = useState(false);
+          const [showBorderDailyRiceReport, setShowBorderDailyRiceReport] = useState(false);
   
   const [editingBorder, setEditingBorder] = useState<Border | null>(null);
   const [profileEdit, setProfileEdit] = useState(false);
@@ -1926,10 +1996,10 @@ const App: React.FC = () => {
                         <EidGreeting />
                          <div className="flex bg-white dark:bg-slate-800 p-1 rounded mb-6 border dark:border-slate-700 overflow-x-auto sticky top-20 z-20 shadow-sm">
 {['overview','meals','market','schedule','iftaar','reports','system','profile'].map(v => (
-		                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
-		                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : v === 'iftaar' ? 'ইফতার হিসাব' : v === 'reports' ? 'রিপোর্ট' : v === 'system' ? 'ডেইলি আপডেট' : 'প্রোফাইল'}
-		                                 </button>
-		                             ))}
+                                                 <button key={v} onClick={() => setActiveBorderTab(v as any)} className={`flex-1 py-2 px-4 rounded font-bold capitalize whitespace-nowrap ${activeBorderTab === v ? 'bg-primary text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                     {v === 'overview' ? 'সামারি' : v === 'meals' ? 'মিল চার্ট' : v === 'market' ? 'বাজার' : v === 'schedule' ? 'বাজার লিস্ট' : v === 'iftaar' ? 'ইফতার হিসাব' : v === 'reports' ? 'রিপোর্ট' : v === 'system' ? 'ডেইলি আপডেট' : 'প্রোফাইল'}
+                                                 </button>
+                                             ))}
                          </div>
 
                          {activeBorderTab === 'reports' && (
@@ -2006,9 +2076,9 @@ const App: React.FC = () => {
                          )}
 
 {activeBorderTab === 'overview' && (
-	                             <div className="space-y-6">
-	                                  <RamadanSchedule />
-	                                  {/* Action Buttons for Border */}
+                                     <div className="space-y-6">
+                                          <RamadanSchedule />
+                                          {/* Action Buttons for Border */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                       <button onClick={() => setShowBorderDailyMealReport(true)} className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
                                           <Calendar size={24} /> দৈনিক মিল আপডেট
@@ -2092,36 +2162,45 @@ const App: React.FC = () => {
                                               </table>
                                           </div>
                                           
-                                          {/* Extra Rice Details */}
-                                          {extraRice && extraRice.length > 0 && (
-                                            <div className="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700">
-                                              <h3 className="text-lg font-bold mb-4 text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/> অতিরিক্ত চাল খরচের বিস্তারিত</h3>
-                                              <div className="overflow-x-auto">
-                                                <table className="w-full text-sm border-collapse">
-                                                  <thead className="bg-orange-700 text-white">
-                                                    <tr>
-                                                      <th className="p-2 border border-orange-600 text-left">তারিখ</th>
-                                                      <th className="p-2 border border-orange-600 text-left">বিবরণ</th>
-                                                      <th className="p-2 border border-orange-600 text-center">পরিমাণ (পট)</th>
-                                                    </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    {extraRice.map(er => (
-                                                      <tr key={er.id} className="border-b dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-700">
-                                                        <td className="p-2 border border-orange-100 dark:border-slate-700 font-baloo dark:text-white">{er.date}</td>
-                                                        <td className="p-2 border border-orange-100 dark:border-slate-700 dark:text-white">{er.description}</td>
-                                                        <td className="p-2 border border-orange-100 dark:border-slate-700 text-center font-bold text-orange-700 dark:text-orange-400">{er.amount.toFixed(1)}</td>
-                                                      </tr>
-                                                    ))}
-                                                    <tr className="bg-orange-100 dark:bg-orange-900/30 font-bold">
-                                                      <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট অতিরিক্ত চাল:</td>
-                                                      <td className="p-2 border border-orange-600 text-center text-orange-700 dark:text-orange-400">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</td>
-                                                    </tr>
-                                                  </tbody>
-                                                </table>
+                                          {/* Rice Summary & Extra Rice Details */}
+                                          <div className="mt-6 pt-6 border-t border-slate-300 dark:border-slate-700">
+                                              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+                                                  <h3 className="text-lg font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Droplet size={20}/> অতিরিক্ত চাল ও জের এর বিস্তারিত</h3>
+                                                  <div className="bg-amber-100 dark:bg-amber-900/30 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800">
+                                                      <span className="text-sm font-bold text-amber-800 dark:text-amber-200">গত মাসের অবশিষ্ট চাল (জের): </span>
+                                                      <span className="text-lg font-bold font-baloo text-orange-700 dark:text-orange-400">{(managerInfoForBorder.prevRiceBalance || 0).toFixed(1)} পট</span>
+                                                  </div>
                                               </div>
-                                            </div>
-                                          )}
+                                              
+                                              {extraRice && extraRice.length > 0 ? (
+                                                  <div className="overflow-x-auto">
+                                                    <table className="w-full text-sm border-collapse">
+                                                      <thead className="bg-orange-700 text-white">
+                                                        <tr>
+                                                          <th className="p-2 border border-orange-600 text-left">তারিখ</th>
+                                                          <th className="p-2 border border-orange-600 text-left">বিবরণ</th>
+                                                          <th className="p-2 border border-orange-600 text-center">পরিমাণ (পট)</th>
+                                                        </tr>
+                                                      </thead>
+                                                      <tbody>
+                                                        {extraRice.map(er => (
+                                                          <tr key={er.id} className="border-b dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-700">
+                                                            <td className="p-2 border border-orange-100 dark:border-slate-700 font-baloo dark:text-white">{er.date}</td>
+                                                            <td className="p-2 border border-orange-100 dark:border-slate-700 dark:text-white">{er.description}</td>
+                                                            <td className="p-2 border border-orange-100 dark:border-slate-700 text-center font-bold text-orange-700 dark:text-orange-400">{er.amount.toFixed(1)}</td>
+                                                          </tr>
+                                                        ))}
+                                                        <tr className="bg-orange-100 dark:bg-orange-900/30 font-bold">
+                                                          <td colSpan={2} className="p-2 border border-orange-600 text-right dark:text-white">মোট অতিরিক্ত চাল:</td>
+                                                          <td className="p-2 border border-orange-600 text-center text-orange-700 dark:text-orange-400">{(extraRice.reduce((sum, er) => sum + er.amount, 0)).toFixed(1)} পট</td>
+                                                        </tr>
+                                                      </tbody>
+                                                    </table>
+                                                  </div>
+                                              ) : (
+                                                  <p className="text-sm text-slate-500 italic p-4 text-center bg-slate-50 dark:bg-slate-800/50 rounded border dark:border-slate-700">কোনো অতিরিক্ত চালের হিসাব নেই</p>
+                                              )}
+                                          </div>
                                       </div>
                                   )}
                                   {/* Manager Info Card for Border */}
@@ -2363,11 +2442,11 @@ const App: React.FC = () => {
                             {/* Main Content */}
                             <div className="flex-1 min-w-0">
 {activeTab === 'dashboard' && (
-	                                    <div className="space-y-6 animate-fade-in">
-	                                        <RamadanSchedule />
-	                                        <ManagerOverview manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} />
-	                                    </div>
-	                                )}
+                                            <div className="space-y-6 animate-fade-in">
+                                                <RamadanSchedule />
+                                                <ManagerOverview manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} />
+                                            </div>
+                                        )}
                                 {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} /></div>}
                                 {activeTab === 'schedule' && <div className="animate-fade-in"><BazaarSchedulePage manager={manager} borders={borders} isManager={true} currentUser={undefined} onUpdate={(m) => setManager(m)} /></div>}
                                 {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} manager={manager} onUpdateManager={(data: any) => {
