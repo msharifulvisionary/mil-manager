@@ -14,7 +14,7 @@ import {
   writeBatch
 } from "firebase/firestore";
 import { FIREBASE_CONFIG } from "../constants";
-import { Manager, Border, Expense, IftaarDeposit, IftaarExpense, IftaarBazaarSchedule } from "../types";
+import { Manager, Border, Expense, IftaarDeposit, IftaarExpense, IftaarBazaarSchedule, ExtraRice } from "../types";
 
 const app = initializeApp(FIREBASE_CONFIG);
 export const db = getFirestore(app);
@@ -221,4 +221,30 @@ export const updateIftaarBazaarSchedule = async (id: string, data: Partial<Iftaa
 
 export const deleteIftaarBazaarSchedule = async (id: string) => {
   await deleteDoc(doc(db, "iftaarBazaarSchedules", id));
+};
+
+// --- Extra Rice ---
+
+export const addExtraRice = async (extraRice: Omit<ExtraRice, 'id'>) => {
+  const docRef = await addDoc(collection(db, "extraRice"), extraRice);
+  return { id: docRef.id, ...extraRice };
+};
+
+export const getExtraRice = async (managerId: string): Promise<ExtraRice[]> => {
+  const q = query(collection(db, "extraRice"), where("managerId", "==", managerId));
+  const querySnapshot = await getDocs(q);
+  const extraRiceList: ExtraRice[] = [];
+  querySnapshot.forEach((doc) => {
+    extraRiceList.push({ id: doc.id, ...doc.data() } as ExtraRice);
+  });
+  return extraRiceList.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
+export const updateExtraRice = async (id: string, data: Partial<ExtraRice>) => {
+  const docRef = doc(db, "extraRice", id);
+  await updateDoc(docRef, data);
+};
+
+export const deleteExtraRice = async (id: string) => {
+  await deleteDoc(doc(db, "extraRice", id));
 };
