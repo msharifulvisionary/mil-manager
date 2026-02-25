@@ -96,7 +96,8 @@ export const addBorder = async (managerId: string, name: string) => {
     riceDeposits: [],
     dailyUsage: {},
     extraCost: 0,
-    guestCost: 0
+    guestCost: 0,
+    additionalRicePots: 0
   };
   const docRef = await addDoc(collection(db, "borders"), newBorder);
   return { id: docRef.id, ...newBorder };
@@ -107,9 +108,9 @@ export const getBorders = async (managerId: string): Promise<Border[]> => {
   const querySnapshot = await getDocs(q);
   const borders: Border[] = [];
   querySnapshot.forEach((doc) => {
-    // Fill default guestCost if missing in old data
+    // Fill default guestCost and additionalRicePots if missing in old data
     const data = doc.data();
-    borders.push({ id: doc.id, guestCost: 0, ...data } as Border);
+    borders.push({ id: doc.id, guestCost: 0, additionalRicePots: 0, ...data } as Border);
   });
   // Sort by 'order' field if available, otherwise fallback to name or insertion
   return borders.sort((a,b) => (a.order || 0) - (b.order || 0));
