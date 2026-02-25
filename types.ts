@@ -46,13 +46,6 @@ export interface BazaarShift {
   shoppers: BazaarShopper[]; // Array of shoppers
 }
 
-export interface RiceExpense {
-  id: string;
-  date: string;
-  amount: number; // in pots
-  description: string;
-}
-
 export interface Border {
   id: string; // Firestore Doc ID
   name: string;
@@ -65,7 +58,6 @@ export interface Border {
   extraCost: number; // Personal Extra / Fine
   guestCost: number; // New: Guest Meal Cost
   order?: number; // New: For shuffling/sorting
-  extraRiceExpenses?: RiceExpense[]; // New: Extra rice expenses
 }
 
 export interface RiceConfig {
@@ -106,12 +98,6 @@ export interface Manager {
   autoRiceEnabled?: boolean;
   autoRiceRules?: AutoRiceRule[];
   iftaarConfig?: IftaarConfig;
-  
-  // New: Extra Rice Expenses (Cook Section)
-  extraRiceExpenses?: RiceExpense[];
-  
-  // New: Fixed Meal Count
-  fixedMealCount?: number;
 }
 
 export interface IftaarConfig {
@@ -161,6 +147,3 @@ export const MONTHS = [
 ];
 
 export const YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
-
-
-
