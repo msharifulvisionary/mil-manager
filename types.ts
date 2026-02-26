@@ -112,6 +112,8 @@ export interface Manager {
   extraRice?: ExtraRice[]; // New: Extra rice usage
   globalAdditionalRicePots?: number; // New: Global Additional Rice Expense
   profilePic?: string; // New: Profile Picture Link
+  khalaName?: string; // New: Khala Name
+  khalaMobile?: string; // New: Khala Mobile
 }
 
 export interface IftaarConfig {
