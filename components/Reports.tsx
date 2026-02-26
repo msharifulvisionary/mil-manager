@@ -173,7 +173,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
       
       {/* 1. System Daily Report */}
       <div style={{ display: 'none' }} ref={systemDailyRef} className="bg-white p-6 w-[1600px] mx-auto">
-        <Header title="সিস্টেম ডেইলি এন্ট্রি (বাবুর্চি হিসাব)" />
+        <Header title="সিস্টেম ডেইলি এন্ট্রি" />
         <table className="w-full border-collapse text-xs border border-gray-400 text-center">
             <thead>
                 <tr className="bg-slate-800 text-white">
@@ -297,7 +297,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
 
       {/* 5. Daily Rice Sheet */}
       <div style={{ display: 'none' }} ref={dailyRiceRef} className="bg-white p-6 w-[1600px] mx-auto">
-        <Header title="দৈনিক চালের হিসাব (বর্ডার ভিত্তিক)" />
+        <Header title="দৈনিক চালের হিসাব" />
         <table className="w-full border-collapse text-[11px] border border-gray-400">
             <thead>
                 <tr className="bg-gray-200">
@@ -326,7 +326,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
 
       {/* 6. Daily Meal Sheet */}
       <div style={{ display: 'none' }} ref={dailyMealRef} className="bg-white p-6 w-[1600px] mx-auto">
-        <Header title="দৈনিক মিলের হিসাব (বর্ডার ভিত্তিক)" />
+        <Header title="দৈনিক মিলের হিসাব" />
         <table className="w-full border-collapse text-[11px] border border-gray-400">
             <thead>
                 <tr className="bg-gray-200">
@@ -346,12 +346,14 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                                 {b.dailyUsage[d]?.meals > 0 ? b.dailyUsage[d]?.meals : ''}
                             </td>
                         ))}
-                        <td className="border border-gray-400 font-bold bg-blue-50" style={{height: '24px', verticalAlign: 'middle'}}>
-                            {getTotalMeals(b)}
-                            {manager?.fixedMealCount && manager.fixedMealCount > 0 && Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0) < manager.fixedMealCount ? (
-                                <div className="text-[9px] text-gray-500 font-normal mt-0.5">আসল: {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}</div>
-                            ) : null}
-                        </td>
+<td className="border border-gray-400 font-bold bg-blue-50" style={{height: '24px', verticalAlign: 'middle', position: 'relative'}}>
+    <div className="leading-tight pt-1">{getTotalMeals(b)}</div>
+    {manager?.fixedMealCount && manager.fixedMealCount > 0 && Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0) < manager.fixedMealCount ? (
+        <div className="text-[8px] text-gray-600 font-normal leading-tight pb-1">
+            ({Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)})
+        </div>
+    ) : null}
+</td>
                     </tr>
                 ))}
             </tbody>
@@ -368,8 +370,8 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                     <th className="border border-gray-600 p-2 text-left">বর্ডার নাম</th>
                     <th className="border border-gray-600 p-2 bg-green-700">চাল জমা (পট)</th>
                     <th className="border border-gray-600 p-2 bg-red-700">চাল খাওয়া (পট)</th>
-                    <th className="border border-gray-600 p-2 bg-blue-700">ম্যানেজার পাবে (শর্ট)</th>
-                    <th className="border border-gray-600 p-2 bg-emerald-700">ম্যানেজার দিবে (উদ্বৃত্ত)</th>
+                    <th className="border border-gray-600 p-2 bg-blue-700">ম্যানেজার পাবে</th>
+                    <th className="border border-gray-600 p-2 bg-emerald-700">ম্যানেজার দিবে</th>
                 </tr>
             </thead>
             <tbody>
@@ -433,10 +435,10 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                     <th className="border border-gray-600 p-2 bg-emerald-700">টাকা জমা</th>
                     <th className="border border-gray-600 p-2">মোট মিল</th>
                     <th className="border border-gray-600 p-2">মিল খরচ</th>
-                    <th className="border border-gray-600 p-2">অতিরিক্ত খরচ (নিজ+গেস্ট)</th>
+                    <th className="border border-gray-600 p-2">অতিরিক্ত খরচ</th>
                     <th className="border border-gray-600 p-2 bg-rose-700">মোট খরচ</th>
-                    <th className="border border-gray-600 p-2 bg-blue-900">ম্যানেজার পাবে (ডিউ)</th>
-                    <th className="border border-gray-600 p-2 bg-green-900">ম্যানেজার দিবে (ফেরত)</th>
+                    <th className="border border-gray-600 p-2 bg-blue-900">ম্যানেজার পাবে</th>
+                    <th className="border border-gray-600 p-2 bg-green-900">ম্যানেজার দিবে</th>
                 </tr>
             </thead>
             <tbody>
@@ -465,14 +467,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                 })}
             </tbody>
         </table>
-        <div className="mt-12 flex justify-between px-20">
-            <div className="text-center">
-                <p className="border-t border-black pt-1 w-40 font-semibold">হিসাব রক্ষক</p>
-            </div>
-            <div className="text-center">
-                <p className="border-t border-black pt-1 w-40 font-semibold">ম্যানেজার স্বাক্ষর</p>
-            </div>
-        </div>
+
       </div>
       
       {/* 9. Bazaar Schedule Report */}
@@ -483,7 +478,7 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                 <tr className="bg-slate-800 text-white">
                     <th className="border border-gray-600 p-3">তারিখ</th>
                     <th className="border border-gray-600 p-3">বার</th>
-                    <th className="border border-gray-600 p-3">বাজারকারী টিম</th>
+                    <th className="border border-gray-600 p-3">বাজারকারি</th>
                     <th className="border border-gray-600 p-3">মন্তব্য / সিগনেচার</th>
                 </tr>
             </thead>
