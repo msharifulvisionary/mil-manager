@@ -70,9 +70,10 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
   // --- Calculation Helpers ---
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const getTotalMeals = (b: Border) => {
-      const actualMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
-      return manager.fixedMealCount ? Math.max(actualMeals, manager.fixedMealCount) : actualMeals;
-    };
+    const actual = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+    const fixed = manager.fixedMeal;
+    return fixed ? Math.max(actual, fixed) : actual;
+  };
   const getTotalRice = (b: Border) => {
     const dailyRice = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
     const borderExtra = b.additionalRicePots || 0;
