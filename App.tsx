@@ -482,7 +482,7 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
                 <div className="space-y-4 mb-8">
                     <div className="bg-blue-50 dark:bg-slate-700 p-4 rounded-lg border border-blue-100 dark:border-slate-600 flex flex-col md:flex-row gap-4 items-end">
                         <div className="w-full md:w-auto">
-                            <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">কত দিন পর পর?</label>
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">কত দিন পর পর বাজার করতে হয়?</label>
                             <select value={interval} onChange={e => setInterval(parseInt(e.target.value))} className="w-full md:w-32 p-2 border rounded font-bold dark:bg-slate-800">
                                 <option value={1}>প্রতিদিন</option>
                                 <option value={2}>২ দিন পর পর</option>
@@ -492,15 +492,15 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
                             </select>
                         </div>
                         <div className="w-full md:w-auto">
-                            <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">শুরু হবে কত তারিখে?</label>
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">বাজার শুরু হবে কত তারিখে?</label>
                             <input type="date" value={startDayInput} onChange={e => setStartDayInput(e.target.value)} className="w-full md:w-40 p-2 border rounded font-bold dark:bg-slate-800" />
                         </div>
-                        <button onClick={generateSchedule} className="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700 w-full md:w-auto">অটোমেটিক জেনারেট</button>
+                        <button onClick={generateSchedule} className="bg-blue-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-blue-700 w-full md:w-auto">অটোমেটিক বাজার তালিকা জেনারেট করুন</button>
                     </div>
 
                     <div className="bg-emerald-50 dark:bg-slate-700 p-4 rounded-lg border border-emerald-100 dark:border-slate-600 flex items-center gap-4">
                         <div className="flex-1">
-                            <label className="text-xs font-bold text-emerald-700 dark:text-emerald-400 block mb-1">নতুন তারিখ যোগ করুন (ক্যালেন্ডার)</label>
+                            <label className="text-xs font-bold text-emerald-700 dark:text-emerald-400 block mb-1">বাজারের জন্য নতুন কোনো তারিখ যোগ করুন</label>
                             <div className="flex gap-2">
                                 <input type="date" value={manualDateInput} onChange={e => setManualDateInput(e.target.value)} className="w-full md:w-auto p-2 border rounded font-bold flex-1 dark:bg-slate-800" />
                                 <button onClick={addSingleDate} className="bg-emerald-600 text-white px-3 py-2 rounded font-bold hover:bg-emerald-700 flex items-center gap-1"><PlusCircle size={18}/> যোগ করুন</button>
@@ -1635,7 +1635,7 @@ const BorderDetailModal = ({
                              <h3 className="font-bold text-slate-700 dark:text-white mb-3"> খরচ সমূহ</h3>
                              <div className="space-y-3">
                                  <div>
-                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">গেস্ট মিল খরচ (শুধুমাত্র মিলের জন্য)</label>
+                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">গেস্ট মিল খরচ</label>
                                     <div className="flex gap-2">
                                         <input type="number" value={border.guestCost} onChange={e => onUpdateGuest(parseFloat(e.target.value))} className="w-full p-2 border rounded font-bold text-blue-600 bg-blue-50 dark:bg-slate-700 font-baloo" />
                                     </div>
@@ -2238,52 +2238,23 @@ const App: React.FC = () => {
                                      <div className="space-y-6 animate-fade-in">
                                           <RamadanSchedule />
                                           
-                                          {/* Stats Grid for Border (Like Manager) */}
-                                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                               <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
-                                                   <h3 className="text-blue-100 text-sm font-medium">মোট বর্ডার</h3>
-                                                   <p className="text-3xl font-bold mt-1 font-baloo">{borders.length} জন</p>
-                                                   <Users className="absolute right-3 bottom-3 text-white/20" size={40} />
-                                               </div>
-                                               <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
-                                                   <h3 className="text-green-100 text-sm font-medium">বর্তমান ক্যাশ</h3>
-                                                   <p className="text-3xl font-bold mt-1 font-baloo">{calcCurrentCashBalance} ৳</p>
-                                                   <p className="text-[10px] mt-1 opacity-80">মোট জমা: {calcTotalMoney} | খরচ: {calcTotalCost}</p>
-                                                   <DollarSign className="absolute right-3 bottom-3 text-white/20" size={40} />
-                                               </div>
-                                               <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
-                                                   <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
-                                                   <p className="text-3xl font-bold mt-1 font-baloo">{calcCurrentRiceBalance.toFixed(1)} পট</p>
-                                                   <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
-                                               </div>
-                                               <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
-                                                   <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">মোট মিল (বর্ডার)</h3>
-                                                   <p className="text-3xl font-bold mt-1 text-slate-800 dark:text-white font-baloo">{calcTotalMeals}</p>
-                                               </div>
-                                               
-                                               {/* Secondary Stats with Meal Rate */}
-                                               <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-slate-100 dark:border-slate-700 col-span-2 md:col-span-3">
-                                                   <h4 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-3">বাজার ও মিল রেট সারাংশ</h4>
-                                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                      <div>
-                                                          <p className="text-xs text-slate-500 dark:text-slate-400">সাধারণ বাজার</p>
-                                                          <p className="text-xl font-bold text-slate-800 dark:text-white font-baloo">{calcMarketCost} ৳</p>
-                                                      </div>
-                                                      <div>
-                                                          <p className="text-xs text-red-500">অতিরিক্ত বাজার</p>
-                                                          <p className="text-xl font-bold text-red-600 font-baloo">{calcExtraCost} ৳</p>
-                                                      </div>
-                                                      <div>
-                                                          <p className="text-xs text-blue-600 font-bold">মিল রেট (রান)</p>
-                                                          <p className="text-xl font-bold text-blue-700 font-baloo">{dynamicMealRate.toFixed(2)} ৳</p>
-                                                      </div>
-                                                      <div>
-                                                          <p className="text-xs text-indigo-600 font-bold">ফিক্সড মিল</p>
-                                                          <p className="text-xl font-bold text-indigo-700 font-baloo">{managerInfoForBorder.fixedMealCount || 'নেই'}</p>
-                                                      </div>
-                                                   </div>
-                                               </div>
+
+        {/* Manager Info Card for Border */}
+                                  <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-blue-100 dark:border-slate-700 flex items-center gap-4">
+                                      {managerInfoForBorder.profilePic ? (
+                                          <img src={managerInfoForBorder.profilePic} alt="Manager" className="w-14 h-14 rounded-full object-cover border-2 border-blue-200" />
+                                      ) : (
+                                          <div className="bg-blue-100 p-3 rounded-full text-blue-600"><UserCircle size={24}/></div>
+                                      )}
+                                      <div>
+                                          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">ম্যানেজার তথ্য</p>
+                                          <h3 className="font-bold text-slate-800 dark:text-white">{managerInfoForBorder.name}</h3>
+                                          <div className="text-sm text-slate-600 dark:text-slate-300 flex gap-4">
+                                              <span>📞 {managerInfoForBorder.mobile}</span>
+                                              {managerInfoForBorder.bloodGroup && <span className="text-red-500 font-bold">🩸 {managerInfoForBorder.bloodGroup}</span>}
                                           </div>
+                                      </div>
+                                  </div>
 
                                           {/* Action Buttons for Border */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2373,24 +2344,7 @@ const App: React.FC = () => {
                                           </div>
                                       </div>
                                   )}
-                                  {/* Manager Info Card for Border */}
-                                  <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-blue-100 dark:border-slate-700 flex items-center gap-4">
-                                      {managerInfoForBorder.profilePic ? (
-                                          <img src={managerInfoForBorder.profilePic} alt="Manager" className="w-14 h-14 rounded-full object-cover border-2 border-blue-200" />
-                                      ) : (
-                                          <div className="bg-blue-100 p-3 rounded-full text-blue-600"><UserCircle size={24}/></div>
-                                      )}
-                                      <div>
-                                          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">ম্যানেজার তথ্য</p>
-                                          <h3 className="font-bold text-slate-800 dark:text-white">{managerInfoForBorder.name}</h3>
-                                          <div className="text-sm text-slate-600 dark:text-slate-300 flex gap-4">
-                                              <span>📞 {managerInfoForBorder.mobile}</span>
-                                              {managerInfoForBorder.bloodGroup && <span className="text-red-500 font-bold">🩸 {managerInfoForBorder.bloodGroup}</span>}
-                                          </div>
-                                      </div>
-                                  </div>
-
-
+                          
                                   {/* Stats Grid for Border View */}
                                   {(() => {
                                       // Calculate breakdown for Border View
@@ -2506,7 +2460,55 @@ const App: React.FC = () => {
                                       </div>
                                   </div>
                              </div>
+                             
+                             
                          )}
+                                          {/* Stats Grid for Border (Like Manager) */}
+                                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                               <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
+                                                   <h3 className="text-blue-100 text-sm font-medium">মোট বর্ডার</h3>
+                                                   <p className="text-3xl font-bold mt-1 font-baloo">{borders.length} জন</p>
+                                                   <Users className="absolute right-3 bottom-3 text-white/20" size={40} />
+                                               </div>
+                                               <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
+                                                   <h3 className="text-green-100 text-sm font-medium">বর্তমান ক্যাশ</h3>
+                                                   <p className="text-3xl font-bold mt-1 font-baloo">{calcCurrentCashBalance} ৳</p>
+                                                   <p className="text-[10px] mt-1 opacity-80">মোট জমা: {calcTotalMoney} | খরচ: {calcTotalCost}</p>
+                                                   <DollarSign className="absolute right-3 bottom-3 text-white/20" size={40} />
+                                               </div>
+                                               <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
+                                                   <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
+                                                   <p className="text-3xl font-bold mt-1 font-baloo">{calcCurrentRiceBalance.toFixed(1)} পট</p>
+                                                   <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
+                                               </div>
+                                               <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
+                                                   <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">মোট মিল (বর্ডার)</h3>
+                                                   <p className="text-3xl font-bold mt-1 text-slate-800 dark:text-white font-baloo">{calcTotalMeals}</p>
+                                               </div>
+                                               
+                                               {/* Secondary Stats with Meal Rate */}
+                                               <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-slate-100 dark:border-slate-700 col-span-2 md:col-span-3">
+                                                   <h4 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-3">বাজার ও মিল রেট সারাংশ</h4>
+                                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                      <div>
+                                                          <p className="text-xs text-slate-500 dark:text-slate-400">সাধারণ বাজার</p>
+                                                          <p className="text-xl font-bold text-slate-800 dark:text-white font-baloo">{calcMarketCost} ৳</p>
+                                                      </div>
+                                                      <div>
+                                                          <p className="text-xs text-red-500">অতিরিক্ত বাজার</p>
+                                                          <p className="text-xl font-bold text-red-600 font-baloo">{calcExtraCost} ৳</p>
+                                                      </div>
+                                                      <div>
+                                                          <p className="text-xs text-blue-600 font-bold">মিল রেট (রান)</p>
+                                                          <p className="text-xl font-bold text-blue-700 font-baloo">{dynamicMealRate.toFixed(2)} ৳</p>
+                                                      </div>
+                                                      <div>
+                                                          <p className="text-xs text-indigo-600 font-bold">ফিক্সড মিল</p>
+                                                          <p className="text-xl font-bold text-indigo-700 font-baloo">{managerInfoForBorder.fixedMealCount || 'নেই'}</p>
+                                                      </div>
+                                                   </div>
+                                               </div>
+                                          </div>
 
                          {/* ... (Other Border Tabs remain mostly same, just ensuring data flows) ... */}
                          {activeBorderTab === 'meals' && (
