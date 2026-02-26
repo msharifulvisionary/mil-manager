@@ -90,6 +90,7 @@ export interface Manager {
   mobile: string;
   bloodGroup?: string; // New
   mealRate: number; 
+  fixedMealCount?: number; // New: Fixed Meal Count Setting
   
   // Credentials created by manager for borders to login
   borderUsername?: string;
