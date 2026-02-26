@@ -777,10 +777,13 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
 }
 
 // 1. Manager Overview Stats Component
-const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: Manager, borders: Border[], expenses: Expense[], extraRice?: ExtraRice[] }) => {
+const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder }: { manager: Manager, borders: Border[], expenses: Expense[], extraRice?: ExtraRice[], onUpdateBorder?: (id: string, data: Partial<Border>) => void }) => {
     // ... (No changes here, keeping existing code) ...
     const totalMoney = borders.reduce((acc, b) => acc + b.deposits.reduce((s, d) => s + d.amount, 0), 0);
-    const totalMeals = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0), 0);
+    const totalMeals = borders.reduce((acc, b) => {
+        const actual = Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0);
+        return acc + ((manager?.fixedMealCount && manager.fixedMealCount > 0) ? Math.max(actual, manager.fixedMealCount) : actual);
+    }, 0);
     const totalRiceDeposited = borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0);
     const totalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0) + (b.additionalRicePots || 0) + (manager.globalAdditionalRicePots || 0), 0);
     const totalExtraRice = extraRice?.reduce((sum, er) => sum + er.amount, 0) || 0;
@@ -809,8 +812,8 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
     const extraCost = expenses.filter(e => e.type === 'extra').reduce((acc, e) => acc + e.amount, 0);
     const totalCost = marketCost + extraCost;
     const currentCashBalance = totalMoney - totalCost;
-    // Updated Rice Balance Logic: Total Deposit - Total Consumed + Previous Month Balance - Extra Rice Used
-    const currentRiceBalance = totalRiceDeposited - totalRiceConsumed + (manager.prevRiceBalance || 0) - totalExtraRice;
+    // Updated Rice Balance Logic: Total Deposit - Total Consumed + Previous Month Balance
+    const currentRiceBalance = totalRiceDeposited - totalRiceConsumed + (manager.prevRiceBalance || 0);
     
     // Calc Meal Rate
     const calcMealRate = totalMeals > 0 ? (marketCost / totalMeals) : 0;
@@ -818,6 +821,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
     const [showBorderList, setShowBorderList] = useState(false);
     const [showDailyMealReport, setShowDailyMealReport] = useState(false);
     const [showDailyRiceReport, setShowDailyRiceReport] = useState(false);
+    const [showExtraCostReport, setShowExtraCostReport] = useState(false);
 
     const copyCreds = () => {
         const text = `মেস লগইন তথ্য:\nইউজারনেম: ${manager.username}\nপাসওয়ার্ড: ${manager.borderPassword}`;
@@ -884,7 +888,10 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                                         </td>
                                     ))}
                                     <td className="p-2 font-bold border dark:border-slate-600 bg-blue-50 dark:bg-blue-900/20">
-                                        {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}
+                                        {((manager?.fixedMealCount && manager.fixedMealCount > 0) ? Math.max(Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0), manager.fixedMealCount) : Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0))}
+                                        {manager?.fixedMealCount && manager.fixedMealCount > 0 && Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0) < manager.fixedMealCount ? (
+                                            <div className="text-[10px] text-slate-500 font-normal mt-0.5">আসল: {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}</div>
+                                        ) : null}
                                     </td>
                                 </tr>
                             ))}
@@ -934,15 +941,65 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
         );
     }
 
+    if (showExtraCostReport) {
+        return (
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in">
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">বর্ডার অতিরিক্ত খরচ আপডেট</h2>
+                    <button onClick={() => setShowExtraCostReport(false)} className="bg-slate-100 text-slate-600 px-3 py-1 rounded hover:bg-slate-200">বন্ধ করুন</button>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-center text-sm border-collapse">
+                        <thead className="bg-slate-800 text-white">
+                            <tr>
+                                <th className="p-2 border border-slate-600">বর্ডার নাম</th>
+                                <th className="p-2 border border-slate-600 bg-orange-700">বর্তমান অতিরিক্ত খরচ (৳)</th>
+                                <th className="p-2 border border-slate-600">অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {borders.map(b => (
+                                <tr key={b.id} className="border-b hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700">
+                                    <td className="p-2 font-semibold text-left border dark:border-slate-600">{b.name}</td>
+                                    <td className="p-2 border dark:border-slate-600 font-bold text-orange-600 dark:text-orange-400 text-lg">
+                                        {b.extraCost} ৳
+                                    </td>
+                                    <td className="p-2 border dark:border-slate-600">
+                                        <button 
+                                            onClick={() => {
+                                                const val = prompt(`${b.name} এর নতুন অতিরিক্ত খরচ (৳):`, b.extraCost.toString());
+                                                if (val !== null && !isNaN(Number(val))) {
+                                                    if(onUpdateBorder) {
+                                                        onUpdateBorder(b.id, { extraCost: Number(val) });
+                                                    }
+                                                }
+                                            }}
+                                            className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors text-sm font-bold flex items-center gap-2 mx-auto"
+                                        >
+                                            <Edit2 size={16}/> আপডেট করুন
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Action Buttons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button onClick={() => setShowDailyMealReport(true)} className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
                     <Calendar size={24} /> দৈনিক মিল আপডেট
                 </button>
                 <button onClick={() => setShowDailyRiceReport(true)} className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
                     <Utensils size={24} /> দৈনিক চাল আপডেট
+                </button>
+                <button onClick={() => setShowExtraCostReport(true)} className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
+                    <DollarSign size={24} /> বর্ডার অতিরিক্ত খরচ
                 </button>
             </div>
 
@@ -1977,13 +2034,23 @@ const App: React.FC = () => {
       setExtraRice([]);
   };
 
-  // Calc Meal Rate (Total Market Cost / Total Meals)
+  const activeManager = manager || managerInfoForBorder;
+  const calcTotalMoney = borders.reduce((acc, b) => acc + b.deposits.reduce((s, d) => s + d.amount, 0), 0);
   const calcTotalMeals = borders.reduce((acc, b) => {
       const actual = Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0);
-      return acc + ((manager?.fixedMealCount && manager.fixedMealCount > 0) ? Math.max(actual, manager.fixedMealCount) : actual);
+      return acc + ((activeManager?.fixedMealCount && activeManager.fixedMealCount > 0) ? Math.max(actual, activeManager.fixedMealCount) : actual);
   }, 0);
   const calcMarketCost = expenses.filter(e => e.type === 'market').reduce((acc, e) => acc + e.amount, 0);
+  const calcExtraCost = expenses.filter(e => e.type === 'extra').reduce((acc, e) => acc + e.amount, 0);
+  const calcTotalCost = calcMarketCost + calcExtraCost;
   const dynamicMealRate = calcTotalMeals > 0 ? calcMarketCost / calcTotalMeals : 0;
+  
+  const calcTotalRiceDeposited = borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0);
+  const calcTotalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0) + (b.additionalRicePots || 0) + (activeManager?.globalAdditionalRicePots || 0), 0);
+  const calcTotalExtraRice = extraRice?.reduce((sum, er) => sum + er.amount, 0) || 0;
+  const calcCurrentCashBalance = calcTotalMoney - calcTotalCost;
+  const calcCurrentRiceBalance = calcTotalRiceDeposited - calcTotalRiceConsumed + (activeManager?.prevRiceBalance || 0);
+
   // Border Balance Summary Logic (Updated Calculation)
   const getBorderSummaryBalance = (b: Border) => {
       const totalDeposit = b.deposits.reduce((acc, curr) => acc + curr.amount, 0);
@@ -2144,8 +2211,56 @@ const App: React.FC = () => {
                          )}
 
 {activeBorderTab === 'overview' && (
-                                     <div className="space-y-6">
+                                     <div className="space-y-6 animate-fade-in">
                                           <RamadanSchedule />
+                                          
+                                          {/* Stats Grid for Border (Like Manager) */}
+                                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                               <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
+                                                   <h3 className="text-blue-100 text-sm font-medium">মোট বর্ডার</h3>
+                                                   <p className="text-3xl font-bold mt-1 font-baloo">{borders.length} জন</p>
+                                                   <Users className="absolute right-3 bottom-3 text-white/20" size={40} />
+                                               </div>
+                                               <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
+                                                   <h3 className="text-green-100 text-sm font-medium">বর্তমান ক্যাশ</h3>
+                                                   <p className="text-3xl font-bold mt-1 font-baloo">{calcCurrentCashBalance} ৳</p>
+                                                   <p className="text-[10px] mt-1 opacity-80">মোট জমা: {calcTotalMoney} | খরচ: {calcTotalCost}</p>
+                                                   <DollarSign className="absolute right-3 bottom-3 text-white/20" size={40} />
+                                               </div>
+                                               <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
+                                                   <h3 className="text-orange-100 text-sm font-medium">চালের মজুদ</h3>
+                                                   <p className="text-3xl font-bold mt-1 font-baloo">{calcCurrentRiceBalance.toFixed(1)} পট</p>
+                                                   <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
+                                               </div>
+                                               <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
+                                                   <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">মোট মিল (বর্ডার)</h3>
+                                                   <p className="text-3xl font-bold mt-1 text-slate-800 dark:text-white font-baloo">{calcTotalMeals}</p>
+                                               </div>
+                                               
+                                               {/* Secondary Stats with Meal Rate */}
+                                               <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-slate-100 dark:border-slate-700 col-span-2 md:col-span-3">
+                                                   <h4 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-3">বাজার ও মিল রেট সারাংশ</h4>
+                                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                      <div>
+                                                          <p className="text-xs text-slate-500 dark:text-slate-400">সাধারণ বাজার</p>
+                                                          <p className="text-xl font-bold text-slate-800 dark:text-white font-baloo">{calcMarketCost} ৳</p>
+                                                      </div>
+                                                      <div>
+                                                          <p className="text-xs text-red-500">অতিরিক্ত বাজার</p>
+                                                          <p className="text-xl font-bold text-red-600 font-baloo">{calcExtraCost} ৳</p>
+                                                      </div>
+                                                      <div>
+                                                          <p className="text-xs text-blue-600 font-bold">মিল রেট (রান)</p>
+                                                          <p className="text-xl font-bold text-blue-700 font-baloo">{dynamicMealRate.toFixed(2)} ৳</p>
+                                                      </div>
+                                                      <div>
+                                                          <p className="text-xs text-indigo-600 font-bold">ফিক্সড মিল</p>
+                                                          <p className="text-xl font-bold text-indigo-700 font-baloo">{managerInfoForBorder.fixedMealCount || 'নেই'}</p>
+                                                      </div>
+                                                   </div>
+                                               </div>
+                                          </div>
+
                                           {/* Action Buttons for Border */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                       <button onClick={() => setShowBorderDailyMealReport(true)} className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-3 font-bold transition-all transform hover:scale-[1.02]">
@@ -2184,7 +2299,10 @@ const App: React.FC = () => {
                                                                   </td>
                                                               ))}
                                                               <td className="p-2 font-bold border dark:border-slate-600 bg-blue-50 dark:bg-blue-900/20">
-                                                                  {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}
+                                                                  {((managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0) ? Math.max(Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0), managerInfoForBorder.fixedMealCount) : Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0))}
+                                                                  {managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0 && Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0) < managerInfoForBorder.fixedMealCount ? (
+                                                                      <div className="text-[10px] text-slate-500 font-normal mt-0.5">আসল: {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}</div>
+                                                                  ) : null}
                                                               </td>
                                                           </tr>
                                                       ))}
@@ -2457,7 +2575,7 @@ const App: React.FC = () => {
 {activeTab === 'dashboard' && (
                                             <div className="space-y-6 animate-fade-in">
                                                 <RamadanSchedule />
-                                                <ManagerOverview manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} />
+                                                <ManagerOverview manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} onUpdateBorder={handleUpdateBorder} />
                                             </div>
                                         )}
                                 {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} fixedMealCount={manager.fixedMealCount} /></div>}
