@@ -2459,9 +2459,8 @@ const App: React.FC = () => {
                                            </div>
                                       </div>
                                   </div>
-                             </div>
-                             
-                                  {/* Stats Grid for Border (Like Manager) */}
+                                  
+                                                            {/* Stats Grid for Border (Like Manager) */}
                                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                                                    <h3 className="text-blue-100 text-sm font-medium">মেসের মোট বর্ডার</h3>
@@ -2507,12 +2506,15 @@ const App: React.FC = () => {
                                                    </div>
                                                </div>
                                           </div>
-
+                                  
+                                  
+                             </div>
                              
                              
                          )}
                          
                          
+
 
                          {/* ... (Other Border Tabs remain mostly same, just ensuring data flows) ... */}
                          {activeBorderTab === 'meals' && (
