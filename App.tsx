@@ -988,7 +988,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                  {/* Secondary Stats with Meal Rate */}
                  <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-slate-100 dark:border-slate-700 col-span-2 md:col-span-3">
                      <h4 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-3">বাজার ও মিল রেট সারাংশ</h4>
-                     <div className="grid grid-cols-3 gap-4">
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                             <p className="text-xs text-slate-500 dark:text-slate-400">সাধারণ বাজার</p>
                             <p className="text-xl font-bold text-slate-800 dark:text-white font-baloo">{marketCost} ৳</p>
@@ -1000,6 +1000,10 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
                         <div>
                             <p className="text-xs text-blue-600 font-bold">মিল রেট (রান)</p>
                             <p className="text-xl font-bold text-blue-700 font-baloo">{calcMealRate.toFixed(2)} ৳</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-indigo-600 font-bold">ফিক্সড মিল</p>
+                            <p className="text-xl font-bold text-indigo-700 font-baloo">{manager.fixedMealCount || 'নেই'}</p>
                         </div>
                      </div>
                  </div>
@@ -1039,18 +1043,25 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
 };
 
 // 2. Border Management List (Updated with Balance & Shuffle)
-const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, expenses }: any) => {
+const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, expenses, fixedMealCount }: any) => {
     const [name, setName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
 
     // Calculate balance logic
     const getBalance = (b: Border) => {
         const totalDeposit = b.deposits.reduce((acc, curr) => acc + curr.amount, 0);
-        const totalMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+        const actualMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+        const totalMeals = (fixedMealCount && fixedMealCount > 0) ? Math.max(actualMeals, fixedMealCount) : actualMeals;
         // Explicit logic: Meal Cost + Personal Extra + Guest Cost (Shared Extra EXCLUDED per request)
         const mealCost = Math.round(totalMeals * mealRate);
         const totalCost = mealCost + b.extraCost + b.guestCost;
         return (totalDeposit - totalCost).toFixed(0);
+    }
+
+    const getTotalRiceBalance = (b: Border) => {
+        const totalDeposit = b.riceDeposits.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+        const dailyRice = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
+        return (totalDeposit - dailyRice).toFixed(1);
     }
 
     const moveBorder = (index: number, direction: 'up' | 'down') => {
@@ -1087,6 +1098,7 @@ const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, exp
                             <th className="p-3 text-right">টাকা জমা</th>
                             <th className="p-3 text-right">চাল জমা</th>
                             <th className="p-3 text-right">অবশিষ্ট টাকা</th>
+                            <th className="p-3 text-right">অবশিষ্ট চাল</th>
                             <th className="p-3 text-center">অ্যাকশন</th>
                         </tr>
                     </thead>
@@ -1109,6 +1121,7 @@ const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, exp
                                 <td className="p-3 text-right font-mono text-emerald-600 dark:text-emerald-400 font-bold">{b.deposits.reduce((acc, curr) => acc + curr.amount, 0)} ৳</td>
                                 <td className="p-3 text-right font-mono text-orange-600 dark:text-orange-400 font-bold">{b.riceDeposits.reduce((acc, curr) => acc + curr.amount, 0)} পট</td>
                                 <td className={`p-3 text-right font-mono font-bold ${Number(getBalance(b)) < 0 ? 'text-red-500' : 'text-green-600'}`}>{getBalance(b)} ৳</td>
+                                <td className={`p-3 text-right font-mono font-bold ${Number(getTotalRiceBalance(b)) < 0 ? 'text-red-500' : 'text-green-600'}`}>{getTotalRiceBalance(b)} পট</td>
                                 <td className="p-3 text-center flex justify-center gap-2">
                                     <button onClick={() => onEdit(b)} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors" title="এডিট">
                                         <Edit2 size={16} />
@@ -1314,7 +1327,7 @@ const formatBengaliDate = (dateStr: string) => {
     return `${toBengaliDigits(day)} ${bengaliMonths[month]} ${toBengaliDigits(year)}`;
 };
 
-const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
+const MarketView = ({ expenses, onAdd, onDelete, onUpdate, readOnly = false }: any) => {
     const [form, setForm] = useState<Partial<Expense>>({ date: new Date().toISOString().split('T')[0], type: 'market', amount: 0, shopper: '' });
     const [isEditing, setIsEditing] = useState(false);
     const [filterType, setFilterType] = useState<'all'|'market'|'extra'>('all');
@@ -1325,7 +1338,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
         if (isEditing && onUpdate) {
             onUpdate(form.id, form);
             setIsEditing(false);
-        } else {
+        } else if (onAdd) {
             const { id, ...cleanForm } = form as any;
             onAdd(cleanForm);
         }
@@ -1333,15 +1346,16 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
     };
 
     const handleEdit = (e: Expense) => {
+        if (readOnly) return;
         setForm(e);
         setIsEditing(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDelete = (id?: string) => {
-        if(!id) return;
+        if(readOnly || !id) return;
         if(window.confirm('সত্যিই কি মুছে ফেলতে চান?')) {
-            onDelete(id);
+            if (onDelete) onDelete(id);
             if(isEditing) {
                 setIsEditing(false);
                 setForm({ date: new Date().toISOString().split('T')[0], type: 'market', amount: 0, shopper: '' });
@@ -1352,7 +1366,8 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
     const filteredExpenses = expenses.filter((e: Expense) => filterType === 'all' ? true : e.type === filterType);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className={`grid grid-cols-1 ${!readOnly ? 'lg:grid-cols-3' : ''} gap-6`}>
+            {!readOnly && (
             <div className="lg:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 h-fit">
                 <h3 className="font-bold text-lg mb-4 text-slate-800 dark:text-white border-b pb-2 flex items-center gap-2">
                     <ShoppingCart size={20} className="text-primary"/> {isEditing ? 'খরচ এডিট করুন' : 'খরচ যুক্ত করুন'}
@@ -1391,7 +1406,8 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                 </div>
             </div>
 
-            <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 flex flex-col h-[600px]">
+            )}
+            <div className={`${!readOnly ? 'lg:col-span-2' : ''} bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 flex flex-col h-[600px]`}>
                 <div className="flex justify-between items-center mb-4 border-b pb-2">
                     <h3 className="font-bold text-lg text-slate-800 dark:text-white">খরচের তালিকা</h3>
                     <div className="flex gap-2">
@@ -1408,7 +1424,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                                 <th className="py-2">ধরণ</th>
                                 <th className="py-2">বিবরণ</th>
                                 <th className="py-2 text-right">টাকা</th>
-                                <th className="py-2 text-right">অ্যাকশন</th>
+                                {!readOnly && <th className="py-2 text-right">অ্যাকশন</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -1422,10 +1438,12 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate }: any) => {
                                     </td>
                                     <td className="py-3 font-medium dark:text-slate-200">{e.shopper}</td>
                                     <td className="py-3 font-bold text-right font-baloo dark:text-white">{e.amount}</td>
+                                    {!readOnly && (
                                     <td className="py-3 text-right flex justify-end gap-2">
                                         <button onClick={() => handleEdit(e)} className="text-blue-500 hover:text-blue-700"><Edit2 size={16}/></button>
                                         <button onClick={() => handleDelete(e.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
                                     </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -1960,13 +1978,17 @@ const App: React.FC = () => {
   };
 
   // Calc Meal Rate (Total Market Cost / Total Meals)
-  const calcTotalMeals = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0), 0);
+  const calcTotalMeals = borders.reduce((acc, b) => {
+      const actual = Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0);
+      return acc + ((manager?.fixedMealCount && manager.fixedMealCount > 0) ? Math.max(actual, manager.fixedMealCount) : actual);
+  }, 0);
   const calcMarketCost = expenses.filter(e => e.type === 'market').reduce((acc, e) => acc + e.amount, 0);
   const dynamicMealRate = calcTotalMeals > 0 ? calcMarketCost / calcTotalMeals : 0;
   // Border Balance Summary Logic (Updated Calculation)
   const getBorderSummaryBalance = (b: Border) => {
       const totalDeposit = b.deposits.reduce((acc, curr) => acc + curr.amount, 0);
-      const totalMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+      const actualMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+      const totalMeals = (managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0) ? Math.max(actualMeals, managerInfoForBorder.fixedMealCount) : actualMeals;
       
       const rateToUse = managerInfoForBorder ? managerInfoForBorder.mealRate : 0;
       // Updated Formula: Cost = Round(Meals * Rate) + Extra + Guest (Shared Extra excluded)
@@ -2226,7 +2248,8 @@ const App: React.FC = () => {
                                   {/* Stats Grid for Border View */}
                                   {(() => {
                                       // Calculate breakdown for Border View
-                                      const bTotalMeals: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.meals) || 0), 0);
+                                      const actualMeals: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.meals) || 0), 0);
+                                      const bTotalMeals: number = (managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0) ? Math.max(actualMeals, managerInfoForBorder.fixedMealCount) : actualMeals;
                                       const bDailyRice: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.rice) || 0), 0);
                                       const borderExtraRice: number = borderView.additionalRicePots || 0;
                                       const globalExtraRice: number = managerInfoForBorder.globalAdditionalRicePots || 0;
@@ -2275,6 +2298,7 @@ const App: React.FC = () => {
                                                   <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded">
                                                       <p className="text-xs text-slate-500 dark:text-slate-400">মিল সংখ্যা</p>
                                                       <p className="font-bold font-baloo dark:text-white">{bTotalMeals}</p>
+                                                      {managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0 && <p className="text-[10px] text-indigo-500">ফিক্সড: {managerInfoForBorder.fixedMealCount}</p>}
                                                   </div>
                                                   <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded">
                                                       <p className="text-xs text-slate-500 dark:text-slate-400">মিল রেট</p>
@@ -2351,22 +2375,7 @@ const App: React.FC = () => {
                              </div>
                          )}
                          {activeBorderTab === 'market' && (
-                              <div className="bg-white dark:bg-slate-800 rounded-xl shadow border dark:border-slate-700 overflow-hidden">
-                                  <div className="max-h-[600px] overflow-y-auto">
-                                      <table className="w-full text-sm text-left">
-                                          <thead className="bg-slate-100 dark:bg-slate-900 sticky top-0 dark:text-white"><tr><th className="p-3">তারিখ</th><th className="p-3">বিবরণ</th><th className="p-3 text-right">টাকা</th></tr></thead>
-                                          <tbody className="divide-y dark:divide-slate-700">
-                                              {expenses.map(e => (
-                                                  <tr key={e.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-300 ${e.type === 'extra' ? 'bg-red-50 dark:bg-red-900/20' : ''}`}>
-                                                      <td className="p-3 font-baloo">{e.date}</td>
-                                                      <td className="p-3">{e.shopper} {e.type === 'extra' && <span className="text-[10px] bg-red-200 dark:bg-red-800 px-1 rounded">অতিরিক্ত বাজার :</span>}</td>
-                                                      <td className="p-3 text-right font-bold font-baloo">{e.amount}</td>
-                                                  </tr>
-                                              ))}
-                                          </tbody>
-                                      </table>
-                                  </div>
-                              </div>
+                              <MarketView expenses={expenses} readOnly={true} />
                          )}
                          {activeBorderTab === 'schedule' && (
                              <BazaarSchedulePage 
@@ -2451,7 +2460,7 @@ const App: React.FC = () => {
                                                 <ManagerOverview manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} />
                                             </div>
                                         )}
-                                {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} /></div>}
+                                {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} fixedMealCount={manager.fixedMealCount} /></div>}
                                 {activeTab === 'schedule' && <div className="animate-fade-in"><BazaarSchedulePage manager={manager} borders={borders} isManager={true} currentUser={undefined} onUpdate={(m) => setManager(m)} /></div>}
                                 {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} manager={manager} onUpdateManager={(data: any) => {
                                     const updated = { ...manager, ...data };
@@ -2512,6 +2521,22 @@ const App: React.FC = () => {
                                                     />
                                                 </div>
                                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">⚠️ মিল রেট পরিবর্তন করলে সকল বর্ডারের খরচের হিসাব সাথে সাথে আপডেট হয়ে যাবে।</p>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-2">ফিক্সড মিল সংখ্যা</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input type="number" className="flex-1 border-2 border-indigo-100 dark:border-slate-600 p-3 rounded-lg text-lg font-bold text-slate-700 dark:text-white dark:bg-slate-700 focus:border-indigo-500 outline-none transition-colors" 
+                                                        value={manager.fixedMealCount || ''} 
+                                                        placeholder="যেমন: ৪৫"
+                                                        onChange={e => {
+                                                            const val = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                                            setManager({...manager, fixedMealCount: val});
+                                                            dbService.updateManager(manager.username, { fixedMealCount: val });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">কোন বর্ডারের মোট মিল এই সংখ্যার কম হলে, তার মোট মিল অটোমেটিক এই সংখ্যা ধরা হবে। মুছতে চাইলে ইনপুটটি ফাঁকা করে দিন।</p>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">
