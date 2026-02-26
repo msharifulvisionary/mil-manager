@@ -346,7 +346,12 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                                 {b.dailyUsage[d]?.meals > 0 ? b.dailyUsage[d]?.meals : ''}
                             </td>
                         ))}
-                        <td className="border border-gray-400 font-bold bg-blue-50" style={{height: '24px', verticalAlign: 'middle'}}>{getTotalMeals(b)}</td>
+                        <td className="border border-gray-400 font-bold bg-blue-50" style={{height: '24px', verticalAlign: 'middle'}}>
+                            {getTotalMeals(b)}
+                            {manager?.fixedMealCount && manager.fixedMealCount > 0 && Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0) < manager.fixedMealCount ? (
+                                <div className="text-[9px] text-gray-500 font-normal mt-0.5">আসল: {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}</div>
+                            ) : null}
+                        </td>
                     </tr>
                 ))}
             </tbody>
