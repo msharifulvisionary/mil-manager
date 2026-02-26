@@ -343,6 +343,32 @@ const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick:
                     </div>
                 </div>
             </div>
+            
+                        {/* Features Section */}
+            <div className="py-20 px-4 bg-white dark:bg-slate-900">
+                <div className="container mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-4 font-baloo">কেন ব্যবহার করবেন?</h2>
+                        <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {[
+                            { icon: Calendar, title: "সহজ মিল ম্যানেজমেন্ট", desc: "প্রতিদিনের মিল এবং চালের হিসাব খুব সহজেই এন্ট্রি এবং আপডেট করার সুবিধা।" },
+                            { icon: FileText, title: "অটোমেটেড রিপোর্ট", desc: "মাস শেষে এক ক্লিকেই সম্পূর্ণ মাসের আয়-ব্যয়ের পিডিএফ এবং ইমেজ রিপোর্ট।" },
+                            { icon: ShieldCheck, title: "স্বচ্ছ ও নিরাপদ", desc: "ম্যানেজার এবং বর্ডার উভয়ের জন্যই আলাদা ড্যাশবোর্ড এবং স্বচ্ছ হিসাব ব্যবস্থা।" }
+                        ].map((item, idx) => (
+                            <div key={idx} className="bg-slate-50 dark:bg-slate-800 p-8 rounded-2xl hover:shadow-xl transition-shadow border border-slate-100 dark:border-slate-700 text-center group">
+                                <div className="w-16 h-16 bg-white dark:bg-slate-700 rounded-full shadow-md flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                                    <item.icon size={32} className="text-primary" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">{item.title}</h3>
+                                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
             {/* Stats/CTA Section (RESTORED) */}
             <div className="bg-slate-900 text-white py-16 px-4 border-t border-slate-800">
