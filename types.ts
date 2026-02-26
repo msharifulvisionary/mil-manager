@@ -59,6 +59,7 @@ export interface Border {
   guestCost: number; // New: Guest Meal Cost
   additionalRicePots?: number; // New: Additional Rice Expense
   order?: number; // New: For shuffling/sorting
+  profilePic?: string; // New: Profile Picture Link
 }
 
 export interface RiceConfig {
@@ -110,6 +111,7 @@ export interface Manager {
   iftaarConfig?: IftaarConfig;
   extraRice?: ExtraRice[]; // New: Extra rice usage
   globalAdditionalRicePots?: number; // New: Global Additional Rice Expense
+  profilePic?: string; // New: Profile Picture Link
 }
 
 export interface IftaarConfig {
