@@ -1692,7 +1692,7 @@ const LoginRegister = ({ setManager, setBorderView }: any) => {
                       <option value="">-- নাম বাছাই করুন --</option>
                       {borderList.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
-                  <button onClick={() => { const b = borderList.find(x => x.id === selectedBorderId); if(b) setBorderView(b); }} disabled={!selectedBorderId} className="w-full bg-primary text-white py-3 rounded font-bold">ড্যাশবোর্ড দেখুন</button>
+                  <button onClick={() => { const b = borderList.find(x => x.id === selectedBorderId); if(b) { handleSetBorderView(b); setShowBorderSelect(false); } }} disabled={!selectedBorderId} className="w-full bg-primary text-white py-3 rounded font-bold">ড্যাশবোর্ড দেখুন</button>
               </div>
           </div>
       )
