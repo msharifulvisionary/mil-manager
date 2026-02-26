@@ -1169,10 +1169,21 @@ const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, exp
                                     </div>
                                 </td>
                                 <td className="p-3">
-                                    <div className="font-semibold text-slate-800 dark:text-white">{b.name}</div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 flex gap-2 mt-0.5">
-                                        {b.mobile && <span>📞 {b.mobile}</span>}
-                                        {b.bloodGroup && <span className="text-red-500">🩸 {b.bloodGroup}</span>}
+                                    <div className="flex items-center gap-3">
+                                        {b.profilePic ? (
+                                            <img src={b.profilePic} alt={b.name} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-600 flex-shrink-0" />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 flex-shrink-0">
+                                                <UserCircle size={20} />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <div className="font-semibold text-slate-800 dark:text-white">{b.name}</div>
+                                            <div className="text-xs text-slate-500 dark:text-slate-400 flex gap-2 mt-0.5">
+                                                {b.mobile && <span>📞 {b.mobile}</span>}
+                                                {b.bloodGroup && <span className="text-red-500">🩸 {b.bloodGroup}</span>}
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="p-3 text-right font-mono text-emerald-600 dark:text-emerald-400 font-bold">{b.deposits.reduce((acc, curr) => acc + curr.amount, 0)} ৳</td>
@@ -1569,9 +1580,22 @@ const BorderDetailModal = ({
             <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative shadow-2xl flex flex-col">
                 <button onClick={onClose} className="absolute top-4 right-4 bg-slate-100 p-2 rounded-full hover:bg-slate-200 transition-colors z-20"><X size={20} /></button>
                 
-                <div className="p-6 border-b dark:border-slate-700 flex-shrink-0">
+                <div className="p-6 border-b dark:border-slate-700 flex-shrink-0 flex items-center gap-4">
+                    {border.profilePic ? (
+                        <img src={border.profilePic} alt={border.name} className="w-16 h-16 rounded-full object-cover border-2 border-primary flex-shrink-0" />
+                    ) : (
+                        <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 flex-shrink-0">
+                            <UserCircle size={32} />
+                        </div>
+                    )}
                     {/* Fixed Text Label */}
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">ম্যানেজ : <span className="text-primary">{border.name}</span></h2>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">ম্যানেজ : <span className="text-primary">{border.name}</span></h2>
+                        <div className="text-sm text-slate-500 dark:text-slate-400 flex gap-3 mt-1">
+                            {border.mobile && <span>📞 {border.mobile}</span>}
+                            {border.bloodGroup && <span className="text-red-500">🩸 {border.bloodGroup}</span>}
+                        </div>
+                    </div>
                 </div>
                 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
@@ -1811,7 +1835,7 @@ const App: React.FC = () => {
   const [editingBorder, setEditingBorder] = useState<Border | null>(null);
   const [profileEdit, setProfileEdit] = useState(false);
   const [profileForm, setProfileForm] = useState<Manager>({} as Manager);
-  const [borderProfileForm, setBorderProfileForm] = useState({ mobile: '', bloodGroup: '' });
+  const [borderProfileForm, setBorderProfileForm] = useState({ mobile: '', bloodGroup: '', profilePic: '' });
 
   // Dark Mode
   const [darkMode, setDarkMode] = useState(localStorage.getItem('theme') === 'dark');
@@ -1885,7 +1909,7 @@ const App: React.FC = () => {
   const handleSetBorderView = async (border: Border) => {
       setBorderView(border);
       setHasStarted(true); // Ensure we leave landing page
-      setBorderProfileForm({ mobile: border.mobile || '', bloodGroup: border.bloodGroup || '' });
+      setBorderProfileForm({ mobile: border.mobile || '', bloodGroup: border.bloodGroup || '', profilePic: border.profilePic || '' });
       // Fetch manager info for rates
       if(border.managerId) {
           try {
@@ -2351,7 +2375,11 @@ const App: React.FC = () => {
                                   )}
                                   {/* Manager Info Card for Border */}
                                   <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border border-blue-100 dark:border-slate-700 flex items-center gap-4">
-                                      <div className="bg-blue-100 p-3 rounded-full text-blue-600"><UserCircle size={24}/></div>
+                                      {managerInfoForBorder.profilePic ? (
+                                          <img src={managerInfoForBorder.profilePic} alt="Manager" className="w-14 h-14 rounded-full object-cover border-2 border-blue-200" />
+                                      ) : (
+                                          <div className="bg-blue-100 p-3 rounded-full text-blue-600"><UserCircle size={24}/></div>
+                                      )}
                                       <div>
                                           <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">ম্যানেজার তথ্য</p>
                                           <h3 className="font-bold text-slate-800 dark:text-white">{managerInfoForBorder.name}</h3>
@@ -2519,6 +2547,28 @@ const App: React.FC = () => {
                                       <select className="w-full p-3 border rounded dark:bg-slate-700 dark:text-white" value={borderProfileForm.bloodGroup} onChange={e => setBorderProfileForm({...borderProfileForm, bloodGroup: e.target.value})}>
                                           <option value="">রক্তের গ্রুপ</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
                                       </select>
+
+                                      <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                          <label className="text-sm font-bold block mb-2 dark:text-white text-slate-800">প্রোফাইল ছবি (Imgur Link)</label>
+                                          <div className="text-xs text-slate-600 dark:text-slate-400 mb-3 space-y-1">
+                                              <p className="font-bold text-primary">কিভাবে ছবি আপলোড করবেন?</p>
+                                              <ol className="list-decimal pl-4 space-y-1">
+                                                  <li><a href="https://imgur.com/upload" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">imgur.com/upload</a> এ যান।</li>
+                                                  <li>আপনার ছবি সিলেক্ট করে আপলোড করুন।</li>
+                                                  <li>আপলোড শেষে ছবির উপর রাইট ক্লিক করে "Open image in new tab" এ ক্লিক করুন।</li>
+                                                  <li>এরপরে নতুন ট্যাব এ ওপেন হওয়া লিংক কপি করুন।</li>
+                                                  <li>লিংকটি অবশ্যই .jpg বা .png দিয়ে শেষ হতে হবে।</li>
+                                                  <li>নিচের ফর্মে লিংকটি পেস্ট করুন।</li>
+                                              </ol>
+                                          </div>
+                                          <input className="w-full p-3 border rounded dark:bg-slate-700 dark:text-white" value={borderProfileForm.profilePic} onChange={e => setBorderProfileForm({...borderProfileForm, profilePic: e.target.value})} placeholder="https://i.imgur.com/your-image.jpg" />
+                                          {borderProfileForm.profilePic && (
+                                              <div className="mt-3 flex justify-center">
+                                                  <img src={borderProfileForm.profilePic} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md" />
+                                              </div>
+                                          )}
+                                      </div>
+
                                       <button onClick={handleBorderProfileUpdate} className="w-full bg-primary text-white py-3 rounded font-bold">আপডেট করুন</button>
                                   </div>
                               </div>
@@ -2609,6 +2659,27 @@ const App: React.FC = () => {
                                                    <input placeholder="মেসের নাম" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.messName} onChange={e => setProfileForm({...profileForm, messName: e.target.value})} />
                                                    <input placeholder="মোবাইল" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.mobile} onChange={e => setProfileForm({...profileForm, mobile: e.target.value})} />
                                                    <input placeholder="রক্তের গ্রুপ" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.bloodGroup || ''} onChange={e => setProfileForm({...profileForm, bloodGroup: e.target.value})} />
+                                                   
+                                                   <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded mt-3 border dark:border-slate-600">
+                                                       <label className="text-xs font-bold block mb-2 dark:text-white text-slate-800">প্রোফাইল ছবি (Imgur Link)</label>
+                                                       <div className="text-[10px] text-slate-600 dark:text-slate-400 mb-3 space-y-1">
+                                                           <p className="font-bold text-primary">কিভাবে ছবি আপলোড করবেন?</p>
+                                                           <ol className="list-decimal pl-4 space-y-1">
+                                                               <li><a href="https://imgur.com/upload" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">imgur.com/upload</a> এ যান।</li>
+                                                               <li>আপনার ছবি সিলেক্ট করে আপলোড করুন।</li>
+                                                               <li>আপলোড শেষে ছবির উপর রাইট ক্লিক করে "Open image in new tab" এ ক্লিক করুন।</li>
+                                                               <li>এরপরে নতুন ট্যাব এ ওপেন হওয়া লিংক কপি করুন।</li>
+                                                               <li>লিংকটি অবশ্যই .jpg বা .png দিয়ে শেষ হতে হবে।</li>
+                                                               <li>নিচের ফর্মে লিংকটি পেস্ট করুন।</li>
+                                                           </ol>
+                                                       </div>
+                                                       <input placeholder="https://i.imgur.com/your-image.jpg" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.profilePic || ''} onChange={e => setProfileForm({...profileForm, profilePic: e.target.value})} />
+                                                       {profileForm.profilePic && (
+                                                           <div className="mt-3 flex justify-center">
+                                                               <img src={profileForm.profilePic} alt="Manager Profile" className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm" />
+                                                           </div>
+                                                       )}
+                                                   </div>
                                                    
                                                    <label className="text-xs font-bold block mt-4 text-red-600">ক্রেডেনশিয়াল আপডেট (সাবধানে পরিবর্তন করুন)</label>
                                                    <input placeholder="আপনার নতুন পাসওয়ার্ড" className="w-full p-2 border rounded border-red-200 dark:bg-slate-600 dark:text-white" value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} />
