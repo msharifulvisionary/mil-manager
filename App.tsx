@@ -4,7 +4,7 @@ import {
   Users, FileText, ShoppingCart, Settings, LogOut, 
   Trash2, PlusCircle, Edit2, Save, X, Activity, DollarSign, Calendar, ChevronRight,
   Copy, UserCircle, Phone, Droplet, LayoutDashboard, Utensils, Eye, EyeOff, List, ArrowRight, ShieldCheck, ClipboardList,
-  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown, Star
+  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown, Star, ArrowLeft
 } from 'lucide-react';
 
 import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper, RiceConfig, ExtraRice } from './types';
@@ -237,7 +237,7 @@ const PWAInstallPrompt = () => {
 };
 
 // --- LANDING PAGE ---
-const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick: () => void }) => {
+const LandingPage = ({ onStart, onRegister, onDevClick }: { onStart: () => void, onRegister: () => void, onDevClick: () => void }) => {
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans transition-colors duration-300">
             {/* Navbar */}
@@ -246,9 +246,14 @@ const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick:
                     <div className="flex items-center gap-2 text-primary font-bold text-xl font-baloo">
                         <Utensils size={28} /> মেস ম্যানেজার
                     </div>
-                    <button onClick={onStart} className="bg-slate-900 dark:bg-primary text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-800 transition-colors">
-                        লগইন / রেজিস্টার
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={onStart} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-600">
+                            লগইন
+                        </button>
+                        <button onClick={onRegister} className="bg-slate-900 dark:bg-primary text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-800 transition-colors hidden sm:block">
+                            রেজিস্ট্রেশন
+                        </button>
+                    </div>
                 </div>
             </nav>
 
@@ -271,11 +276,21 @@ const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick:
                         মিল, বাজার, টাকা জমা এবং যাবতীয় খরচের হিসাব রাখার ঝামেলা থেকে মুক্তি পান। অটোমেটেড রিপোর্ট জেনারেশন এবং স্বচ্ছ হিসাবের জন্য সেরা সমাধান।
                     </p>
                     <button 
-                        onClick={onStart}
-                        className="group bg-primary hover:bg-sky-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-primary/50 transition-all flex items-center justify-center gap-3 mx-auto"
+                        onClick={onRegister}
+                        className="group bg-primary hover:bg-sky-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-primary/50 transition-all flex items-center justify-center gap-3 mx-auto mb-8"
                     >
                         এখনই শুরু করুন <ArrowRight className="group-hover:translate-x-1 transition-transform"/>
                     </button>
+                    
+                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-2xl max-w-md mx-auto text-left flex items-start gap-4">
+                        <div className="bg-green-500 p-2 rounded-full mt-1 shrink-0">
+                            <Download size={20} className="text-white" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-white mb-1 text-lg">অফলাইন সুবিধা!</h3>
+                            <p className="text-slate-300 text-sm leading-relaxed">এই ওয়েবসাইটটি আপনার মোবাইলে ওয়েব অ্যাপ (PWA) হিসেবে ইন্সটল করে নিতে পারেন। ব্রাউজারের মেনু থেকে "Add to Home screen" বা "Install" এ ক্লিক করুন।</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -312,7 +327,7 @@ const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick:
                         <h2 className="text-2xl font-bold mb-2 font-baloo">আপনার মেস ম্যানেজ করতে প্রস্তুত?</h2>
                         <p className="text-slate-400">আজই রেজিস্ট্রেশন করুন এবং ডিজিটাল অভিজ্ঞতা নিন।</p>
                     </div>
-                    <button onClick={onStart} className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+                    <button onClick={onRegister} className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
                         ফ্রি-তে ব্যবহার করুন
                     </button>
                 </div>
@@ -1704,9 +1719,9 @@ const BorderDetailModal = ({
 };
 
 // Login/Register Component
-const LoginRegister = ({ setManager, setBorderView }: any) => {
-  const [isRegister, setIsRegister] = useState(false);
-  const [activeTab, setActiveTab] = useState<'manager' | 'border'>('border');
+const LoginRegister = ({ setManager, setBorderView, onBack, initialIsRegister }: any) => {
+  const [isRegister, setIsRegister] = useState(initialIsRegister || false);
+  const [activeTab, setActiveTab] = useState<'manager' | 'border'>(initialIsRegister ? 'manager' : 'border');
   const [showPass, setShowPass] = useState(false);
   
   const [regForm, setRegForm] = useState<Manager>({ username: '', password: '', name: '', messName: '', year: 2025, month: MONTHS[0], mobile: '', mealRate: 0, borderUsername: '', borderPassword: '', bloodGroup: '' });
@@ -1766,8 +1781,13 @@ const LoginRegister = ({ setManager, setBorderView }: any) => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-100 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4">
-      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-xl max-w-md w-full animate-fade-in">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-100 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4 relative">
+      {onBack && (
+        <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-md text-slate-700 dark:text-slate-300 hover:text-primary transition-colors font-bold text-sm">
+          <ArrowLeft size={16} /> হোম পেজ
+        </button>
+      )}
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-xl max-w-md w-full animate-fade-in mt-10 md:mt-0">
         <h1 className="text-3xl font-bold text-center text-primary mb-6 font-baloo">মেস ম্যানেজার প্রো</h1>
         <div className="flex mb-6 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
           <button className={`flex-1 py-2 rounded font-bold ${activeTab === 'border' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-500'}`} onClick={() => setActiveTab('border')}>বর্ডার</button>
@@ -1820,6 +1840,7 @@ const LoginRegister = ({ setManager, setBorderView }: any) => {
 
 const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
+  const [initialIsRegister, setInitialIsRegister] = useState(false);
   const [manager, setManager] = useState<Manager | null>(null);
   const [borderView, setBorderView] = useState<Border | null>(null);
   const [managerInfoForBorder, setManagerInfoForBorder] = useState<Manager | null>(null);
@@ -2096,7 +2117,7 @@ const App: React.FC = () => {
 
         {/* Conditional Views */}
         {!hasStarted ? (
-            <LandingPage onStart={() => setHasStarted(true)} onDevClick={() => setShowDevModal(true)} />
+            <LandingPage onStart={() => { setHasStarted(true); setInitialIsRegister(false); }} onRegister={() => { setHasStarted(true); setInitialIsRegister(true); }} onDevClick={() => setShowDevModal(true)} />
         ) : (
             <>
                 {borderView && managerInfoForBorder ? (
@@ -2249,10 +2270,19 @@ const App: React.FC = () => {
                                       <div>
                                           <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">ম্যানেজার তথ্য</p>
                                           <h3 className="font-bold text-slate-800 dark:text-white">{managerInfoForBorder.name}</h3>
-                                          <div className="text-sm text-slate-600 dark:text-slate-300 flex gap-4">
+                                          <div className="text-sm text-slate-600 dark:text-slate-300 flex gap-4 mb-2">
                                               <span>📞 {managerInfoForBorder.mobile}</span>
                                               {managerInfoForBorder.bloodGroup && <span className="text-red-500 font-bold">🩸 {managerInfoForBorder.bloodGroup}</span>}
                                           </div>
+                                          {(managerInfoForBorder.khalaName || managerInfoForBorder.khalaMobile) && (
+                                              <div className="mt-2 pt-2 border-t border-blue-100 dark:border-slate-700">
+                                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase">খালার তথ্য</p>
+                                                <h3 className="font-bold text-slate-800 dark:text-white text-sm">{managerInfoForBorder.khalaName || 'নাম নেই'}</h3>
+                                                <div className="text-sm text-slate-600 dark:text-slate-300 flex gap-4">
+                                                    <span>📞 {managerInfoForBorder.khalaMobile || '-'}</span>
+                                                </div>
+                                              </div>
+                                          )}
                                       </div>
                                   </div>
 
@@ -2668,6 +2698,10 @@ const App: React.FC = () => {
                                                    <input placeholder="মোবাইল" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.mobile} onChange={e => setProfileForm({...profileForm, mobile: e.target.value})} />
                                                    <input placeholder="রক্তের গ্রুপ" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.bloodGroup || ''} onChange={e => setProfileForm({...profileForm, bloodGroup: e.target.value})} />
                                                    
+                                                   <label className="text-xs font-bold block mt-4 dark:text-white text-emerald-600">খালার তথ্য (ঐচ্ছিক)</label>
+                                                   <input placeholder="খালার নাম" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.khalaName || ''} onChange={e => setProfileForm({...profileForm, khalaName: e.target.value})} />
+                                                   <input placeholder="খালার মোবাইল নাম্বার" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.khalaMobile || ''} onChange={e => setProfileForm({...profileForm, khalaMobile: e.target.value})} />
+
                                                    <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded mt-3 border dark:border-slate-600">
                                                        <label className="text-xs font-bold block mb-2 dark:text-white text-slate-800">প্রোফাইল ছবি (Imgur Link)</label>
                                                        <div className="text-[10px] text-slate-600 dark:text-slate-400 mb-3 space-y-1">
@@ -2702,6 +2736,8 @@ const App: React.FC = () => {
                                                    <p>মেস: <b>{manager.messName}</b></p>
                                                    <p>মোবাইল: <b>{manager.mobile}</b></p>
                                                    <p>রক্তের গ্রুপ: <b>{manager.bloodGroup || '-'}</b></p>
+                                                   {manager.khalaName && <p>খালার নাম: <b>{manager.khalaName}</b></p>}
+                                                   {manager.khalaMobile && <p>খালার মোবাইল: <b>{manager.khalaMobile}</b></p>}
                                                </div>
                                            )}
                                         </div>
