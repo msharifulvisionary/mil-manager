@@ -70,9 +70,8 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
   // --- Calculation Helpers ---
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const getTotalMeals = (b: Border) => {
-    const actual = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
-    const fixed = manager.fixedMeal;
-    return fixed ? Math.max(actual, fixed) : actual;
+    const actualMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+    return (manager?.fixedMealCount && manager.fixedMealCount > 0) ? Math.max(actualMeals, manager.fixedMealCount) : actualMeals;
   };
   const getTotalRice = (b: Border) => {
     const dailyRice = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
@@ -404,18 +403,13 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                 <span>বর্ডারদের মোট খাওয়া:</span>
                 <span className="font-bold font-mono">-{borders.reduce((acc, b) => acc + getTotalRice(b), 0).toFixed(2)} পট</span>
             </div>
-            <div className="flex justify-between mb-2 text-red-700">
-                <span>অতিরিক্ত চাল খরচ:</span>
-                <span className="font-bold font-mono">-{(extraRice?.reduce((sum, e) => sum + e.amount, 0) || 0).toFixed(2)} পট</span>
-            </div>
             <div className="flex justify-between border-t border-gray-400 pt-2 text-green-800 text-lg">
                 <span className="font-bold">বর্তমানে অবশিষ্ট চাল:</span>
                 <span className="font-bold font-mono">
                     {(
                         (manager.prevRiceBalance || 0) + 
                         borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0) - 
-                        borders.reduce((acc, b) => acc + getTotalRice(b), 0) - 
-                        (extraRice?.reduce((sum, e) => sum + e.amount, 0) || 0)
+                        borders.reduce((acc, b) => acc + getTotalRice(b), 0)
                     ).toFixed(2)} পট
                 </span>
             </div>
