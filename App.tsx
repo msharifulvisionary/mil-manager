@@ -780,7 +780,11 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
 const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: Manager, borders: Border[], expenses: Expense[], extraRice?: ExtraRice[] }) => {
     // ... (No changes here, keeping existing code) ...
     const totalMoney = borders.reduce((acc, b) => acc + b.deposits.reduce((s, d) => s + d.amount, 0), 0);
-    const totalMeals = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0), 0);
+    const totalMeals = borders.reduce((acc, b) => {
+        const actual = Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0);
+        const fixed = manager?.fixedMeal;
+        return acc + (fixed ? Math.max(actual, fixed) : actual);
+    }, 0);
     const totalRiceDeposited = borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0);
     const totalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0) + (b.additionalRicePots || 0) + (manager.globalAdditionalRicePots || 0), 0);
     const totalExtraRice = extraRice?.reduce((sum, er) => sum + er.amount, 0) || 0;
@@ -809,8 +813,8 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
     const extraCost = expenses.filter(e => e.type === 'extra').reduce((acc, e) => acc + e.amount, 0);
     const totalCost = marketCost + extraCost;
     const currentCashBalance = totalMoney - totalCost;
-    // Updated Rice Balance Logic: Total Deposit - Total Consumed + Previous Month Balance - Extra Rice Used
-    const currentRiceBalance = totalRiceDeposited - totalRiceConsumed + (manager.prevRiceBalance || 0) - totalExtraRice;
+    // Updated Rice Balance Logic: Total Deposit + Previous Month Balance - Total Consumed (Extra rice NOT deducted per user request)
+    const currentRiceBalance = totalRiceDeposited + (manager.prevRiceBalance || 0) - totalRiceConsumed;
     
     // Calc Meal Rate
     const calcMealRate = totalMeals > 0 ? (marketCost / totalMeals) : 0;
@@ -1054,18 +1058,29 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: M
 };
 
 // 2. Border Management List (Updated with Balance & Shuffle)
-const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, expenses }: any) => {
+const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, expenses, manager }: any) => {
     const [name, setName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
 
     // Calculate balance logic
     const getBalance = (b: Border) => {
         const totalDeposit = b.deposits.reduce((acc, curr) => acc + curr.amount, 0);
-        const totalMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+        const actualMeals = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.meals || 0), 0);
+        const fixed = manager?.fixedMeal;
+        const finalMeals = fixed ? Math.max(actualMeals, fixed) : actualMeals;
         // Explicit logic: Meal Cost + Personal Extra + Guest Cost (Shared Extra EXCLUDED per request)
-        const mealCost = Math.round(totalMeals * mealRate);
+        const mealCost = Math.round(finalMeals * mealRate);
         const totalCost = mealCost + b.extraCost + b.guestCost;
         return (totalDeposit - totalCost).toFixed(0);
+    }
+
+    const getRiceBalance = (b: Border) => {
+        const totalRiceDeposit = b.riceDeposits.reduce((acc, curr) => acc + curr.amount, 0);
+        const dailyRice = Object.values(b.dailyUsage).reduce((acc, curr) => acc + (curr.rice || 0), 0);
+        const borderExtra = b.additionalRicePots || 0;
+        const globalExtra = manager?.globalAdditionalRicePots || 0;
+        const totalRiceConsumed = dailyRice + borderExtra + globalExtra;
+        return (totalRiceDeposit - totalRiceConsumed).toFixed(1);
     }
 
     const moveBorder = (index: number, direction: 'up' | 'down') => {
@@ -1101,7 +1116,8 @@ const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, exp
                             <th className="p-3">নাম & তথ্য</th>
                             <th className="p-3 text-right">টাকা জমা</th>
                             <th className="p-3 text-right">চাল জমা</th>
-                            <th className="p-3 text-right">অবশিষ্ট টাকা</th>
+                            <th className="p-3 text-right">টাকা ব্যালেন্স</th>
+                            <th className="p-3 text-right">চাল ব্যালেন্স</th>
                             <th className="p-3 text-center">অ্যাকশন</th>
                         </tr>
                     </thead>
@@ -1122,8 +1138,9 @@ const BorderList = ({ borders, onAdd, onEdit, onDelete, onReorder, mealRate, exp
                                     </div>
                                 </td>
                                 <td className="p-3 text-right font-mono text-emerald-600 dark:text-emerald-400 font-bold">{b.deposits.reduce((acc, curr) => acc + curr.amount, 0)} ৳</td>
-                                <td className="p-3 text-right font-mono text-orange-600 dark:text-orange-400 font-bold">{b.riceDeposits.reduce((acc, curr) => acc + curr.amount, 0)} পট</td>
+                                <td className="p-3 text-right font-mono text-orange-600 dark:text-orange-400 font-bold">{b.riceDeposits.reduce((acc, curr) => acc + (curr.amount||0), 0)} পট</td>
                                 <td className={`p-3 text-right font-mono font-bold ${Number(getBalance(b)) < 0 ? 'text-red-500' : 'text-green-600'}`}>{getBalance(b)} ৳</td>
+                                <td className={`p-3 text-right font-mono font-bold ${Number(getRiceBalance(b)) < 0 ? 'text-red-500' : 'text-orange-600'}`}>{getRiceBalance(b)} পট</td>
                                 <td className="p-3 text-center flex justify-center gap-2">
                                     <button onClick={() => onEdit(b)} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors" title="এডিট">
                                         <Edit2 size={16} />
@@ -2478,7 +2495,7 @@ const App: React.FC = () => {
                                                 <ManagerOverview manager={manager} borders={borders} expenses={expenses} extraRice={extraRice} />
                                             </div>
                                         )}
-                                {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={manager.mealRate} expenses={expenses} /></div>}
+                                {activeTab === 'borders' && <div className="animate-fade-in"><BorderList borders={borders} onAdd={handleAddBorder} onEdit={setEditingBorder} onDelete={handleDeleteBorder} onReorder={handleReorderBorders} mealRate={calcMealRate} expenses={expenses} manager={manager} /></div>}
                                 {activeTab === 'schedule' && <div className="animate-fade-in"><BazaarSchedulePage manager={manager} borders={borders} isManager={true} currentUser={undefined} onUpdate={(m) => setManager(m)} /></div>}
                                 {activeTab === 'daily' && <div className="animate-fade-in"><DailyEntry borders={borders} onSave={handleDailySave} manager={manager} onUpdateManager={(data: any) => {
                                     const updated = { ...manager, ...data };
