@@ -2372,31 +2372,31 @@ const App: React.FC = () => {
                                         <>
                                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                               <div className="bg-emerald-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                                  <h3 className="text-emerald-100 text-xs">মোট জমা টাকা</h3>
+                                                  <h3 className="text-emerald-100 text-xs">আপনার মোট জমা টাকা</h3>
                                                   <p className="text-2xl font-bold font-baloo">{bTotalDeposit} ৳</p>
                                                   <DollarSign className="absolute bottom-2 right-2 opacity-20"/>
                                               </div>
                                               <div className="bg-orange-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                                  <h3 className="text-orange-100 text-xs">মোট জমা চাল</h3>
+                                                  <h3 className="text-orange-100 text-xs">আপনার মোট জমা চাল</h3>
                                                   <p className="text-2xl font-bold font-baloo">{borderView.riceDeposits.reduce((a: number,b: RiceDeposit) => a + (Number(b.amount)||0), 0)} পট</p>
                                                   <Utensils className="absolute bottom-2 right-2 opacity-20"/>
                                               </div>
                                               <div className={`p-4 rounded-xl shadow-lg text-white relative overflow-hidden ${bBalance < 0 ? 'bg-red-600' : 'bg-blue-600'}`}>
-                                                  <h3 className="text-white/80 text-xs">বর্তমান ব্যালেন্স</h3>
+                                                  <h3 className="text-white/80 text-xs">আপনার বর্তমান অবশিষ্ট ব্যালেন্স</h3>
                                                   <p className="text-2xl font-bold font-baloo mt-1">{bBalance.toFixed(0)} ৳</p>
                                                   <p className="text-[10px] bg-white/20 inline-block px-1 rounded mt-1">মিল রেট: {bMealRate} ৳</p>
                                               </div>
                                               <div className="bg-yellow-600 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                                                  <h3 className="text-yellow-100 text-xs">চাল খাওয়া</h3>
+                                                  <h3 className="text-yellow-100 text-xs">আপনার মোট চাল খাওয়া</h3>
                                                   <p className="text-2xl font-bold font-baloo">{bTotalRice.toFixed(1)} পট</p>
                                               </div>
                                           </div>
 
                                           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border border-slate-200 dark:border-slate-700">
-                                              <h3 className="font-bold border-b dark:border-slate-700 pb-3 mb-4 text-slate-800 dark:text-white">খরচের বিস্তারিত</h3>
+                                              <h3 className="font-bold border-b dark:border-slate-700 pb-3 mb-4 text-slate-800 dark:text-white">আপনার খরচের বিস্তারিত</h3>
                                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
                                                   <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">মিল সংখ্যা</p>
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400">আপনার মোট মিল সংখ্যা</p>
                                                       <p className="font-bold font-baloo dark:text-white">{bTotalMeals}</p>
                                                       {managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0 && <p className="text-[10px] text-indigo-500">ফিক্সড: {managerInfoForBorder.fixedMealCount}</p>}
                                                   </div>
@@ -2406,26 +2406,26 @@ const App: React.FC = () => {
                                                   </div>
                                                   {/* Meal Cost Section */}
                                                   <div className="p-3 bg-blue-50 dark:bg-slate-700 rounded border border-blue-100 dark:border-slate-600">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">মিল খরচ</p>
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400">আপনার মোট মিল খরচ</p>
                                                       <p className="font-bold font-baloo text-blue-700 dark:text-blue-400">{bMealCost.toFixed(0)} ৳</p>
                                                   </div>
                                                   <div className="p-3 bg-purple-50 dark:bg-slate-700 rounded">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">গেস্ট খরচ</p>
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400">আপনার গেস্ট খরচ</p>
                                                       <p className="font-bold font-baloo text-purple-600 dark:text-purple-400">{borderView.guestCost} ৳</p>
                                                   </div>
                                                   <div className="p-3 bg-red-50 dark:bg-slate-700 rounded">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত খরচ</p>
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400">আপনার মোট অতিরিক্ত খরচ</p>
                                                       <p className="font-bold font-baloo text-red-600 dark:text-red-400">{borderView.extraCost} ৳</p>
                                                   </div>
                                                   <div className="p-3 bg-orange-50 dark:bg-slate-700 rounded">
-                                                      <p className="text-xs text-slate-500 dark:text-slate-400">অতিরিক্ত চাল</p>
+                                                      <p className="text-xs text-slate-500 dark:text-slate-400">আপনার অতিরিক্ত চালের ভাগ</p>
                                                       <p className="font-bold font-baloo text-orange-600 dark:text-orange-400">{borderExtraRice.toFixed(1)} পট</p>
                                                   </div>
                                                   
                                               </div>
                                               <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-900 rounded text-center">
                                                   <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                                                      মোট খরচ = {bMealCost.toFixed(0)} (মিল) + {borderView.guestCost} (গেস্ট) + {borderView.extraCost} (অতিরিক্ত) = <span className="text-red-600 dark:text-red-400 text-lg">{bTotalCost.toFixed(0)} ৳</span>
+                                                      আপনার সর্বমোট খরচ = {bMealCost.toFixed(0)} (মিল) + {borderView.guestCost} (গেস্ট) + {borderView.extraCost} (অতিরিক্ত) = <span className="text-red-600 dark:text-red-400 text-lg">{bTotalCost.toFixed(0)} ৳</span>
                                                   </p>
                                                   
                                               </div>
@@ -2437,7 +2437,7 @@ const App: React.FC = () => {
                                   {/* Transaction History Tables */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border dark:border-slate-700">
-                                           <h3 className="font-bold border-b pb-3 mb-4 text-emerald-600 dark:text-emerald-400">টাকা জমা ইতিহাস</h3>
+                                           <h3 className="font-bold border-b pb-3 mb-4 text-emerald-600 dark:text-emerald-400">আপনার টাকা জমা দেওয়ার ইতিহাস</h3>
                                            <div className="max-h-60 overflow-y-auto">
                                               <table className="w-full text-sm">
                                                   <thead className="bg-slate-50 dark:bg-slate-700 text-xs"><tr><th className="p-2 text-left dark:text-slate-300">তারিখ</th><th className="p-2 text-right dark:text-slate-300">পরিমাণ</th></tr></thead>
@@ -2448,7 +2448,7 @@ const App: React.FC = () => {
                                            </div>
                                       </div>
                                       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border dark:border-slate-700">
-                                           <h3 className="font-bold border-b pb-3 mb-4 text-orange-600 dark:text-orange-400">চাল জমা ইতিহাস</h3>
+                                           <h3 className="font-bold border-b pb-3 mb-4 text-orange-600 dark:text-orange-400">আপনার চাল জমা দেওয়ার ইতিহাস</h3>
                                            <div className="max-h-60 overflow-y-auto">
                                               <table className="w-full text-sm">
                                                   <thead className="bg-slate-50 dark:bg-slate-700 text-xs"><tr><th className="p-2 text-left dark:text-slate-300">তারিখ/ধরণ</th><th className="p-2 text-right dark:text-slate-300">পরিমাণ</th></tr></thead>
@@ -2461,19 +2461,17 @@ const App: React.FC = () => {
                                   </div>
                              </div>
                              
-                             
-                         )}
-                                          {/* Stats Grid for Border (Like Manager) */}
+                                  {/* Stats Grid for Border (Like Manager) */}
                                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
-                                                   <h3 className="text-blue-100 text-sm font-medium">মোট বর্ডার</h3>
+                                                   <h3 className="text-blue-100 text-sm font-medium">মেসের মোট বর্ডার</h3>
                                                    <p className="text-3xl font-bold mt-1 font-baloo">{borders.length} জন</p>
                                                    <Users className="absolute right-3 bottom-3 text-white/20" size={40} />
                                                </div>
                                                <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
-                                                   <h3 className="text-green-100 text-sm font-medium">বর্তমান ক্যাশ</h3>
+                                                   <h3 className="text-green-100 text-sm font-medium">মিলের বর্তমান ক্যাশ</h3>
                                                    <p className="text-3xl font-bold mt-1 font-baloo">{calcCurrentCashBalance} ৳</p>
-                                                   <p className="text-[10px] mt-1 opacity-80">মোট জমা: {calcTotalMoney} | খরচ: {calcTotalCost}</p>
+                                                   <p className="text-[10px] mt-1 opacity-80">মোট জমা টাকা: {calcTotalMoney} |মোট খরচ: {calcTotalCost}</p>
                                                    <DollarSign className="absolute right-3 bottom-3 text-white/20" size={40} />
                                                </div>
                                                <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
@@ -2482,7 +2480,7 @@ const App: React.FC = () => {
                                                    <Utensils className="absolute right-3 bottom-3 text-white/20" size={40} />
                                                </div>
                                                <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border border-slate-200 dark:border-slate-700">
-                                                   <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">মোট মিল (বর্ডার)</h3>
+                                                   <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">মোট মিল</h3>
                                                    <p className="text-3xl font-bold mt-1 text-slate-800 dark:text-white font-baloo">{calcTotalMeals}</p>
                                                </div>
                                                
@@ -2491,15 +2489,15 @@ const App: React.FC = () => {
                                                    <h4 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-3">বাজার ও মিল রেট সারাংশ</h4>
                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                       <div>
-                                                          <p className="text-xs text-slate-500 dark:text-slate-400">সাধারণ বাজার</p>
+                                                          <p className="text-xs text-slate-500 dark:text-slate-400">সাধারণ বাজার খরচ</p>
                                                           <p className="text-xl font-bold text-slate-800 dark:text-white font-baloo">{calcMarketCost} ৳</p>
                                                       </div>
                                                       <div>
-                                                          <p className="text-xs text-red-500">অতিরিক্ত বাজার</p>
+                                                          <p className="text-xs text-red-500">অতিরিক্ত বাজার খরচ</p>
                                                           <p className="text-xl font-bold text-red-600 font-baloo">{calcExtraCost} ৳</p>
                                                       </div>
                                                       <div>
-                                                          <p className="text-xs text-blue-600 font-bold">মিল রেট (রান)</p>
+                                                          <p className="text-xs text-blue-600 font-bold">মিল রেট (রানিং)</p>
                                                           <p className="text-xl font-bold text-blue-700 font-baloo">{dynamicMealRate.toFixed(2)} ৳</p>
                                                       </div>
                                                       <div>
@@ -2509,6 +2507,12 @@ const App: React.FC = () => {
                                                    </div>
                                                </div>
                                           </div>
+
+                             
+                             
+                         )}
+                         
+                         
 
                          {/* ... (Other Border Tabs remain mostly same, just ensuring data flows) ... */}
                          {activeBorderTab === 'meals' && (
