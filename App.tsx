@@ -515,7 +515,7 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
                     <thead className="bg-slate-800 text-white">
                         <tr>
                             <th className="p-3 w-1/4">তারিখ & বার</th>
-                            <th className="p-3 w-1/2">বাজারকারী টিম</th>
+                            <th className="p-3 w-1/2">বাজারকারী</th>
                             {isManager && <th className="p-3 w-1/4 text-center">অ্যাকশন</th>}
                         </tr>
                     </thead>
@@ -649,13 +649,13 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                 <div className="flex flex-wrap items-center gap-4">
                     {/* Previous Rice Input */}
                     <div className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-900/30 p-2 rounded border border-yellow-200 dark:border-yellow-800">
-                        <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">গত মাসের চাল (পট):</span>
+                        <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">গত মাসের অবশিষ্ট চাল (পট):</span>
                         <input type="number" step="0.1" value={prevRice} onChange={(e) => setPrevRice(parseFloat(e.target.value)||0)} className="w-16 p-1 border rounded text-center dark:bg-slate-700 dark:text-white font-bold" />
                     </div>
 
                     {/* Rice Diff Config */}
                     <div className="flex gap-2 text-xs items-center bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                        <span className="font-bold">চাল পার্থক্য:</span>
+                        <span className="font-bold">চালের পার্থক্য:</span>
                         <div className="flex items-center gap-1">সকাল <input type="number" value={riceConfig.morningDiff} onChange={e => handleConfigChange('morningDiff', e.target.value)} className="w-10 p-1 border rounded text-center" /></div>
                         <div className="flex items-center gap-1">দুপুর <input type="number" value={riceConfig.lunchDiff} onChange={e => handleConfigChange('lunchDiff', e.target.value)} className="w-10 p-1 border rounded text-center" /></div>
                         <div className="flex items-center gap-1">রাত <input type="number" value={riceConfig.dinnerDiff} onChange={e => handleConfigChange('dinnerDiff', e.target.value)} className="w-10 p-1 border rounded text-center" /></div>
@@ -1028,7 +1028,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder
                  <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
                      <h3 className="text-green-100 text-sm font-medium">বর্তমান ক্যাশ</h3>
                      <p className="text-3xl font-bold mt-1 font-baloo">{currentCashBalance} ৳</p>
-                     <p className="text-[10px] mt-1 opacity-80">মোট জমা: {totalMoney} | খরচ: {totalCost}</p>
+                     <p className="text-[10px] mt-1 opacity-80">মোট জমা: {totalMoney} |মোট খরচ: {totalCost}</p>
                      <DollarSign className="absolute right-3 bottom-3 text-white/20" size={40} />
                  </div>
                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-xl shadow-lg relative overflow-hidden">
@@ -1055,7 +1055,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder
                             <p className="text-xl font-bold text-red-600 font-baloo">{extraCost} ৳</p>
                         </div>
                         <div>
-                            <p className="text-xs text-blue-600 font-bold">মিল রেট (রান)</p>
+                            <p className="text-xs text-blue-600 font-bold">মিল রেট (রানিং)</p>
                             <p className="text-xl font-bold text-blue-700 font-baloo">{calcMealRate.toFixed(2)} ৳</p>
                         </div>
                         <div>
@@ -1068,7 +1068,7 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder
                  {/* System Daily Stats (With Date Navigation) */}
                  <div className="col-span-2 md:col-span-3 bg-slate-800 text-white p-4 rounded-xl shadow border border-slate-600">
                     <div className="flex justify-between items-center mb-3 border-b border-slate-600 pb-2">
-                        <h4 className="text-slate-300 text-xs font-bold uppercase">সিস্টেম ডেইলি হিসাব ({viewDay} তারিখ)</h4>
+                        <h4 className="text-slate-300 text-xs font-bold uppercase">ডেইলি মিল হিসাব ({viewDay} তারিখ)</h4>
                         <div className="flex items-center gap-2">
                             <button onClick={(e) => { e.stopPropagation(); handlePrevDay(); }} className="p-1 hover:bg-slate-700 rounded transition-colors">
                                 <ArrowUp size={16} className="-rotate-90" />
@@ -1490,7 +1490,7 @@ const MarketView = ({ expenses, onAdd, onDelete, onUpdate, readOnly = false }: a
                                     <td className="py-3 text-slate-600 dark:text-slate-300 font-baloo">{formatBengaliDate(e.date)}</td>
                                     <td className="py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${e.type === 'extra' ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}>
-                                            {e.type === 'extra' ? ' অতিরিক্ত বাজার' : 'সাধারণ বাজার'}
+                                            {e.type ==='extra'?'অতিরিক্ত বাজার' :'সাধারণ বাজার'}
                                         </span>
                                     </td>
                                     <td className="py-3 font-medium dark:text-slate-200">{e.shopper}</td>
@@ -2301,7 +2301,7 @@ const App: React.FC = () => {
                                                               <td className="p-2 font-bold border dark:border-slate-600 bg-blue-50 dark:bg-blue-900/20">
                                                                   {((managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0) ? Math.max(Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0), managerInfoForBorder.fixedMealCount) : Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0))}
                                                                   {managerInfoForBorder?.fixedMealCount && managerInfoForBorder.fixedMealCount > 0 && Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0) < managerInfoForBorder.fixedMealCount ? (
-                                                                      <div className="text-[10px] text-slate-500 font-normal mt-0.5">আসল: {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)}</div>
+                                                                     <div className="text-[10px] text-slate-500 font-normal mt-0.5">({Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.meals || 0), 0)})</div>
                                                                   ) : null}
                                                               </td>
                                                           </tr>
@@ -2551,7 +2551,7 @@ const App: React.FC = () => {
                                         {id: 'schedule', label: 'বাজার লিস্ট', icon: CalendarDays},
                                         {id: 'iftaar', label: 'ইফতার', icon: Utensils},
                                         {id: 'daily', label: 'দৈনিক মিল', icon: Calendar},
-                                        {id: 'system', label: 'বাবুর্চি হিসাব', icon: ClipboardList},
+                                        {id: 'system', label: 'দৈনিক মিল ও চাল হিসাব', icon: ClipboardList},
                                         {id: 'market', label: 'বাজার খরচ', icon: ShoppingCart},
                                         {id: 'reports', label: 'রিপোর্ট', icon: FileText},
                                         {id: 'settings', label: 'সেটিংস', icon: Settings},
