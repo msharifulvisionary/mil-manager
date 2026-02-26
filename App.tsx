@@ -4,7 +4,7 @@ import {
   Users, FileText, ShoppingCart, Settings, LogOut, 
   Trash2, PlusCircle, Edit2, Save, X, Activity, DollarSign, Calendar, ChevronRight,
   Copy, UserCircle, Phone, Droplet, LayoutDashboard, Utensils, Eye, EyeOff, List, ArrowRight, ShieldCheck, ClipboardList,
-  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown, Star, ArrowLeft
+  Download, CheckCircle, MessageCircle, Mail, Globe, Share2, Facebook, CalendarDays, UserPlus, Moon, Sun, ArrowUp, ArrowDown, Star
 } from 'lucide-react';
 
 import { Manager, Border, Expense, MONTHS, YEARS, Deposit, RiceDeposit, SystemDailyEntry, BazaarShift, BazaarShopper, RiceConfig, ExtraRice } from './types';
@@ -237,7 +237,7 @@ const PWAInstallPrompt = () => {
 };
 
 // --- LANDING PAGE ---
-const LandingPage = ({ onStart, onRegister, onDevClick }: { onStart: () => void, onRegister: () => void, onDevClick: () => void }) => {
+const LandingPage = ({ onStart, onDevClick }: { onStart: () => void, onDevClick: () => void }) => {
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans transition-colors duration-300">
             {/* Navbar */}
@@ -246,14 +246,9 @@ const LandingPage = ({ onStart, onRegister, onDevClick }: { onStart: () => void,
                     <div className="flex items-center gap-2 text-primary font-bold text-xl font-baloo">
                         <Utensils size={28} /> মেস ম্যানেজার
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button onClick={onStart} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-600">
-                            লগইন
-                        </button>
-                        <button onClick={onRegister} className="bg-slate-900 dark:bg-primary text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-800 transition-colors hidden sm:block">
-                            রেজিস্ট্রেশন
-                        </button>
-                    </div>
+                    <button onClick={() => onStart(false)} className="bg-slate-900 dark:bg-primary text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-800 transition-colors">
+                        লগইন / রেজিস্টার
+                    </button>
                 </div>
             </nav>
 
@@ -276,21 +271,11 @@ const LandingPage = ({ onStart, onRegister, onDevClick }: { onStart: () => void,
                         মিল, বাজার, টাকা জমা এবং যাবতীয় খরচের হিসাব রাখার ঝামেলা থেকে মুক্তি পান। অটোমেটেড রিপোর্ট জেনারেশন এবং স্বচ্ছ হিসাবের জন্য সেরা সমাধান।
                     </p>
                     <button 
-                        onClick={onRegister}
-                        className="group bg-primary hover:bg-sky-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-primary/50 transition-all flex items-center justify-center gap-3 mx-auto mb-8"
+                        onClick={() => onStart(true)}
+                        className="group bg-primary hover:bg-sky-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-primary/50 transition-all flex items-center justify-center gap-3 mx-auto"
                     >
                         এখনই শুরু করুন <ArrowRight className="group-hover:translate-x-1 transition-transform"/>
                     </button>
-                    
-                    <div className="bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-2xl max-w-md mx-auto text-left flex items-start gap-4">
-                        <div className="bg-green-500 p-2 rounded-full mt-1 shrink-0">
-                            <Download size={20} className="text-white" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-white mb-1 text-lg">অফলাইন সুবিধা!</h3>
-                            <p className="text-slate-300 text-sm leading-relaxed">এই ওয়েবসাইটটি আপনার মোবাইলে ওয়েব অ্যাপ (PWA) হিসেবে ইন্সটল করে নিতে পারেন। ব্রাউজারের মেনু থেকে "Add to Home screen" বা "Install" এ ক্লিক করুন।</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -298,28 +283,67 @@ const LandingPage = ({ onStart, onRegister, onDevClick }: { onStart: () => void,
             <div className="py-20 px-4 bg-white dark:bg-slate-900">
                 <div className="container mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-4 font-baloo">কেন ব্যবহার করবেন?</h2>
+                        <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-4 font-baloo">বিস্তারিত ফিচারসমূহ</h2>
                         <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {[
-                            { icon: Calendar, title: "সহজ মিল ম্যানেজমেন্ট", desc: "প্রতিদিনের মিল এবং চালের হিসাব খুব সহজেই এন্ট্রি এবং আপডেট করার সুবিধা।" },
-                            { icon: FileText, title: "অটোমেটেড রিপোর্ট", desc: "মাস শেষে এক ক্লিকেই সম্পূর্ণ মাসের আয়-ব্যয়ের পিডিএফ এবং ইমেজ রিপোর্ট।" },
-                            { icon: ShieldCheck, title: "স্বচ্ছ ও নিরাপদ", desc: "ম্যানেজার এবং বর্ডার উভয়ের জন্যই আলাদা ড্যাশবোর্ড এবং স্বচ্ছ হিসাব ব্যবস্থা।" }
-                        ].map((item, idx) => (
-                            <div key={idx} className="bg-slate-50 dark:bg-slate-800 p-8 rounded-2xl hover:shadow-xl transition-shadow border border-slate-100 dark:border-slate-700 text-center group">
-                                <div className="w-16 h-16 bg-white dark:bg-slate-700 rounded-full shadow-md flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                                    <item.icon size={32} className="text-primary" />
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">{item.title}</h3>
-                                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+                        {/* Manager Features */}
+                        <div className="bg-slate-50 dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-blue-100 dark:border-slate-700 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full z-0"></div>
+                            <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-6 font-baloo flex items-center gap-2 relative z-10"><Users size={28}/> ম্যানেজার যা করতে পারবেন:</h3>
+                            <ul className="space-y-4 text-slate-700 dark:text-slate-300 relative z-10">
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>সহজেই বর্ডার যুক্ত এবং তাদের তথ্য পরিচালনা করতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>দৈনিক বাজার খরচ, চাল এবং মিলের এন্ট্রি করতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>স্বয়ংক্রিয়ভাবে মাসিক মিল রেট এবং বর্ডারদের খরচের হিসাব বের করতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>বর্ডারদের জন্য নির্দিষ্ট বাজার ডিউটি বা রুটিন তৈরি করতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>এক ক্লিকে সম্পূর্ণ মাসের স্বচ্ছ রিপোর্ট জেনারেট করে পিডিএফ বা ইমেজ আকারে শেয়ার করতে পারবেন।</span></li>
+                            </ul>
+                        </div>
+
+                        {/* Border Features */}
+                        <div className="bg-slate-50 dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-emerald-100 dark:border-slate-700 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-full z-0"></div>
+                            <h3 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-6 font-baloo flex items-center gap-2 relative z-10"><UserCircle size={28}/> বর্ডার যা করতে পারবেন:</h3>
+                            <ul className="space-y-4 text-slate-700 dark:text-slate-300 relative z-10">
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>নিজের মোবাইল থেকেই ড্যাশবোর্ডে লগইন করে নিজের হিসাব দেখতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>প্রতিদিন কত মিল ও চাল খরচ হয়েছে তার আপডেট দেখতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>নিজের মোট জমা, খরচ এবং বর্তমান ব্যালেন্স যেকোনো সময় চেক করতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>বাজারের রুটিন এবং নিজের ডিউটি ডেট আগে থেকেই জানতে পারবেন।</span></li>
+                                <li className="flex items-start gap-3"><CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={20}/> <span>সম্পূর্ণ মেসের প্রতিদিনের বাজার খরচের লিস্ট দেখতে পারবেন।</span></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
             
+            {/* Download App Section */}
+            <div className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white py-16 px-4">
+                <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="md:w-2/3 text-center md:text-left">
+                        <h2 className="text-3xl font-bold mb-4 font-baloo flex items-center justify-center md:justify-start gap-3"><Globe size={32}/> ওয়েব অ্যাপ হিসেবে ইনস্টল করুন!</h2>
+                        <p className="text-lg text-sky-100 mb-6">বারবার ব্রাউজারে ঢোকার ঝামেলা নেই। আপনার মোবাইলের হোমস্ক্রিনে অ্যাপ হিসেবে ইনস্টল করে রাখুন এবং যেকোনো সময় এক ক্লিকেই ব্যবহার করুন। সম্পূর্ণ অফলাইন সাপোর্ট এবং ফাস্ট লোডিং সুবিধা।</p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                            <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30 text-sm">
+                                <span className="font-bold block text-yellow-300 mb-1">Android ব্যবহারকারীদের জন্য:</span>
+                                Chrome ব্রাউজারের উপরে ডানদিকে (⋮) মেনুতে ক্লিক করে "Add to Home screen" অথবা "Install app" এ ক্লিক করুন।
+                            </div>
+                            <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30 text-sm">
+                                <span className="font-bold block text-yellow-300 mb-1">iOS (iPhone) ব্যবহারকারীদের জন্য:</span>
+                                Safari ব্রাউজারের নিচে Share আইকনে ক্লিক করে "Add to Home Screen" সিলেক্ট করুন।
+                            </div>
+                        </div>
+                    </div>
+                    <div className="md:w-1/3 flex justify-center">
+                        <div className="w-48 h-48 bg-white p-4 rounded-3xl shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-300 flex flex-col items-center justify-center text-slate-800">
+                            <Utensils size={64} className="text-primary mb-2"/>
+                            <span className="font-bold font-baloo text-xl">মেস ম্যানেজার</span>
+                            <span className="text-xs text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded mt-2">App Icon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Stats/CTA Section (RESTORED) */}
             <div className="bg-slate-900 text-white py-16 px-4 border-t border-slate-800">
                 <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
@@ -327,7 +351,7 @@ const LandingPage = ({ onStart, onRegister, onDevClick }: { onStart: () => void,
                         <h2 className="text-2xl font-bold mb-2 font-baloo">আপনার মেস ম্যানেজ করতে প্রস্তুত?</h2>
                         <p className="text-slate-400">আজই রেজিস্ট্রেশন করুন এবং ডিজিটাল অভিজ্ঞতা নিন।</p>
                     </div>
-                    <button onClick={onRegister} className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+                    <button onClick={() => onStart(true)} className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
                         ফ্রি-তে ব্যবহার করুন
                     </button>
                 </div>
@@ -1719,9 +1743,9 @@ const BorderDetailModal = ({
 };
 
 // Login/Register Component
-const LoginRegister = ({ setManager, setBorderView, onBack, initialIsRegister }: any) => {
+const LoginRegister = ({ setManager, setBorderView, initialIsRegister, onBackToHome }: any) => {
   const [isRegister, setIsRegister] = useState(initialIsRegister || false);
-  const [activeTab, setActiveTab] = useState<'manager' | 'border'>(initialIsRegister ? 'manager' : 'border');
+  const [activeTab, setActiveTab] = useState<'manager' | 'border'>('border');
   const [showPass, setShowPass] = useState(false);
   
   const [regForm, setRegForm] = useState<Manager>({ username: '', password: '', name: '', messName: '', year: 2025, month: MONTHS[0], mobile: '', mealRate: 0, borderUsername: '', borderPassword: '', bloodGroup: '' });
@@ -1781,14 +1805,12 @@ const LoginRegister = ({ setManager, setBorderView, onBack, initialIsRegister }:
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-100 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4 relative">
-      {onBack && (
-        <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-md text-slate-700 dark:text-slate-300 hover:text-primary transition-colors font-bold text-sm">
-          <ArrowLeft size={16} /> হোম পেজ
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-100 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4">
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-xl max-w-md w-full animate-fade-in relative">
+        <button onClick={onBackToHome} className="absolute top-4 left-4 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 text-sm font-bold transition-colors">
+            <ArrowRight className="rotate-180" size={16} /> হোম
         </button>
-      )}
-      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-xl max-w-md w-full animate-fade-in mt-10 md:mt-0">
-        <h1 className="text-3xl font-bold text-center text-primary mb-6 font-baloo">মেস ম্যানেজার প্রো</h1>
+        <h1 className="text-3xl font-bold text-center text-primary mb-6 font-baloo mt-4 md:mt-0">মেস ম্যানেজার প্রো</h1>
         <div className="flex mb-6 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
           <button className={`flex-1 py-2 rounded font-bold ${activeTab === 'border' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-500'}`} onClick={() => setActiveTab('border')}>বর্ডার</button>
           <button className={`flex-1 py-2 rounded font-bold ${activeTab === 'manager' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-500'}`} onClick={() => setActiveTab('manager')}>ম্যানেজার</button>
@@ -1840,7 +1862,7 @@ const LoginRegister = ({ setManager, setBorderView, onBack, initialIsRegister }:
 
 const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
-  const [initialIsRegister, setInitialIsRegister] = useState(false);
+  const [initialReg, setInitialReg] = useState(false);
   const [manager, setManager] = useState<Manager | null>(null);
   const [borderView, setBorderView] = useState<Border | null>(null);
   const [managerInfoForBorder, setManagerInfoForBorder] = useState<Manager | null>(null);
@@ -2117,7 +2139,13 @@ const App: React.FC = () => {
 
         {/* Conditional Views */}
         {!hasStarted ? (
-            <LandingPage onStart={() => { setHasStarted(true); setInitialIsRegister(false); }} onRegister={() => { setHasStarted(true); setInitialIsRegister(true); }} onDevClick={() => setShowDevModal(true)} />
+            <LandingPage 
+                onStart={(isReg: boolean) => {
+                    setInitialReg(isReg);
+                    setHasStarted(true);
+                }} 
+                onDevClick={() => setShowDevModal(true)} 
+            />
         ) : (
             <>
                 {borderView && managerInfoForBorder ? (
@@ -2270,19 +2298,17 @@ const App: React.FC = () => {
                                       <div>
                                           <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">ম্যানেজার তথ্য</p>
                                           <h3 className="font-bold text-slate-800 dark:text-white">{managerInfoForBorder.name}</h3>
-                                          <div className="text-sm text-slate-600 dark:text-slate-300 flex gap-4 mb-2">
-                                              <span>📞 {managerInfoForBorder.mobile}</span>
-                                              {managerInfoForBorder.bloodGroup && <span className="text-red-500 font-bold">🩸 {managerInfoForBorder.bloodGroup}</span>}
-                                          </div>
-                                          {(managerInfoForBorder.khalaName || managerInfoForBorder.khalaMobile) && (
-                                              <div className="mt-2 pt-2 border-t border-blue-100 dark:border-slate-700">
-                                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase">খালার তথ্য</p>
-                                                <h3 className="font-bold text-slate-800 dark:text-white text-sm">{managerInfoForBorder.khalaName || 'নাম নেই'}</h3>
-                                                <div className="text-sm text-slate-600 dark:text-slate-300 flex gap-4">
-                                                    <span>📞 {managerInfoForBorder.khalaMobile || '-'}</span>
-                                                </div>
+                                          <div className="text-sm text-slate-600 dark:text-slate-300 flex flex-col gap-1 mt-1">
+                                              <div className="flex gap-4">
+                                                  <span>📞 {managerInfoForBorder.mobile}</span>
+                                                  {managerInfoForBorder.bloodGroup && <span className="text-red-500 font-bold">🩸 {managerInfoForBorder.bloodGroup}</span>}
                                               </div>
-                                          )}
+                                              {managerInfoForBorder.khalaName && (
+                                                  <div className="text-xs mt-1 pt-1 border-t border-slate-200 dark:border-slate-600">
+                                                      <span className="font-bold">খালার তথ্য:</span> {managerInfoForBorder.khalaName} {managerInfoForBorder.khalaMobile ? `(📞 ${managerInfoForBorder.khalaMobile})` : ''}
+                                                  </div>
+                                              )}
+                                          </div>
                                       </div>
                                   </div>
 
@@ -2698,10 +2724,10 @@ const App: React.FC = () => {
                                                    <input placeholder="মোবাইল" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.mobile} onChange={e => setProfileForm({...profileForm, mobile: e.target.value})} />
                                                    <input placeholder="রক্তের গ্রুপ" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.bloodGroup || ''} onChange={e => setProfileForm({...profileForm, bloodGroup: e.target.value})} />
                                                    
-                                                   <label className="text-xs font-bold block mt-4 dark:text-white text-emerald-600">খালার তথ্য (ঐচ্ছিক)</label>
+                                                   <label className="text-xs font-bold block mt-4 dark:text-white">খালার তথ্য (ঐচ্ছিক)</label>
                                                    <input placeholder="খালার নাম" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.khalaName || ''} onChange={e => setProfileForm({...profileForm, khalaName: e.target.value})} />
                                                    <input placeholder="খালার মোবাইল নাম্বার" className="w-full p-2 border rounded dark:bg-slate-600 dark:text-white" value={profileForm.khalaMobile || ''} onChange={e => setProfileForm({...profileForm, khalaMobile: e.target.value})} />
-
+                                                   
                                                    <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded mt-3 border dark:border-slate-600">
                                                        <label className="text-xs font-bold block mb-2 dark:text-white text-slate-800">প্রোফাইল ছবি (Imgur Link)</label>
                                                        <div className="text-[10px] text-slate-600 dark:text-slate-400 mb-3 space-y-1">
@@ -2736,7 +2762,7 @@ const App: React.FC = () => {
                                                    <p>মেস: <b>{manager.messName}</b></p>
                                                    <p>মোবাইল: <b>{manager.mobile}</b></p>
                                                    <p>রক্তের গ্রুপ: <b>{manager.bloodGroup || '-'}</b></p>
-                                                   {manager.khalaName && <p>খালার নাম: <b>{manager.khalaName}</b></p>}
+                                                   {manager.khalaName && <p className="mt-2 pt-2 border-t dark:border-slate-700">খালার নাম: <b>{manager.khalaName}</b></p>}
                                                    {manager.khalaMobile && <p>খালার মোবাইল: <b>{manager.khalaMobile}</b></p>}
                                                </div>
                                            )}
@@ -2841,7 +2867,12 @@ const App: React.FC = () => {
                         )}
                     </Layout>
                 ) : (
-                    <LoginRegister setManager={setManager} setBorderView={handleSetBorderView} />
+                    <LoginRegister 
+                        setManager={setManager} 
+                        setBorderView={handleSetBorderView} 
+                        initialIsRegister={initialReg} 
+                        onBackToHome={() => setHasStarted(false)} 
+                    />
                 )}
             </>
         )}
