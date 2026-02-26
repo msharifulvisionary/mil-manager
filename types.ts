@@ -109,6 +109,7 @@ export interface Manager {
   iftaarConfig?: IftaarConfig;
   extraRice?: ExtraRice[]; // New: Extra rice usage
   globalAdditionalRicePots?: number; // New: Global Additional Rice Expense
+  fixedMealCount?: number; // New: Fixed meal system
 }
 
 export interface IftaarConfig {
