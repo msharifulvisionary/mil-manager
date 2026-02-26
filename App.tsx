@@ -780,7 +780,10 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
 const ManagerOverview = ({ manager, borders, expenses, extraRice }: { manager: Manager, borders: Border[], expenses: Expense[], extraRice?: ExtraRice[] }) => {
     // ... (No changes here, keeping existing code) ...
     const totalMoney = borders.reduce((acc, b) => acc + b.deposits.reduce((s, d) => s + d.amount, 0), 0);
-    const totalMeals = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0), 0);
+    const totalMeals = borders.reduce((acc, b) => {
+          const actualMeals = Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0);
+          return acc + (manager.fixedMealCount ? Math.max(actualMeals, manager.fixedMealCount) : actualMeals);
+      }, 0);
     const totalRiceDeposited = borders.reduce((acc, b) => acc + b.riceDeposits.reduce((s, d) => s + (d.amount || 0), 0), 0);
     const totalRiceConsumed = borders.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0) + (b.additionalRicePots || 0) + (manager.globalAdditionalRicePots || 0), 0);
     const totalExtraRice = extraRice?.reduce((sum, er) => sum + er.amount, 0) || 0;
@@ -2226,7 +2229,8 @@ const App: React.FC = () => {
                                   {/* Stats Grid for Border View */}
                                   {(() => {
                                       // Calculate breakdown for Border View
-                                      const bTotalMeals: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.meals) || 0), 0);
+                                      const actualBTotalMeals: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.meals) || 0), 0);
+                                        const bTotalMeals = managerInfoForBorder.fixedMealCount ? Math.max(actualBTotalMeals, managerInfoForBorder.fixedMealCount) : actualBTotalMeals;
                                       const bDailyRice: number = Object.values(borderView.dailyUsage).reduce<number>((a, b: any) => a + (Number(b.rice) || 0), 0);
                                       const borderExtraRice: number = borderView.additionalRicePots || 0;
                                       const globalExtraRice: number = managerInfoForBorder.globalAdditionalRicePots || 0;
