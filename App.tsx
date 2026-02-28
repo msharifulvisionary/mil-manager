@@ -644,7 +644,7 @@ const BazaarSchedulePage = ({ manager, borders, isManager, currentUser, onUpdate
 };
 
 // New: System Daily Entry Component (Updated)
-const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, onUpdateExtraRice, onDeleteExtraRice }: { manager: Manager, onUpdate: (m: Manager) => void, extraRice?: ExtraRice[], onAddExtraRice?: (data: Omit<ExtraRice, 'id'>) => void, onUpdateExtraRice?: (id: string, data: Partial<ExtraRice>) => void, onDeleteExtraRice?: (id: string) => void }) => {
+const SystemDailyEntryPage = ({ manager, borders, onUpdate, extraRice, onAddExtraRice, onUpdateExtraRice, onDeleteExtraRice }: { manager: Manager, borders: Border[], onUpdate: (m: Manager) => void, extraRice?: ExtraRice[], onAddExtraRice?: (data: Omit<ExtraRice, 'id'>) => void, onUpdateExtraRice?: (id: string, data: Partial<ExtraRice>) => void, onDeleteExtraRice?: (id: string) => void }) => {
     // ... (No changes here) ...
     const days = Array.from({length: 31}, (_, i) => i + 1);
     const [localData, setLocalData] = useState(manager.systemDaily || {});
@@ -675,6 +675,22 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
     const handleConfigChange = (field: keyof RiceConfig, val: string) => {
         setRiceConfig({ ...riceConfig, [field]: parseFloat(val) || 0 });
     }
+
+    const totalDashboardMeals = borders?.reduce((acc, b) => {
+        const actual = Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.meals || 0), 0);
+        return acc + ((manager?.fixedMealCount && manager.fixedMealCount > 0) ? Math.max(actual, manager.fixedMealCount) : actual);
+    }, 0) || 0;
+    
+    const totalDashboardRice = borders?.reduce((acc, b) => acc + Object.values(b.dailyUsage).reduce((s, u: any) => s + (u.rice || 0), 0) + (b.additionalRicePots || 0) + (manager.globalAdditionalRicePots || 0), 0) || 0;
+
+    let totalSystemMeals = 0;
+    let totalSystemRice = 0;
+
+    days.forEach(d => {
+        const entry = localData[d] || { morning: {meal:0, rice:0}, lunch: {meal:0, rice:0}, dinner: {meal:0, rice:0} };
+        totalSystemMeals += (entry.morning?.meal||0) + (entry.lunch?.meal||0) + (entry.dinner?.meal||0);
+        totalSystemRice += (entry.morning?.rice||0) + (entry.lunch?.rice||0) + (entry.dinner?.rice||0);
+    });
 
     const handleSave = async () => {
         try {
@@ -737,8 +753,10 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                             <th colSpan={2} className="p-1 border border-slate-600 bg-orange-600">সকাল</th>
                             <th colSpan={2} className="p-1 border border-slate-600 bg-blue-600">দুপুর</th>
                             <th colSpan={2} className="p-1 border border-slate-600 bg-purple-600">রাত</th>
+                            <th colSpan={2} className="p-1 border border-slate-600 bg-emerald-600">মোট (দিন)</th>
                         </tr>
                         <tr>
+                            <th className="p-1 border border-slate-600 text-[10px] w-12">মিল</th><th className="p-1 border border-slate-600 text-[10px] w-12">চাল</th>
                             <th className="p-1 border border-slate-600 text-[10px] w-12">মিল</th><th className="p-1 border border-slate-600 text-[10px] w-12">চাল</th>
                             <th className="p-1 border border-slate-600 text-[10px] w-12">মিল</th><th className="p-1 border border-slate-600 text-[10px] w-12">চাল</th>
                             <th className="p-1 border border-slate-600 text-[10px] w-12">মিল</th><th className="p-1 border border-slate-600 text-[10px] w-12">চাল</th>
@@ -747,6 +765,8 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                     <tbody className="divide-y dark:divide-slate-700">
                         {days.map(d => {
                             const entry = localData[d] || { morning: {meal:0, rice:0}, lunch: {meal:0, rice:0}, dinner: {meal:0, rice:0} };
+                            const dayTotalMeals = (entry.morning?.meal||0) + (entry.lunch?.meal||0) + (entry.dinner?.meal||0);
+                            const dayTotalRice = (entry.morning?.rice||0) + (entry.lunch?.rice||0) + (entry.dinner?.rice||0);
                             return (
                                 <tr key={d} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                                     <td className="p-2 font-bold bg-slate-100 dark:bg-slate-600 border border-slate-200 dark:border-slate-500">{d}</td>
@@ -759,11 +779,46 @@ const SystemDailyEntryPage = ({ manager, onUpdate, extraRice, onAddExtraRice, on
                                     
                                     <td className="p-1 border dark:border-slate-600"><input type="number" className="w-full text-center outline-none bg-transparent dark:text-white" value={entry.dinner?.meal||''} placeholder="-" onChange={e => handleChange(d, 'dinner', 'meal', parseFloat(e.target.value)||0)} /></td>
                                     <td className="p-1 border bg-purple-50 dark:bg-slate-900/50 dark:border-slate-600"><input type="number" step="0.1" className="w-full text-center outline-none bg-transparent font-bold text-purple-700 dark:text-purple-500" value={entry.dinner?.rice||''} placeholder="-" onChange={e => handleChange(d, 'dinner', 'rice', parseFloat(e.target.value)||0)} /></td>
+
+                                    <td className="p-1 border bg-emerald-50 dark:bg-emerald-900/20 dark:border-slate-600 font-bold text-emerald-700 dark:text-emerald-400">{dayTotalMeals}</td>
+                                    <td className="p-1 border bg-emerald-50 dark:bg-emerald-900/20 dark:border-slate-600 font-bold text-emerald-700 dark:text-emerald-400">{dayTotalRice.toFixed(1)}</td>
                                 </tr>
                             )
                         })}
+                        <tr className="bg-slate-200 dark:bg-slate-800 font-bold">
+                            <td className="p-2 border border-slate-300 dark:border-slate-600">মোট</td>
+                            <td colSpan={6} className="p-2 border border-slate-300 dark:border-slate-600 text-right">মাসের মোট =</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400">{totalSystemMeals}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400">{totalSystemRice.toFixed(1)}</td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+
+            {/* Comparison Section */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">মিলের হিসাব পার্থক্য</h4>
+                    <div className="flex justify-between text-sm mb-1"><span>সিস্টেমের মোট মিল:</span> <strong>{totalSystemMeals}</strong></div>
+                    <div className="flex justify-between text-sm mb-1"><span>ড্যাশবোর্ডের মোট মিল:</span> <strong>{totalDashboardMeals}</strong></div>
+                    <div className="flex justify-between text-sm pt-1 border-t border-blue-200 dark:border-blue-700 mt-1">
+                        <span>পার্থক্য:</span> 
+                        <strong className={totalSystemMeals !== totalDashboardMeals ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}>
+                            {Math.abs(totalSystemMeals - totalDashboardMeals)} {totalSystemMeals > totalDashboardMeals ? '(বেশি)' : totalSystemMeals < totalDashboardMeals ? '(কম)' : ''}
+                        </strong>
+                    </div>
+                </div>
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <h4 className="font-bold text-orange-800 dark:text-orange-300 mb-2">চালের হিসাব পার্থক্য</h4>
+                    <div className="flex justify-between text-sm mb-1"><span>সিস্টেমের মোট চাল:</span> <strong>{totalSystemRice.toFixed(1)} পট</strong></div>
+                    <div className="flex justify-between text-sm mb-1"><span>ড্যাশবোর্ডের মোট চাল:</span> <strong>{totalDashboardRice.toFixed(1)} পট</strong></div>
+                    <div className="flex justify-between text-sm pt-1 border-t border-orange-200 dark:border-orange-700 mt-1">
+                        <span>পার্থক্য:</span> 
+                        <strong className={totalSystemRice !== totalDashboardRice ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}>
+                            {Math.abs(totalSystemRice - totalDashboardRice).toFixed(1)} {totalSystemRice > totalDashboardRice ? '(বেশি)' : totalSystemRice < totalDashboardRice ? '(কম)' : ''}
+                        </strong>
+                    </div>
+                </div>
             </div>
 
             {/* Extra Rice Section */}
@@ -996,6 +1051,9 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder
                                     ))}
                                     <td className="p-2 font-bold border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/20">
                                         {(Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0) + (b.additionalRicePots || 0) + (manager.globalAdditionalRicePots || 0)).toFixed(1)}
+                                        {((b.additionalRicePots || 0) > 0 || (manager.globalAdditionalRicePots || 0) > 0) ? (
+                                            <div className="text-[10px] text-slate-500 font-normal mt-0.5">আসল: {Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0).toFixed(1)}</div>
+                                        ) : null}
                                     </td>
                                 </tr>
                             ))}
@@ -1018,7 +1076,8 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder
                         <thead className="bg-slate-800 text-white">
                             <tr>
                                 <th className="p-2 border border-slate-600">বর্ডার নাম</th>
-                                <th className="p-2 border border-slate-600 bg-orange-700">বর্তমান অতিরিক্ত খরচ (৳)</th>
+                                <th className="p-2 border border-slate-600 bg-red-700">অতিরিক্ত খরচ (৳)</th>
+                                <th className="p-2 border border-slate-600 bg-orange-700">অতিরিক্ত চাল (পট)</th>
                                 <th className="p-2 border border-slate-600">অ্যাকশন</th>
                             </tr>
                         </thead>
@@ -1026,10 +1085,13 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder
                             {borders.map(b => (
                                 <tr key={b.id} className="border-b hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700">
                                     <td className="p-2 font-semibold text-left border dark:border-slate-600">{b.name}</td>
-                                    <td className="p-2 border dark:border-slate-600 font-bold text-orange-600 dark:text-orange-400 text-lg">
+                                    <td className="p-2 border dark:border-slate-600 font-bold text-red-600 dark:text-red-400 text-lg">
                                         {b.extraCost} ৳
                                     </td>
-                                    <td className="p-2 border dark:border-slate-600">
+                                    <td className="p-2 border dark:border-slate-600 font-bold text-orange-600 dark:text-orange-400 text-lg">
+                                        {b.additionalRicePots || 0} পট
+                                    </td>
+                                    <td className="p-2 border dark:border-slate-600 space-x-2">
                                         <button 
                                             onClick={() => {
                                                 const val = prompt(`${b.name} এর নতুন অতিরিক্ত খরচ (৳):`, b.extraCost.toString());
@@ -1039,9 +1101,22 @@ const ManagerOverview = ({ manager, borders, expenses, extraRice, onUpdateBorder
                                                     }
                                                 }
                                             }}
-                                            className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors text-sm font-bold flex items-center gap-2 mx-auto"
+                                            className="bg-red-50 text-red-600 px-3 py-1 rounded border border-red-200 hover:bg-red-600 hover:text-white transition-colors text-xs font-bold inline-flex items-center gap-1"
                                         >
-                                            <Edit2 size={16}/> আপডেট করুন
+                                            <Edit2 size={14}/> টাকা
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                const val = prompt(`${b.name} এর নতুন অতিরিক্ত চাল (পট):`, (b.additionalRicePots || 0).toString());
+                                                if (val !== null && !isNaN(Number(val))) {
+                                                    if(onUpdateBorder) {
+                                                        onUpdateBorder(b.id, { additionalRicePots: Number(val) });
+                                                    }
+                                                }
+                                            }}
+                                            className="bg-orange-50 text-orange-600 px-3 py-1 rounded border border-orange-200 hover:bg-orange-600 hover:text-white transition-colors text-xs font-bold inline-flex items-center gap-1"
+                                        >
+                                            <Edit2 size={14}/> চাল
                                         </button>
                                     </td>
                                 </tr>
@@ -2725,7 +2800,7 @@ const App: React.FC = () => {
                                     setManager(updated);
                                     dbService.updateManager(manager.username, data);
                                 }} /></div>}
-                                {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} onUpdate={(m) => {
+                                {activeTab === 'system' && <div className="animate-fade-in"><SystemDailyEntryPage manager={manager} borders={borders} onUpdate={(m) => {
                                     setManager(m);
                                     localStorage.setItem('messManager', JSON.stringify(m));
                                 }} extraRice={extraRice} onAddExtraRice={handleAddExtraRice} onUpdateExtraRice={handleUpdateExtraRice} onDeleteExtraRice={handleDeleteExtraRice} /></div>}
