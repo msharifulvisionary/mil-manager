@@ -685,11 +685,33 @@ const SystemDailyEntryPage = ({ manager, borders, onUpdate, extraRice, onAddExtr
 
     let totalSystemMeals = 0;
     let totalSystemRice = 0;
+    
+    let totalMorningMeals = 0;
+    let totalMorningRice = 0;
+    let totalLunchMeals = 0;
+    let totalLunchRice = 0;
+    let totalDinnerMeals = 0;
+    let totalDinnerRice = 0;
 
     days.forEach(d => {
         const entry = localData[d] || { morning: {meal:0, rice:0}, lunch: {meal:0, rice:0}, dinner: {meal:0, rice:0} };
-        totalSystemMeals += (entry.morning?.meal||0) + (entry.lunch?.meal||0) + (entry.dinner?.meal||0);
-        totalSystemRice += (entry.morning?.rice||0) + (entry.lunch?.rice||0) + (entry.dinner?.rice||0);
+        
+        const mMeal = entry.morning?.meal||0;
+        const mRice = entry.morning?.rice||0;
+        const lMeal = entry.lunch?.meal||0;
+        const lRice = entry.lunch?.rice||0;
+        const dMeal = entry.dinner?.meal||0;
+        const dRice = entry.dinner?.rice||0;
+
+        totalMorningMeals += mMeal;
+        totalMorningRice += mRice;
+        totalLunchMeals += lMeal;
+        totalLunchRice += lRice;
+        totalDinnerMeals += dMeal;
+        totalDinnerRice += dRice;
+
+        totalSystemMeals += mMeal + lMeal + dMeal;
+        totalSystemRice += mRice + lRice + dRice;
     });
 
     const handleSave = async () => {
@@ -787,9 +809,14 @@ const SystemDailyEntryPage = ({ manager, borders, onUpdate, extraRice, onAddExtr
                         })}
                         <tr className="bg-slate-200 dark:bg-slate-800 font-bold">
                             <td className="p-2 border border-slate-300 dark:border-slate-600">মোট</td>
-                            <td colSpan={6} className="p-2 border border-slate-300 dark:border-slate-600 text-right">মাসের মোট =</td>
-                            <td className="p-2 border border-slate-300 dark:border-slate-600 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400">{totalSystemMeals}</td>
-                            <td className="p-2 border border-slate-300 dark:border-slate-600 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400">{totalSystemRice.toFixed(1)}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 text-center text-orange-700 dark:text-orange-400">{totalMorningMeals}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 text-center text-orange-700 dark:text-orange-400">{totalMorningRice.toFixed(1)}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 text-center text-blue-700 dark:text-blue-400">{totalLunchMeals}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 text-center text-blue-700 dark:text-blue-400">{totalLunchRice.toFixed(1)}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 text-center text-purple-700 dark:text-purple-400">{totalDinnerMeals}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 text-center text-purple-700 dark:text-purple-400">{totalDinnerRice.toFixed(1)}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 text-center">{totalSystemMeals}</td>
+                            <td className="p-2 border border-slate-300 dark:border-slate-600 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 text-center">{totalSystemRice.toFixed(1)}</td>
                         </tr>
                     </tbody>
                 </table>
