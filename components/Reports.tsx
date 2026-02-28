@@ -317,7 +317,14 @@ const Reports: React.FC<ReportsProps> = ({ manager, borders, expenses, extraRice
                                 {b.dailyUsage[d]?.rice > 0 ? b.dailyUsage[d]?.rice : ''}
                             </td>
                         ))}
-                        <td className="border border-gray-400 font-bold bg-yellow-50" style={{height: '24px', verticalAlign: 'middle'}}>{getTotalRice(b).toFixed(1)}</td>
+<td className="border border-gray-400 font-bold bg-yellow-50" style={{height: '24px', verticalAlign: 'middle', position: 'relative'}}>
+    <div className="leading-tight pt-1">{getTotalRice(b).toFixed(1)}</div>
+    {((b.additionalRicePots || 0) > 0 || (manager.globalAdditionalRicePots || 0) > 0) ? (
+        <div className="text-[8px] text-gray-600 font-normal leading-tight pb-1">
+            ({Object.values(b.dailyUsage).reduce((acc, curr: any) => acc + (curr.rice || 0), 0).toFixed(1)})
+        </div>
+    ) : null}
+</td>
                     </tr>
                 ))}
             </tbody>
